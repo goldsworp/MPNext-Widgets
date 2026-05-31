@@ -1,4 +1,5 @@
 import { MPHelper } from "@/lib/providers/ministry-platform";
+import { DomainTimezoneService } from "@/services/domainTimezoneService";
 import type { CalendarEvent } from "@mpnext/types";
 
 // ── MP Record Types ──
@@ -66,11 +67,6 @@ interface ContactRecord {
   Mobile_Phone: string | null;
 }
 
-interface EventParticipantCount {
-  Event_ID: number;
-  Count: number;
-}
-
 interface ProductRecord {
   Product_ID: number;
   Product_Name: string;
@@ -119,9 +115,12 @@ export class FullCalendarService {
     congregationId?: number,
     userGuid?: string
   ): Promise<{ events: CalendarEvent[]; isAdmin: boolean; filters: FilterData }> {
-    // MP/SQL Server needs simple datetime format — strip timezone offsets
-    const startDate = new Date(start).toISOString().slice(0, 19).replace("T", " ");
-    const endDate = new Date(end).toISOString().slice(0, 19).replace("T", " ");
+    // MP $filter literals are interpreted in the domain's wall-clock time zone.
+    // Routing through DomainTimezoneService converts any incoming instant (Z or
+    // offset-tagged) to MP-TZ wall-clock so date-boundary queries don't shift.
+    const tz = DomainTimezoneService.getInstance();
+    const startDate = await tz.toMpSqlDatetime(start);
+    const endDate = await tz.toMpSqlDatetime(end);
 
     let filter = `Event_Start_Date >= '${startDate}' AND Event_End_Date <= '${endDate}' AND Cancelled = 0 AND Visibility_Level_ID = 4`;
     if (congregationId) {
@@ -239,6 +238,9 @@ export class FullCalendarService {
       program: e.Program_ID ? [e.Program_ID] : [],
     };
 
+    // Heterogeneous results consumed positionally below; the conditional
+    // pushes for admin enrichment rule out a fixed tuple type.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parallelFetches: Promise<any>[] = [
       this.getEventTypeMap(lookupIds.eventType),
       this.getCongregationMap(lookupIds.congregation),
@@ -309,13 +311,20 @@ export class FullCalendarService {
 
       if (!users[0]?.User_ID) return false;
 
-      const groupIdsEnv = process.env.CALENDAR_ADMIN_GROUP_IDS || "22";
+      // No tenant-specific default: fail closed when unconfigured so a fresh
+      // tenant never inherits another tenant's admin group IDs.
+      const groupIdsEnv = process.env.CALENDAR_ADMIN_GROUP_IDS || "";
       const adminGroupIds = groupIdsEnv
         .split(",")
         .map((id) => parseInt(id.trim(), 10))
         .filter((id) => !isNaN(id));
 
-      if (adminGroupIds.length === 0) return false;
+      if (adminGroupIds.length === 0) {
+        console.warn(
+          "FullCalendarService: CALENDAR_ADMIN_GROUP_IDS is not set; no users will be treated as calendar admins.",
+        );
+        return false;
+      }
 
       const idList = adminGroupIds.join(",");
       const records = await this.mp!.getTableRecords<UserGroupRecord>({
@@ -353,7 +362,7 @@ export class FullCalendarService {
         ),
       ];
 
-      let ministryMap = new Map<number, MinistryRecord>();
+      const ministryMap = new Map<number, MinistryRecord>();
       if (ministryIds.length > 0) {
         const mFilter = ministryIds.map((id) => `Ministry_ID = ${id}`).join(" OR ");
         const ministries = await this.mp!.getTableRecords<MinistryRecord>({

@@ -74,7 +74,7 @@ const MODELS_PATH = path.join(
 );
 const NEXT_BUILD_PATH = path.join(PROJECT_ROOT, '.next');
 
-const REQUIRED_NODE_VERSION = 18;
+const REQUIRED_NODE_VERSION = 20;
 
 // Patterns to detect if this is a clone of the MPNext template repository
 const TEMPLATE_REPO_PATTERNS = [
@@ -200,7 +200,7 @@ function parseArguments(): SetupOptions {
 
 function showHelp(): void {
   console.log(`
-${chalk.bold('MPNext-Components Setup')}
+${chalk.bold('MPNext-Widgets Setup')}
 
 Usage: pnpm run setup [options]
 
@@ -561,7 +561,7 @@ function checkNodeVersion(): StepResult {
     return {
       success: false,
       message: `Node.js v${version} is below minimum required v${REQUIRED_NODE_VERSION}`,
-      details: 'Please upgrade Node.js to v18 or later',
+      details: 'Please upgrade Node.js to v20.9 or later',
     };
   }
 
@@ -728,7 +728,7 @@ function checkBuildCache(): StepResult {
 // ============================================================================
 
 function runCheckMode(): number {
-  console.log(chalk.bold.blue('\nMPNext-Components Setup Check'));
+  console.log(chalk.bold.blue('\nMPNext-Widgets Setup Check'));
   console.log(chalk.blue('==============================\n'));
 
   const results: { name: string; result: StepResult }[] = [];
@@ -834,7 +834,7 @@ function runCheckMode(): number {
 // ============================================================================
 
 async function runInteractiveSetup(options: SetupOptions): Promise<number> {
-  console.log(chalk.bold.blue('\nMPNext-Components Setup'));
+  console.log(chalk.bold.blue('\nMPNext-Widgets Setup'));
   console.log(chalk.blue('======================='));
 
   const totalSteps = 9;
@@ -848,7 +848,7 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
   printResult(nodeResult);
 
   if (!nodeResult.success) {
-    console.log(chalk.red('\nSetup cannot continue without Node.js v18 or later.'));
+    console.log(chalk.red('\nSetup cannot continue without Node.js v20.9 or later.'));
     return 1;
   }
   passedSteps++;

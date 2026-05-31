@@ -1,25 +1,38 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { FullCalendarService } from '@/services/fullCalendarService';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const mockGetTableRecords = vi.fn();
-const mockGetFilesByRecord = vi.fn();
+const { mockGetTableRecords, mockGetFilesByRecord, mockGetDomainInfo } = vi.hoisted(() => ({
+  mockGetTableRecords: vi.fn(),
+  mockGetFilesByRecord: vi.fn(),
+  mockGetDomainInfo: vi.fn(),
+}));
 
 vi.mock('@/lib/providers/ministry-platform', () => {
   return {
     MPHelper: class {
       getTableRecords = mockGetTableRecords;
       getFilesByRecord = mockGetFilesByRecord;
+      getDomainInfo = mockGetDomainInfo;
     },
   };
 });
 
+import { FullCalendarService } from '@/services/fullCalendarService';
+import { DomainTimezoneService } from '@/services/domainTimezoneService';
+
 describe('FullCalendarService', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // mockReset (not clearAllMocks) so mockResolvedValueOnce queues drain.
+    mockGetTableRecords.mockReset();
+    mockGetFilesByRecord.mockReset();
+    mockGetDomainInfo.mockReset();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (FullCalendarService as any).instance = undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (DomainTimezoneService as any).instance = null;
     // Default: getFilesByRecord returns no images
     mockGetFilesByRecord.mockResolvedValue([]);
+    // Default domain: Eastern. Individual tests may override before exercising.
+    mockGetDomainInfo.mockResolvedValue({ TimeZoneName: 'America/New_York' });
   });
 
   describe('getInstance', () => {
@@ -32,6 +45,20 @@ describe('FullCalendarService', () => {
 
   describe('checkCalendarAdmin', () => {
     const guid = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+    const prevAdminGroups = process.env.CALENDAR_ADMIN_GROUP_IDS;
+
+    beforeEach(() => {
+      // Admin groups are tenant-configured (no hardcoded default); set explicitly.
+      process.env.CALENDAR_ADMIN_GROUP_IDS = '22';
+    });
+
+    afterEach(() => {
+      if (prevAdminGroups === undefined) {
+        delete process.env.CALENDAR_ADMIN_GROUP_IDS;
+      } else {
+        process.env.CALENDAR_ADMIN_GROUP_IDS = prevAdminGroups;
+      }
+    });
 
     it('should return true when the user is in an admin group', async () => {
       mockGetTableRecords
@@ -65,6 +92,20 @@ describe('FullCalendarService', () => {
       const result = await service.checkCalendarAdmin(guid);
 
       expect(result).toBe(false);
+    });
+
+    it('should fail closed (return false) when CALENDAR_ADMIN_GROUP_IDS is unset', async () => {
+      delete process.env.CALENDAR_ADMIN_GROUP_IDS;
+      mockGetTableRecords.mockResolvedValueOnce([
+        { User_ID: 1, User_GUID: guid, Contact_ID: 100 },
+      ]);
+
+      const service = await FullCalendarService.getInstance();
+      const result = await service.checkCalendarAdmin(guid);
+
+      expect(result).toBe(false);
+      // User lookup happens, but no group query is issued when unconfigured.
+      expect(mockGetTableRecords).toHaveBeenCalledTimes(1);
     });
 
     it('should return false when the user GUID does not resolve', async () => {
@@ -231,6 +272,35 @@ describe('FullCalendarService', () => {
 
       const service = await FullCalendarService.getInstance();
       await expect(service.getEvents(start, end)).rejects.toThrow('events failed');
+    });
+
+    it('builds the $filter literal as MP-TZ wall-clock (Recipe E — no UTC shift)', async () => {
+      mockGetTableRecords.mockResolvedValueOnce([]);
+
+      const service = await FullCalendarService.getInstance();
+      await service.getEvents('2026-05-01T00:00:00Z', '2026-05-31T23:59:59Z');
+
+      const filter = mockGetTableRecords.mock.calls[0][0].filter as string;
+      // 2026-05-01T00:00:00Z → 2026-04-30 20:00:00 in America/New_York (EDT, UTC-4)
+      expect(filter).toContain(`Event_Start_Date >= '2026-04-30 20:00:00'`);
+      expect(filter).toContain(`Event_End_Date <= '2026-05-31 19:59:59'`);
+    });
+
+    it('regression: repeating the same getEvents call produces the same filter (no drift)', async () => {
+      mockGetTableRecords.mockResolvedValue([]);
+
+      const service = await FullCalendarService.getInstance();
+      await service.getEvents('2026-05-01T00:00:00Z', '2026-05-31T23:59:59Z');
+      await service.getEvents('2026-05-01T00:00:00Z', '2026-05-31T23:59:59Z');
+      await service.getEvents('2026-05-01T00:00:00Z', '2026-05-31T23:59:59Z');
+
+      // The filter substring under inspection must be stable across calls,
+      // regardless of how many times getDomainInfo is hit or what TZ the
+      // node process is running in.
+      const filters = mockGetTableRecords.mock.calls.map((c) => c[0].filter as string);
+      expect(filters[0]).toContain(`Event_Start_Date >= '2026-04-30 20:00:00'`);
+      expect(filters[1]).toBe(filters[0]);
+      expect(filters[2]).toBe(filters[0]);
     });
   });
 

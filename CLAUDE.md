@@ -1,20 +1,20 @@
-# CLAUDE.md - MPNext-Components
+# CLAUDE.md - MPNext-Widgets
 
 ## Overview
 
-**pnpm monorepo**: Component-only extraction from NorthwoodsNext. Contains 3 embed SDK widgets (user-menu, add-to-calendar, full-calendar) with their supporting API routes, services, and shared types. The embed SDK builds framework-agnostic Web Components (Shadow DOM) loaded via `<script>` on external sites.
+**pnpm monorepo**: Component-only embed SDK extraction. Contains 5 embed SDK widgets (user-menu, add-to-calendar, full-calendar, profile, my-invoices) with their supporting API routes, services, and shared types. The embed SDK builds framework-agnostic Web Components (Shadow DOM) loaded via `<script>` on external sites.
 
 ## Structure
 
 ```
 src/                           # Next.js 16 (App Router)
-├── app/api/embed/             # Widget API endpoints (subset for 3 widgets)
-├── services/                  # Singleton services (addToCalendar, fullCalendar, profile, subscription, user)
+├── app/api/embed/             # Widget API endpoints (subset for 5 widgets)
+├── services/                  # Singleton services (addToCalendar, fullCalendar, profile, subscription, user, invoice, domainTimezone)
 ├── lib/embed/                 # Widget auth (JWT, CORS, tenant config)
 ├── lib/providers/ministry-platform/  # MP REST API (MPHelper, models, auth)
 packages/
 ├── embed-sdk/                 # @mpnext/embed-sdk (Vite library)
-│   ├── src/components/        # 3 Web Components (next-* custom elements)
+│   ├── src/components/        # 5 Web Components (next-* custom elements)
 │   ├── src/shared/            # base-widget.ts, api-client.ts, cdn-loader.ts
 │   └── demo-*.html            # Per-widget demo pages + index.html
 └── types/                     # @mpnext/types (Zod schemas + TS interfaces)
@@ -43,18 +43,18 @@ Manual widget testing via `pnpm test:widget` (opens http://localhost:5173). Play
 
 **Playwright test account**: `PLAYWRIGHT_MP_USERNAME` / `PLAYWRIGHT_MP_PASSWORD` in `.env.local`. This is a non-admin MP OAuth user with **MFA disabled**.
 
-**Dev tenant**: `northwoods-dev` in `src/lib/embed/config.ts`. Allowed origins: `localhost:3000`, `localhost:5173` (and 127.0.0.1 variants). Init token: `northwoods-dev_dev-secret`.
+**Dev auth**: Widget session auth is origin-based — no tenant id or init token. The `/api/embed/session` route validates the request origin against `EMBED_ALLOWED_ORIGINS` (`src/lib/embed/config.ts`). Local dev origins: `localhost:3000`, `localhost:5173` (and 127.0.0.1 variants).
 
 ## Widget Architecture
 
-1. External site loads `nw-embed.es.js` via `<script type="module">`
+1. External site loads `next-embed.es.js` via `<script type="module">`
 2. `MPNextEmbed.init()` sets token provider
 3. Token provider fetches JWT (5-min expiry) from `/api/embed/session`
 4. Widgets render in Shadow DOM; API calls use Bearer token with auto-refresh on 401
 
-**Design**: Web Components + Shadow DOM (no framework deps, ~5KB gzip), JWT+CORS auth, idempotency keys, multi-tenant origin allowlists.
+**Design**: Web Components + Shadow DOM (no framework deps, ~33KB gzip), JWT+CORS auth, multi-tenant origin allowlists.
 
-**3 widgets**: `next-user-menu`, `next-add-to-calendar`, `next-full-calendar`
+**5 widgets**: `next-user-menu`, `next-add-to-calendar`, `next-full-calendar`, `next-profile`, `next-my-invoices`
 
 **MP widget styling**: `public/embed-sdk/mp-widget-overrides.css` injected into MP Shadow DOM widgets via `customcss` attribute. User-menu applies this automatically.
 
@@ -62,7 +62,13 @@ Manual widget testing via `pnpm test:widget` (opens http://localhost:5173). Play
 
 All services follow singleton pattern: `const svc = await ServiceName.getInstance()`. Each wraps `MPHelper`.
 
-Services: `addToCalendar`, `fullCalendar`, `profile`, `subscription`, `user`
+Services: `addToCalendar`, `fullCalendar`, `profile`, `subscription`, `user`, `invoice`, `domainTimezone`
+
+## MP Date/Time Handling
+
+**Convert all date/time values at the MP boundary** — use `DomainTimezoneService` (never raw `new Date(x).toISOString()` or `getFullYear()`) when sending or receiving datetime fields, since MP stores wall-clock values in the domain's time zone, not UTC. Server-side, route writes/filters through `DomainTimezoneService.getInstance().toMpSqlDatetime(...)`. Client-side, format MP values with `Intl.DateTimeFormat({ timeZone })` using the IANA zone from `getMpTimezone()` (`src/app/actions/domain.ts`).
+
+See **[Date/Time Handling Reference](.claude/references/ministryplatform.datetimehandling.md)**.
 
 ## Code Conventions
 
@@ -109,8 +115,11 @@ await mp.executeProcedure('ProcName', { param: 'value' });
 | `src/lib/embed/auth.ts` | `requireWidgetAuth()` -- accepts `widget: string \| string[]` |
 | `src/lib/embed/config.ts` | Tenant configs & allowed origins |
 | `src/lib/embed/jwt.ts` | Widget JWT creation/verification |
-| `packages/embed-sdk/src/index.ts` | SDK entry point -- registers 3 widgets |
+| `packages/embed-sdk/src/index.ts` | SDK entry point -- registers 5 widgets |
 | `packages/embed-sdk/src/shared/base-widget.ts` | Abstract base class (Shadow DOM, token mgmt, fetch) |
 | `packages/embed-sdk/vite.config.ts` | Vite library mode (ES + UMD output) |
 | `public/embed-sdk/mp-widget-overrides.css` | Brand CSS for MP Shadow DOM widgets |
 | `.claude/references/ministryplatform.query-syntax.md` | MP REST API query syntax reference (`$filter`, `$select`, `_TABLE` traversal) |
+| `.claude/references/ministryplatform.datetimehandling.md` | How to send/receive MP datetimes safely via `DomainTimezoneService`, anti-patterns, Windows↔IANA mapping, test guidance |
+| `src/services/domainTimezoneService.ts` | Singleton: MP domain TZ → IANA, `toMpSqlDatetime`, `parseMpDatetime` |
+| `src/app/actions/domain.ts` | `getMpTimezone()` server action for client-side `Intl.DateTimeFormat` rendering |

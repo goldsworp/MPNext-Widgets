@@ -6,7 +6,7 @@
  * - The current `refreshToken()` implementation always returns `null`, so the
  *   public 401 retry path can only be exercised by stubbing the private method.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from "vitest";
 import { ApiClient, type ApiClientConfig } from "./api-client";
 
 /** Build a Response-like object compatible with what ApiClient consumes. */
@@ -26,14 +26,14 @@ function makeResponse(
 
 describe("ApiClient", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
-  let getToken: ReturnType<typeof vi.fn>;
-  let onTokenRefresh: ReturnType<typeof vi.fn>;
+  let getToken: Mock<() => Promise<string>>;
+  let onTokenRefresh: Mock<(newToken: string) => void>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     fetchMock = vi.fn();
     getToken = vi.fn(async () => "test-token");
-    onTokenRefresh = vi.fn();
+    onTokenRefresh = vi.fn<(newToken: string) => void>();
     // Override the global fetch used inside ApiClient.
     globalThis.fetch = fetchMock as unknown as typeof fetch;
   });
@@ -83,13 +83,13 @@ describe("ApiClient", () => {
 
     it("includes X-Tenant-ID header when tenantId is configured", async () => {
       fetchMock.mockResolvedValueOnce(makeResponse({}));
-      const client = new ApiClient(baseConfig({ tenantId: "northwoods-dev" }));
+      const client = new ApiClient(baseConfig({ tenantId: "test-tenant" }));
 
       await client.request("/data");
 
       const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       const headers = init.headers as Record<string, string>;
-      expect(headers["X-Tenant-ID"]).toBe("northwoods-dev");
+      expect(headers["X-Tenant-ID"]).toBe("test-tenant");
     });
 
     it("omits X-Tenant-ID when tenantId is not configured", async () => {
