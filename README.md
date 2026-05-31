@@ -659,7 +659,7 @@ This project follows strict TypeScript conventions and code style. Please review
 
 ## License
 
-Proprietary and confidential (UNLICENSED). All rights reserved. See [LICENSE](./LICENSE).
+Licensed to MinistryPlatform customers for use, modification, and extension — no resale. © 2026 ACS Technologies (ACST). All other rights reserved. See [LICENSE](./LICENSE).
 
 ## Support
 
