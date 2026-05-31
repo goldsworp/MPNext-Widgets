@@ -43,6 +43,18 @@ export abstract class MPNextWidget extends HTMLElement {
         return new URL(s.src).origin;
       } catch { /* continue */ }
     }
+
+    // Fall back to a sibling widget's api-host (handles Vite dev, where the SDK
+    // is a local module import — no "next-embed" script tag — and a widget
+    // without an explicit api-host would otherwise fetch the wrong origin).
+    const sibling = document.querySelector(
+      "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices",
+    );
+    if (sibling && sibling !== this) {
+      const host = sibling.getAttribute("api-host");
+      if (host) return host;
+    }
+
     return "";
   }
 
