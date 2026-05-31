@@ -21,7 +21,7 @@ Embeddable Web Component widgets for [Ministry Platform](https://www.ministrypla
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-  - [Quick Setup with Claude Code](#quick-setup-with-claude-code)
+  - [Quick Setup (Automated)](#quick-setup-automated)
   - [Manual Setup](#manual-setup)
   - [OAuth Setup](#oauth-setup)
 - [Project Structure](#project-structure)
@@ -132,13 +132,19 @@ pnpm setup -- --verbose     # Extra output
 pnpm setup -- --help        # Show all options
 ```
 
+**Headless / CI:** `--yes` (or `--non-interactive`) runs the full flow without prompts — it keeps existing `.env.local` values, auto-generates any missing secrets, and applies defaults. It's also auto-enabled when stdin isn't a TTY, so it won't hang in a pipeline. Provide MP credentials via `.env.local` (or your CI secret store) beforehand:
+
+```bash
+node scripts/setup-bootstrap.mjs --yes
+```
+
 Once setup completes, run `pnpm dev` and visit http://localhost:3000 (host app) and http://localhost:5173 (widget demo gallery).
 
 ---
 
 ### Manual Setup
 
-If you prefer manual setup or don't have Claude Code:
+If you prefer to run each step yourself instead of the automated setup:
 
 #### 1. Clone the Repository
 
@@ -256,7 +262,13 @@ Copy the generated values to your `.env.local` as `BETTER_AUTH_SECRET` and `EMBE
 
 ### 4. Generate Ministry Platform Types
 
-> **Note**: A full set of generated models is **committed to the repo**, so the project builds and runs without a live MP connection. Regenerating is only needed to match your own tenant's schema or after a schema change — it is not a prerequisite for a first build.
+> **Note**: A full set of generated models is **committed to the repo**, so the project builds and runs without a live MP connection. They come from a **reference tenant**, so a first build always succeeds — but on a fork pointed at a different MP instance they may not match your schema (custom fields, table differences). The build will compile against the committed types either way, so **regenerate against your own instance before relying on the types**:
+>
+> ```bash
+> pnpm mp:generate:models
+> ```
+>
+> The automated setup attempts this for you; if it fails (unreachable/throttled tenant) it warns and keeps the committed models rather than aborting.
 
 To regenerate TypeScript types from your Ministry Platform database schema:
 
@@ -404,6 +416,7 @@ MPNext-Widgets/
 │
 ├── public/embed-sdk/                     # Deployed widget bundles (hashed) + brand CSS
 ├── scripts/
+│   ├── setup-bootstrap.mjs               # Zero-dep entry for `pnpm setup` (ensures pnpm + deps, then runs setup.ts)
 │   ├── setup.ts                          # Interactive setup CLI
 │   ├── hash-sdk.js                       # Hash + rewrite SDK bundle filenames
 │   └── copy-sdk.js                       # Copy build output into public/

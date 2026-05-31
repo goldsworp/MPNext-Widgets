@@ -32,6 +32,10 @@ interface SetupOptions {
   skipInstall: boolean;
   update: boolean;
   verbose: boolean;
+  // No prompts: use existing .env.local, auto-generate missing secrets, apply
+  // defaults. Set explicitly via --yes/--non-interactive, or auto-enabled when
+  // stdin is not a TTY (e.g. CI) so prompts don't throw.
+  nonInteractive: boolean;
 }
 
 interface StepResult {
@@ -188,6 +192,7 @@ function parseArguments(): SetupOptions {
     skipInstall: false,
     update: false,
     verbose: false,
+    nonInteractive: false,
   };
 
   for (const arg of args) {
@@ -203,6 +208,11 @@ function parseArguments(): SetupOptions {
         break;
       case '--update':
         options.update = true;
+        break;
+      case '-y':
+      case '--yes':
+      case '--non-interactive':
+        options.nonInteractive = true;
         break;
       case '--verbose':
         options.verbose = true;
@@ -232,6 +242,8 @@ Options:
   --clean         Delete node_modules before install
   --skip-install  Skip the pnpm install step
   --update        Run "pnpm update" after install (mutates the lockfile; off by default)
+  -y, --yes       Non-interactive: no prompts; use existing .env.local, auto-generate
+  --non-interactive   missing secrets, apply defaults. Auto-enabled when stdin is not a TTY.
   --verbose       Extra output
   -h, --help      Show this help message
 
@@ -240,6 +252,7 @@ Examples:
   pnpm run setup:check        # Check configuration only
   pnpm run setup -- --clean   # Clean install
   pnpm run setup -- --update  # Also update dependencies
+  pnpm run setup -- --yes     # Headless / CI (no prompts)
 `);
 }
 
@@ -881,7 +894,15 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
   printStepHeader(2, totalSteps, 'Checking project origin');
   const detection = detectTemplateClone();
 
-  if (detection.isClone) {
+  if (detection.isClone && options.nonInteractive) {
+    console.log(chalk.yellow('  ⚠ Still connected to the MPNext template repository'));
+    if (detection.remoteUrl) {
+      console.log(chalk.gray(`    ${detection.remoteUrl}`));
+    }
+    console.log(chalk.gray('  Keeping git config as-is (non-interactive)'));
+    warnings++;
+    passedSteps++;
+  } else if (detection.isClone) {
     console.log(chalk.yellow('  ⚠ This appears to be a clone of the MPNext template'));
     if (detection.remoteUrl) {
       console.log(chalk.gray(`    ${detection.remoteUrl}`));
@@ -939,6 +960,10 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
       console.log(chalk.green('  ✓ Keeping current git configuration'));
       passedSteps++;
     }
+  } else if (!detection.hasGit && options.nonInteractive) {
+    console.log(chalk.gray('  ⚠ No git repository found (skipped init, non-interactive)'));
+    warnings++;
+    passedSteps++;
   } else if (!detection.hasGit) {
     console.log(chalk.yellow('  ⚠ No git repository found'));
 
@@ -982,10 +1007,12 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
 
   if (!envFileResult.success && fs.existsSync(ENV_EXAMPLE_PATH)) {
     printResult(envFileResult);
-    const shouldCreate = await confirm({
-      message: 'Create .env.local from .env.example?',
-      default: true,
-    });
+    const shouldCreate = options.nonInteractive
+      ? true
+      : await confirm({
+          message: 'Create .env.local from .env.example?',
+          default: true,
+        });
 
     if (shouldCreate) {
       envFileResult = await createEnvFile();
@@ -1027,130 +1054,151 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
     }
   }
 
-  console.log(chalk.yellow('\n  Ministry Platform Configuration'));
-  console.log(chalk.gray('  The OIDC, API, and File URLs will be derived from your MP host'));
+  if (options.nonInteractive) {
+    // No prompts — keep whatever .env.local already provides, generate any
+    // missing secrets, and apply documented defaults so a CI run can proceed.
+    console.log(
+      chalk.gray('  Non-interactive — keeping .env.local values; filling secrets/defaults')
+    );
 
-  const mpHost = await input({
-    message: 'Enter your Ministry Platform host (e.g., mpi.ministryplatform.com):',
-    default: currentHost || undefined,
-  });
-
-  if (mpHost) {
-    const derived = deriveMPUrls(mpHost);
-    updates.set('MINISTRY_PLATFORM_BASE_URL', derived.baseUrl);
-    updates.set('NEXT_PUBLIC_MINISTRY_PLATFORM_FILE_URL', derived.fileUrl);
-
-    console.log(chalk.green(`  ✓ MINISTRY_PLATFORM_BASE_URL = ${derived.baseUrl}`));
-    console.log(chalk.green(`  ✓ NEXT_PUBLIC_MINISTRY_PLATFORM_FILE_URL = ${derived.fileUrl}`));
-  }
-
-  // Always ask for OIDC_CLIENT_ID with default
-  console.log(chalk.yellow('\n  OAuth Client Configuration'));
-  const currentOidcClientId = currentEnv.get('OIDC_CLIENT_ID') || 'MPNextWidgets';
-
-  const oidcClientId = await input({
-    message: 'Enter OIDC_CLIENT_ID (OAuth client ID for user authentication):',
-    default: currentOidcClientId,
-  });
-
-  if (oidcClientId) {
-    updates.set('OIDC_CLIENT_ID', oidcClientId);
-    console.log(chalk.green(`  ✓ OIDC_CLIENT_ID = ${oidcClientId}`));
-  }
-
-  // Ask for OIDC_CLIENT_SECRET, showing the client ID for reference
-  const oidcClientSecret = await password({
-    message: `Enter OIDC_CLIENT_SECRET (${oidcClientId}):`,
-  });
-
-  if (oidcClientSecret) {
-    updates.set('OIDC_CLIENT_SECRET', oidcClientSecret);
-    console.log(chalk.green(`  ✓ OIDC_CLIENT_SECRET = ********`));
-  }
-
-  // Always ask for MINISTRY_PLATFORM_CLIENT_ID with default
-  console.log(chalk.yellow('\n  Ministry Platform API Client Configuration'));
-  const currentMpClientId = currentEnv.get('MINISTRY_PLATFORM_CLIENT_ID') || 'MPNextWidgets';
-
-  const mpClientId = await input({
-    message: 'Enter MINISTRY_PLATFORM_CLIENT_ID (API client ID for data access):',
-    default: currentMpClientId,
-  });
-
-  if (mpClientId) {
-    updates.set('MINISTRY_PLATFORM_CLIENT_ID', mpClientId);
-    console.log(chalk.green(`  ✓ MINISTRY_PLATFORM_CLIENT_ID = ${mpClientId}`));
-  }
-
-  // Ask for MINISTRY_PLATFORM_CLIENT_SECRET, showing the client ID for reference
-  const mpClientSecret = await password({
-    message: `Enter MINISTRY_PLATFORM_CLIENT_SECRET (${mpClientId}):`,
-  });
-
-  if (mpClientSecret) {
-    updates.set('MINISTRY_PLATFORM_CLIENT_SECRET', mpClientSecret);
-    console.log(chalk.green(`  ✓ MINISTRY_PLATFORM_CLIENT_SECRET = ********`));
-  }
-
-  // Variables handled specially (skip in regular loop)
-  const speciallyHandledVars = [
-    ...mpDerivedVars,
-    'OIDC_CLIENT_ID',
-    'OIDC_CLIENT_SECRET',
-    'MINISTRY_PLATFORM_CLIENT_ID',
-    'MINISTRY_PLATFORM_CLIENT_SECRET',
-  ];
-
-  // Now check for other missing/empty required variables
-  // eslint-disable-next-line prefer-const
-  let { result: envVarsResult, missing, empty } = validateEnvVars();
-
-  if (!envVarsResult.success) {
-    printResult(envVarsResult);
-
-    const issues = [...missing, ...empty];
-
-    // Process remaining variables (skip the ones we already handled)
-    for (const varDef of issues) {
-      // Skip variables that were handled specially
-      if (speciallyHandledVars.includes(varDef.name)) {
+    for (const varDef of ENV_VARS) {
+      const existing = currentEnv.get(varDef.name);
+      if (existing !== undefined && existing !== '') {
         continue;
       }
-
-      console.log(chalk.yellow(`\n  ${varDef.name}: ${varDef.description}`));
-
       if (varDef.autoGenerate) {
-        const shouldGenerate = await confirm({
-          message: `Auto-generate ${varDef.name}?`,
-          default: true,
-        });
+        updates.set(varDef.name, await generateAuthSecret());
+        console.log(chalk.green(`  ✓ Generated ${varDef.name}`));
+      } else if (varDef.defaultValue) {
+        updates.set(varDef.name, varDef.defaultValue);
+        console.log(chalk.green(`  ✓ ${varDef.name} = ${varDef.defaultValue}`));
+      }
+    }
+  } else {
+    console.log(chalk.yellow('\n  Ministry Platform Configuration'));
+    console.log(chalk.gray('  The OIDC, API, and File URLs will be derived from your MP host'));
 
-        if (shouldGenerate) {
-          const secret = await generateAuthSecret();
-          updates.set(varDef.name, secret);
-          console.log(chalk.green(`  ✓ Generated ${varDef.name}`));
-        } else {
+    const mpHost = await input({
+      message: 'Enter your Ministry Platform host (e.g., mpi.ministryplatform.com):',
+      default: currentHost || undefined,
+    });
+
+    if (mpHost) {
+      const derived = deriveMPUrls(mpHost);
+      updates.set('MINISTRY_PLATFORM_BASE_URL', derived.baseUrl);
+      updates.set('NEXT_PUBLIC_MINISTRY_PLATFORM_FILE_URL', derived.fileUrl);
+
+      console.log(chalk.green(`  ✓ MINISTRY_PLATFORM_BASE_URL = ${derived.baseUrl}`));
+      console.log(chalk.green(`  ✓ NEXT_PUBLIC_MINISTRY_PLATFORM_FILE_URL = ${derived.fileUrl}`));
+    }
+
+    // Always ask for OIDC_CLIENT_ID with default
+    console.log(chalk.yellow('\n  OAuth Client Configuration'));
+    const currentOidcClientId = currentEnv.get('OIDC_CLIENT_ID') || 'MPNextWidgets';
+
+    const oidcClientId = await input({
+      message: 'Enter OIDC_CLIENT_ID (OAuth client ID for user authentication):',
+      default: currentOidcClientId,
+    });
+
+    if (oidcClientId) {
+      updates.set('OIDC_CLIENT_ID', oidcClientId);
+      console.log(chalk.green(`  ✓ OIDC_CLIENT_ID = ${oidcClientId}`));
+    }
+
+    // Ask for OIDC_CLIENT_SECRET, showing the client ID for reference
+    const oidcClientSecret = await password({
+      message: `Enter OIDC_CLIENT_SECRET (${oidcClientId}):`,
+    });
+
+    if (oidcClientSecret) {
+      updates.set('OIDC_CLIENT_SECRET', oidcClientSecret);
+      console.log(chalk.green(`  ✓ OIDC_CLIENT_SECRET = ********`));
+    }
+
+    // Always ask for MINISTRY_PLATFORM_CLIENT_ID with default
+    console.log(chalk.yellow('\n  Ministry Platform API Client Configuration'));
+    const currentMpClientId = currentEnv.get('MINISTRY_PLATFORM_CLIENT_ID') || 'MPNextWidgets';
+
+    const mpClientId = await input({
+      message: 'Enter MINISTRY_PLATFORM_CLIENT_ID (API client ID for data access):',
+      default: currentMpClientId,
+    });
+
+    if (mpClientId) {
+      updates.set('MINISTRY_PLATFORM_CLIENT_ID', mpClientId);
+      console.log(chalk.green(`  ✓ MINISTRY_PLATFORM_CLIENT_ID = ${mpClientId}`));
+    }
+
+    // Ask for MINISTRY_PLATFORM_CLIENT_SECRET, showing the client ID for reference
+    const mpClientSecret = await password({
+      message: `Enter MINISTRY_PLATFORM_CLIENT_SECRET (${mpClientId}):`,
+    });
+
+    if (mpClientSecret) {
+      updates.set('MINISTRY_PLATFORM_CLIENT_SECRET', mpClientSecret);
+      console.log(chalk.green(`  ✓ MINISTRY_PLATFORM_CLIENT_SECRET = ********`));
+    }
+
+    // Variables handled specially (skip in regular loop)
+    const speciallyHandledVars = [
+      ...mpDerivedVars,
+      'OIDC_CLIENT_ID',
+      'OIDC_CLIENT_SECRET',
+      'MINISTRY_PLATFORM_CLIENT_ID',
+      'MINISTRY_PLATFORM_CLIENT_SECRET',
+    ];
+
+    // Now check for other missing/empty required variables
+    const { result: prelim, missing, empty } = validateEnvVars();
+
+    if (!prelim.success) {
+      printResult(prelim);
+
+      const issues = [...missing, ...empty];
+
+      // Process remaining variables (skip the ones we already handled)
+      for (const varDef of issues) {
+        // Skip variables that were handled specially
+        if (speciallyHandledVars.includes(varDef.name)) {
+          continue;
+        }
+
+        console.log(chalk.yellow(`\n  ${varDef.name}: ${varDef.description}`));
+
+        if (varDef.autoGenerate) {
+          const shouldGenerate = await confirm({
+            message: `Auto-generate ${varDef.name}?`,
+            default: true,
+          });
+
+          if (shouldGenerate) {
+            const secret = await generateAuthSecret();
+            updates.set(varDef.name, secret);
+            console.log(chalk.green(`  ✓ Generated ${varDef.name}`));
+          } else {
+            const value = await password({
+              message: `Enter ${varDef.name}:`,
+            });
+            if (value) {
+              updates.set(varDef.name, value);
+            }
+          }
+        } else if (varDef.sensitive) {
           const value = await password({
             message: `Enter ${varDef.name}:`,
           });
           if (value) {
             updates.set(varDef.name, value);
           }
-        }
-      } else if (varDef.sensitive) {
-        const value = await password({
-          message: `Enter ${varDef.name}:`,
-        });
-        if (value) {
-          updates.set(varDef.name, value);
-        }
-      } else {
-        const value = await input({
-          message: `Enter ${varDef.name}:`,
-          default: varDef.defaultValue,
-        });
-        if (value) {
-          updates.set(varDef.name, value);
+        } else {
+          const value = await input({
+            message: `Enter ${varDef.name}:`,
+            default: varDef.defaultValue,
+          });
+          if (value) {
+            updates.set(varDef.name, value);
+          }
         }
       }
     }
@@ -1163,7 +1211,7 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
 
   // Re-validate after all updates
   const revalidation = validateEnvVars();
-  envVarsResult = revalidation.result;
+  const envVarsResult = revalidation.result;
   if (envVarsResult.success) {
     printResult(envVarsResult);
     passedSteps++;
@@ -1182,7 +1230,7 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
     if (options.clean || !fs.existsSync(NODE_MODULES_PATH)) {
       let doClean = options.clean;
 
-      if (!options.clean && fs.existsSync(NODE_MODULES_PATH)) {
+      if (!options.clean && !options.nonInteractive && fs.existsSync(NODE_MODULES_PATH)) {
         doClean = await confirm({
           message: 'Perform clean install (delete node_modules)?',
           default: false,
@@ -1253,9 +1301,21 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
   } else if (countFilesInDir(MODELS_PATH) > 0) {
     // Models are committed to the repo, so the build does not depend on a
     // live MP connection. Treat a failed regen (e.g. unreachable tenant) as a
-    // warning rather than a fatal error.
+    // warning rather than a fatal error — but make the staleness risk loud:
+    // the committed models come from a reference tenant and may not match a
+    // fork's own instance (custom fields, etc.) until a successful regen.
     console.log(
-      chalk.yellow('  ⚠ Type generation failed; using committed models/ (regen later)')
+      chalk.yellow('  ⚠ Type generation failed — falling back to committed models/')
+    );
+    console.log(
+      chalk.yellow(
+        '    These are from a reference tenant and may NOT match your instance.'
+      )
+    );
+    console.log(
+      chalk.yellow(
+        '    Run `pnpm mp:generate:models` against your MP instance before relying on the types.'
+      )
     );
     if (!options.verbose && generateResult.output) {
       console.log(chalk.gray(generateResult.output.slice(0, 500)));
@@ -1331,6 +1391,14 @@ async function main(): Promise<void> {
   if (options.check) {
     exitCode = runCheckMode();
   } else {
+    // Prompts (inquirer) throw without a TTY, so auto-enable non-interactive
+    // mode in CI / piped shells rather than crashing mid-run.
+    if (!options.nonInteractive && !process.stdin.isTTY) {
+      options.nonInteractive = true;
+      console.log(
+        chalk.yellow('No interactive terminal detected — running in non-interactive mode.')
+      );
+    }
     exitCode = await runInteractiveSetup(options);
   }
 
