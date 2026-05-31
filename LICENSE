@@ -1,15 +1,71 @@
+MPNext-Widgets License
 Copyright (c) 2026 ACS Technologies (ACST). All rights reserved.
 
-This software and its associated source code, documentation, and assets
-(the "Software") are proprietary and confidential to ACS Technologies (ACST).
+This license governs use of the accompanying software, source code,
+documentation, and assets (the "Software"). By using, copying, or modifying
+the Software, you accept this license. If you do not accept it, you have no
+rights to the Software.
 
-No part of the Software may be used, copied, modified, merged, published,
-distributed, sublicensed, or disclosed, in whole or in part, by any means,
-without the prior explicit written permission of ACS Technologies (ACST).
+1. Definitions
 
-Unauthorized use, reproduction, or distribution of the Software, or any
-portion of it, is strictly prohibited.
+   "MinistryPlatform Customer" means an organization or individual that, at the
+   relevant time, holds a current and active subscription to or license for
+   MinistryPlatform from ACS Technologies (ACST) or its authorized resellers.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+2. Grant of Rights
+
+   Subject to the conditions and restrictions below, and only for so long as
+   you are a MinistryPlatform Customer, ACS Technologies (ACST) grants you a
+   worldwide, royalty-free, non-exclusive license to:
+
+   (a) use and run the Software, including in production, for your own
+       organization and your own MinistryPlatform instances;
+
+   (b) modify, extend, adapt, and create derivative works of the Software for
+       those purposes; and
+
+   (c) share the Software and your modifications or derivative works with other
+       MinistryPlatform Customers.
+
+3. Conditions
+
+   (a) You must retain this license, the copyright notice, and all attribution
+       in all copies or substantial portions of the Software, including in any
+       modifications or derivative works you distribute.
+
+   (b) You may distribute the Software, or modifications or derivative works of
+       it, only to recipients who are themselves MinistryPlatform Customers and
+       who agree to the terms of this license.
+
+4. Restrictions
+
+   (a) You may not sell, rent, lease, or otherwise commercialize the Software,
+       or charge any fee for the Software itself (this does not restrict you
+       from charging for your own services that make use of the Software).
+
+   (b) You may not sublicense, distribute, or otherwise make the Software
+       available to any person or organization that is not a MinistryPlatform
+       Customer.
+
+   (c) All rights not expressly granted in this license are reserved by ACS
+       Technologies (ACST). No rights are granted to anyone who is not a
+       MinistryPlatform Customer.
+
+5. Termination
+
+   The rights granted in this license apply only while you are a
+   MinistryPlatform Customer. If you cease to be a MinistryPlatform Customer,
+   the rights granted in Section 2 terminate automatically, and you must stop
+   using the Software and destroy your copies, except for copies retained by
+   recipients who remain MinistryPlatform Customers under their own grant of
+   this license.
+
+6. Disclaimer of Warranty and Limitation of Liability
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL ACS
+   TECHNOLOGIES (ACST) BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF,
+   OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
