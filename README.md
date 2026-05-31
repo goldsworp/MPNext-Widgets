@@ -101,14 +101,15 @@ Two layers, used by different surfaces:
 
 ### Quick Setup (Automated)
 
-An interactive setup command walks you through the whole process. It bootstraps itself — if pnpm or `node_modules` are missing, it installs them first, so this works on a clean clone:
+An interactive setup command walks you through the whole process. The bootstrap entry point needs **only Node** (already a prerequisite) — it enables pnpm via Corepack, installs dependencies, then launches setup, so this works on a clean machine with nothing but Node and Git:
 
 ```bash
 git clone https://github.com/MinistryPlatform-Community/MPNext-Widgets.git
 cd MPNext-Widgets
-corepack enable   # one-time: makes the pinned pnpm available
-pnpm setup
+node scripts/setup-bootstrap.mjs
 ```
+
+> **Already have pnpm?** `corepack enable && pnpm setup` (or just `pnpm setup`) runs the exact same flow. The `node` command above is the cold-start path because it doesn't presuppose pnpm is installed.
 
 The interactive setup command will:
 1. Verify Node.js version (v20.9+ required)
@@ -121,7 +122,7 @@ The interactive setup command will:
 8. Generate Ministry Platform types (a warning, not a failure, when committed types already exist)
 9. Run a production build to verify configuration
 
-**Additional setup options:**
+**Additional setup options** (flags forward to either entry point — e.g. `node scripts/setup-bootstrap.mjs --clean`):
 ```bash
 pnpm setup:check            # Validation only (no changes)
 pnpm setup -- --clean       # Clean install (delete node_modules first)
