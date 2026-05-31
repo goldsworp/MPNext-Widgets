@@ -94,36 +94,39 @@ Two layers, used by different surfaces:
 ## Prerequisites
 
 - **Node.js**: v20.9 or higher (required by Next.js 16; CI runs on Node 22)
-- **Package Manager**: **pnpm 10.x** (the `preinstall` guard refuses `npm install` / `yarn install`)
+- **Package Manager**: **pnpm 10.x** (the `preinstall` guard refuses `npm install` / `yarn install`). The version is pinned via `packageManager` in `package.json` — enable it with **`corepack enable`** (Corepack ships with Node) and the correct pnpm is fetched automatically. No manual install needed.
 - **Ministry Platform**: Active instance with API credentials and an OAuth client configured (see [OAuth Setup](#oauth-setup))
 
 ## Getting Started
 
-### Quick Setup with Claude Code
+### Quick Setup (Automated)
 
-If you have [Claude Code](https://claude.ai/code) installed, the setup process is automated:
+An interactive setup command walks you through the whole process. It bootstraps itself — if pnpm or `node_modules` are missing, it installs them first, so this works on a clean clone:
 
 ```bash
 git clone https://github.com/MinistryPlatform-Community/MPNext-Widgets.git
 cd MPNext-Widgets
+corepack enable   # one-time: makes the pinned pnpm available
 pnpm setup
 ```
 
 The interactive setup command will:
-1. Verify Node.js version (v18+ required)
-2. Check git status
-3. Create `.env.local` from `.env.example` (if needed)
-4. Prompt for missing environment variables (MP host, OAuth client, secrets)
-5. Auto-generate `BETTER_AUTH_SECRET` and `EMBED_JWT_SECRET` (optional)
-6. Install workspace dependencies
-7. Generate Ministry Platform types
-8. Run a production build to verify configuration
+1. Verify Node.js version (v20.9+ required)
+2. Check the git origin (offer to fork or re-init if it's still the template repo)
+3. Check git status (warn on uncommitted changes)
+4. Create `.env.local` from `.env.example` (if needed)
+5. Prompt for environment variables (MP host, OAuth client, secrets) and auto-generate `BETTER_AUTH_SECRET` / `EMBED_JWT_SECRET`
+6. Install workspace dependencies (`pnpm install`)
+7. Optionally update dependencies (only with `--update`; skipped by default to preserve the lockfile)
+8. Generate Ministry Platform types (a warning, not a failure, when committed types already exist)
+9. Run a production build to verify configuration
 
 **Additional setup options:**
 ```bash
 pnpm setup:check            # Validation only (no changes)
 pnpm setup -- --clean       # Clean install (delete node_modules first)
-pnpm setup -- --skip-install # Skip pnpm install/update
+pnpm setup -- --skip-install # Skip pnpm install
+pnpm setup -- --update      # Also run pnpm update (mutates the lockfile)
 pnpm setup -- --verbose     # Extra output
 pnpm setup -- --help        # Show all options
 ```
@@ -145,7 +148,10 @@ cd MPNext-Widgets
 
 #### 2. Install Dependencies
 
+If you don't already have pnpm, enable it via Corepack (installs the version pinned in `package.json`):
+
 ```bash
+corepack enable
 pnpm install
 ```
 
@@ -175,6 +181,10 @@ MINISTRY_PLATFORM_BASE_URL=https://your-instance.ministryplatform.com/ministrypl
 # Public Keys
 NEXT_PUBLIC_MINISTRY_PLATFORM_FILE_URL=https://your-instance.ministryplatform.com/ministryplatformapi/files
 NEXT_PUBLIC_APP_NAME=MPNext-Widgets
+
+# Organization name baked into the embed SDK at build time (e.g. SMS opt-in
+# consent text). Unset falls back to "our organization". Consumed by Vite.
+VITE_ORG_NAME=
 
 # Embed Widgets
 # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
@@ -245,7 +255,9 @@ Copy the generated values to your `.env.local` as `BETTER_AUTH_SECRET` and `EMBE
 
 ### 4. Generate Ministry Platform Types
 
-Before running the application, generate TypeScript types from your Ministry Platform database schema:
+> **Note**: A full set of generated models is **committed to the repo**, so the project builds and runs without a live MP connection. Regenerating is only needed to match your own tenant's schema or after a schema change — it is not a prerequisite for a first build.
+
+To regenerate TypeScript types from your Ministry Platform database schema:
 
 ```bash
 pnpm mp:generate:models
@@ -300,6 +312,7 @@ pnpm dev
 - **"Invalid client"**: Check OAuth client ID and secret
 - **Widget 401 / CORS error**: Confirm `EMBED_ALLOWED_ORIGINS` includes the host page origin and `EMBED_JWT_SECRET` is set
 - **Auto-login after logout**: Verify post-logout redirect URIs are configured in the MP OAuth client (OIDC RP-initiated logout requires these)
+- **Native build script errors (esbuild / sharp / unrs-resolver)**: pnpm 10 blocks dependency build scripts by default. If a postinstall step is required (e.g. `sharp` for some Next.js image paths), approve them with `pnpm approve-builds`
 
 ### Production Deployment
 

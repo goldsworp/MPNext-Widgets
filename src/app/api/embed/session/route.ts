@@ -25,7 +25,15 @@ export async function POST(req: NextRequest) {
   const fallbackCors = buildFallbackCorsHeaders(origin);
 
   try {
-    const body: SessionRequest = await req.json();
+    let body: SessionRequest;
+    try {
+      body = (await req.json()) as SessionRequest;
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid or empty JSON body" },
+        { status: 400, headers: fallbackCors },
+      );
+    }
     const { wid, mpUserToken } = body;
 
     if (!wid) {

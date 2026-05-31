@@ -30,6 +30,7 @@ interface SetupOptions {
   check: boolean;
   clean: boolean;
   skipInstall: boolean;
+  update: boolean;
   verbose: boolean;
 }
 
@@ -76,25 +77,43 @@ const NEXT_BUILD_PATH = path.join(PROJECT_ROOT, '.next');
 
 const REQUIRED_NODE_VERSION = 20;
 
-// Patterns to detect if this is a clone of the MPNext template repository
+// `owner/repo` slugs that identify a clone still pointing at an upstream
+// template repository (rather than the developer's own fork).
 const TEMPLATE_REPO_PATTERNS = [
+  'MinistryPlatform-Community/MPNext-Widgets',
   'MinistryPlatform-Community/mpnext',
   'MinistryPlatform-Community/ccm-pwa',
 ];
+
+// Extract a normalized `owner/repo` slug from any git remote URL form:
+//   https://github.com/Owner/Repo.git
+//   git@github.com:Owner/Repo.git
+//   ssh://git@github.com/Owner/Repo
+function parseRepoSlug(remoteUrl: string): string | null {
+  const cleaned = remoteUrl.trim().replace(/\.git$/i, '');
+  // Take the last two path segments (owner + repo), splitting on / or :
+  const segments = cleaned.split(/[/:]/).filter(Boolean);
+  if (segments.length < 2) {
+    return null;
+  }
+  return segments.slice(-2).join('/').toLowerCase();
+}
 
 const ENV_VARS: EnvVar[] = [
   // Required variables
   {
     name: 'OIDC_CLIENT_ID',
-    required: true,
+    required: false,
     sensitive: false,
-    description: 'OAuth client ID for user authentication',
+    description:
+      'OAuth client ID for user login (optional — falls back to MINISTRY_PLATFORM_CLIENT_ID)',
   },
   {
     name: 'OIDC_CLIENT_SECRET',
-    required: true,
+    required: false,
     sensitive: true,
-    description: 'OAuth client secret for user authentication',
+    description:
+      'OAuth client secret for user login (optional — falls back to MINISTRY_PLATFORM_CLIENT_SECRET)',
   },
   {
     name: 'MINISTRY_PLATFORM_CLIENT_ID',
@@ -167,6 +186,7 @@ function parseArguments(): SetupOptions {
     check: false,
     clean: false,
     skipInstall: false,
+    update: false,
     verbose: false,
   };
 
@@ -180,6 +200,9 @@ function parseArguments(): SetupOptions {
         break;
       case '--skip-install':
         options.skipInstall = true;
+        break;
+      case '--update':
+        options.update = true;
         break;
       case '--verbose':
         options.verbose = true;
@@ -207,7 +230,8 @@ Usage: pnpm run setup [options]
 Options:
   --check         Validation-only mode (no modifications)
   --clean         Delete node_modules before install
-  --skip-install  Skip pnpm install/update steps
+  --skip-install  Skip the pnpm install step
+  --update        Run "pnpm update" after install (mutates the lockfile; off by default)
   --verbose       Extra output
   -h, --help      Show this help message
 
@@ -215,6 +239,7 @@ Examples:
   pnpm run setup              # Interactive setup
   pnpm run setup:check        # Check configuration only
   pnpm run setup -- --clean   # Clean install
+  pnpm run setup -- --update  # Also update dependencies
 `);
 }
 
@@ -388,7 +413,7 @@ function printResult(result: StepResult): void {
 async function generateAuthSecret(): Promise<string> {
   // Generate a random secret using Node.js crypto
   const { randomBytes } = await import('node:crypto');
-  return randomBytes(32).toString('base64');
+  return randomBytes(32).toString('base64url');
 }
 
 function normalizeMPHost(input: string): string {
@@ -428,12 +453,11 @@ function detectTemplateClone(): CloneDetectionResult {
 
   const remoteUrl = result.output.trim();
 
-  // Check if the remote URL matches any of the template repo patterns
-  const isClone = TEMPLATE_REPO_PATTERNS.some(
-    (pattern) =>
-      remoteUrl.includes(pattern) ||
-      remoteUrl.toLowerCase().includes(pattern.toLowerCase())
-  );
+  // Compare the parsed owner/repo slug against the template patterns so a
+  // partial substring (e.g. "mpnext" inside an unrelated URL) cannot trip it.
+  const slug = parseRepoSlug(remoteUrl);
+  const isClone = slug !== null &&
+    TEMPLATE_REPO_PATTERNS.some((pattern) => pattern.toLowerCase() === slug);
 
   return { isClone, remoteUrl, hasGit: true, hasOrigin: true };
 }
@@ -560,14 +584,14 @@ function checkNodeVersion(): StepResult {
   if (version < REQUIRED_NODE_VERSION) {
     return {
       success: false,
-      message: `Node.js v${version} is below minimum required v${REQUIRED_NODE_VERSION}`,
+      message: `Node.js v${version} is below the required v20.9`,
       details: 'Please upgrade Node.js to v20.9 or later',
     };
   }
 
   return {
     success: true,
-    message: `Node.js ${process.version} (meets v${REQUIRED_NODE_VERSION}+ requirement)`,
+    message: `Node.js ${process.version} (meets v20.9+ requirement)`,
   };
 }
 
@@ -848,7 +872,7 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
   printResult(nodeResult);
 
   if (!nodeResult.success) {
-    console.log(chalk.red('\nSetup cannot continue without Node.js v20.9 or later.'));
+    console.log(chalk.red('\nSetup cannot continue without Node.js v20.9 or later.\n'));
     return 1;
   }
   passedSteps++;
@@ -1022,7 +1046,7 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
 
   // Always ask for OIDC_CLIENT_ID with default
   console.log(chalk.yellow('\n  OAuth Client Configuration'));
-  const currentOidcClientId = currentEnv.get('OIDC_CLIENT_ID') || 'TM.Widgets';
+  const currentOidcClientId = currentEnv.get('OIDC_CLIENT_ID') || 'MPNextWidgets';
 
   const oidcClientId = await input({
     message: 'Enter OIDC_CLIENT_ID (OAuth client ID for user authentication):',
@@ -1046,7 +1070,7 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
 
   // Always ask for MINISTRY_PLATFORM_CLIENT_ID with default
   console.log(chalk.yellow('\n  Ministry Platform API Client Configuration'));
-  const currentMpClientId = currentEnv.get('MINISTRY_PLATFORM_CLIENT_ID') || 'MPNext';
+  const currentMpClientId = currentEnv.get('MINISTRY_PLATFORM_CLIENT_ID') || 'MPNextWidgets';
 
   const mpClientId = await input({
     message: 'Enter MINISTRY_PLATFORM_CLIENT_ID (API client ID for data access):',
@@ -1186,10 +1210,16 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
     }
   }
 
-  // Step 7: pnpm update
+  // Step 7: pnpm update (opt-in — mutating the lockfile breaks the
+  // reproducible install the committed pnpm-lock.yaml provides)
   printStepHeader(7, totalSteps, 'Updating dependencies');
 
-  if (options.skipInstall) {
+  if (!options.update) {
+    console.log(
+      chalk.gray('  Skipped (committed lockfile kept; pass --update to refresh)')
+    );
+    passedSteps++;
+  } else if (options.skipInstall) {
     console.log(chalk.gray('  Skipped (--skip-install)'));
     passedSteps++;
   } else {
@@ -1220,8 +1250,20 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
     const fileCount = countFilesInDir(MODELS_PATH);
     console.log(chalk.green(`  ✓ ${fileCount} files generated`));
     passedSteps++;
+  } else if (countFilesInDir(MODELS_PATH) > 0) {
+    // Models are committed to the repo, so the build does not depend on a
+    // live MP connection. Treat a failed regen (e.g. unreachable tenant) as a
+    // warning rather than a fatal error.
+    console.log(
+      chalk.yellow('  ⚠ Type generation failed; using committed models/ (regen later)')
+    );
+    if (!options.verbose && generateResult.output) {
+      console.log(chalk.gray(generateResult.output.slice(0, 500)));
+    }
+    warnings++;
+    passedSteps++;
   } else {
-    console.log(chalk.red('  ✗ Type generation failed'));
+    console.log(chalk.red('  ✗ Type generation failed (no committed models found)'));
     if (!options.verbose && generateResult.output) {
       console.log(chalk.gray(generateResult.output.slice(0, 500)));
     }
