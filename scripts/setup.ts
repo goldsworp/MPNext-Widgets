@@ -429,6 +429,31 @@ async function generateAuthSecret(): Promise<string> {
   return randomBytes(32).toString('base64url');
 }
 
+// A 32-byte secret is 43 chars once base64url-encoded. Anything shorter cannot
+// be a valid auto-generated secret.
+const MIN_SECRET_LENGTH = 32;
+
+// .env.example ships human-readable placeholders (e.g.
+// "your-better-auth-secret-min-32-chars"). These are non-empty, so a naive
+// "is it set?" check treats them as configured and skips generation. Detect
+// them so auto-generated secrets get a real value instead of the placeholder.
+function isPlaceholderValue(value: string): boolean {
+  return /^your-/i.test(value.trim());
+}
+
+// True when a required var still needs a value written. Covers missing/empty
+// for every var, plus leftover placeholders and too-short values for the
+// auto-generated secrets (BETTER_AUTH_SECRET, EMBED_JWT_SECRET).
+function needsValue(varDef: EnvVar, value: string | undefined): boolean {
+  if (value === undefined || value === '') {
+    return true;
+  }
+  if (varDef.autoGenerate) {
+    return isPlaceholderValue(value) || value.length < MIN_SECRET_LENGTH;
+  }
+  return false;
+}
+
 function normalizeMPHost(input: string): string {
   // Remove protocol if present
   let host = input.trim();
@@ -684,7 +709,8 @@ function validateEnvVars(): {
 
     if (value === undefined) {
       missing.push(varDef);
-    } else if (value === '') {
+    } else if (needsValue(varDef, value)) {
+      // Empty, or a leftover placeholder / too-short auto-generated secret.
       empty.push(varDef);
     }
   }
@@ -706,7 +732,7 @@ function validateEnvVars(): {
   return {
     result: {
       success: false,
-      message: `Missing or empty: ${issueNames}`,
+      message: `Missing, empty, or placeholder: ${issueNames}`,
     },
     missing,
     empty,
@@ -1063,7 +1089,7 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
 
     for (const varDef of ENV_VARS) {
       const existing = currentEnv.get(varDef.name);
-      if (existing !== undefined && existing !== '') {
+      if (!needsValue(varDef, existing)) {
         continue;
       }
       if (varDef.autoGenerate) {
@@ -1092,28 +1118,37 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
       console.log(chalk.green(`  ✓ NEXT_PUBLIC_MINISTRY_PLATFORM_FILE_URL = ${derived.fileUrl}`));
     }
 
-    // Always ask for OIDC_CLIENT_ID with default
-    console.log(chalk.yellow('\n  OAuth Client Configuration'));
-    const currentOidcClientId = currentEnv.get('OIDC_CLIENT_ID') || 'MPNextWidgets';
+    // OIDC client is optional — if left blank, the code falls back to the MP
+    // API client credentials below (src/lib/auth.ts). Pressing Enter keeps it
+    // blank rather than defaulting to a value.
+    console.log(chalk.yellow('\n  OAuth Client Configuration (optional)'));
+    console.log(
+      chalk.gray('  Press Enter to skip — falls back to MINISTRY_PLATFORM_CLIENT_ID/_SECRET')
+    );
+    const currentOidcClientId = currentEnv.get('OIDC_CLIENT_ID') || '';
 
     const oidcClientId = await input({
-      message: 'Enter OIDC_CLIENT_ID (OAuth client ID for user authentication):',
-      default: currentOidcClientId,
+      message: 'Enter OIDC_CLIENT_ID (optional):',
+      default: currentOidcClientId || undefined,
     });
 
     if (oidcClientId) {
       updates.set('OIDC_CLIENT_ID', oidcClientId);
       console.log(chalk.green(`  ✓ OIDC_CLIENT_ID = ${oidcClientId}`));
+    } else {
+      console.log(chalk.gray('  ⊘ OIDC_CLIENT_ID left blank (using MP API client)'));
     }
 
-    // Ask for OIDC_CLIENT_SECRET, showing the client ID for reference
+    // Ask for OIDC_CLIENT_SECRET only when a client ID was provided.
     const oidcClientSecret = await password({
-      message: `Enter OIDC_CLIENT_SECRET (${oidcClientId}):`,
+      message: 'Enter OIDC_CLIENT_SECRET (optional):',
     });
 
     if (oidcClientSecret) {
       updates.set('OIDC_CLIENT_SECRET', oidcClientSecret);
       console.log(chalk.green(`  ✓ OIDC_CLIENT_SECRET = ********`));
+    } else {
+      console.log(chalk.gray('  ⊘ OIDC_CLIENT_SECRET left blank'));
     }
 
     // Always ask for MINISTRY_PLATFORM_CLIENT_ID with default
@@ -1365,6 +1400,30 @@ async function runInteractiveSetup(options: SetupOptions): Promise<number> {
       chalk.red(`✗ ${passedSteps}/${totalChecks} steps passed, ${failedSteps} failed`)
     );
   }
+
+  // Manual step the automated setup cannot perform — MP Widgets enforces its
+  // own server-side origin allowlist (separate from EMBED_ALLOWED_ORIGINS), so
+  // the next-user-menu widget's MP-hosted widgets are rejected locally until
+  // the dev origins are added on the MP server. See README → "MinistryPlatform
+  // Widget Origins (Local Dev)".
+  console.log(chalk.bold.yellow('\nManual step required (MinistryPlatform server):'));
+  console.log(
+    chalk.yellow('  The next-user-menu widget embeds MP-hosted Shadow DOM widgets that enforce')
+  );
+  console.log(
+    chalk.yellow('  their own origin allowlist. To load them from local dev, on the MP Web Server:')
+  );
+  console.log(
+    chalk.white(
+      '    1. Add to [MPWebRoot]/widgets/wwwroot/_DomainData/saasdomains/customer.config (<appSettings>):'
+    )
+  );
+  console.log(chalk.gray('         <add key="localhost3000" value="http://localhost:3000" />'));
+  console.log(chalk.gray('         <add key="localhost5173" value="http://localhost:5173" />'));
+  console.log(chalk.white('    2. Recycle the "Widgets" application pool in IIS Manager.'));
+  console.log(
+    chalk.gray('  Full walkthrough: README → "MinistryPlatform Widget Origins (Local Dev)".')
+  );
 
   console.log(chalk.bold('\nNext steps:'));
   console.log(chalk.white("  1. Run 'pnpm run dev' to start development server"));

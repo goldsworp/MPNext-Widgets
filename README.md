@@ -24,6 +24,7 @@ Embeddable Web Component widgets for [Ministry Platform](https://www.ministrypla
   - [Quick Setup (Automated)](#quick-setup-automated)
   - [Manual Setup](#manual-setup)
   - [OAuth Setup](#oauth-setup)
+  - [MinistryPlatform Widget Origins (Local Dev)](#ministryplatform-widget-origins-local-dev)
 - [Project Structure](#project-structure)
 - [Widgets](#widgets)
 - [Ministry Platform Integration](#ministry-platform-integration)
@@ -260,6 +261,31 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 
 Copy the generated values to your `.env.local` as `BETTER_AUTH_SECRET` and `EMBED_JWT_SECRET`.
 
+### MinistryPlatform Widget Origins (Local Dev)
+
+The `next-user-menu` widget embeds MinistryPlatform's own Shadow DOM widgets, which are served by the MP Widgets script (`MPWidgets.js`). That script enforces a **server-side allowlist of permitted origins** in the core MinistryPlatform Widgets configuration — separate from the app's `EMBED_ALLOWED_ORIGINS` and from the OAuth redirect URIs above. To load these widgets from your local dev servers, you must add `http://localhost:3000` and `http://localhost:5173` to that allowlist.
+
+#### 1. Edit the customer config
+
+On the MP Web Server, open:
+
+```
+[MPWebRoot]/widgets/wwwroot/_DomainData/saasdomains/customer.config
+```
+
+Add these two entries inside the `<appSettings>` section:
+
+```xml
+<add key="localhost3000" value="http://localhost:3000" />
+<add key="localhost5173" value="http://localhost:5173" />
+```
+
+#### 2. Recycle the Widgets application pool
+
+Open **IIS Manager**, navigate to **Application Pools**, right-click the **Widgets** app pool for your MP instance, and select **Recycle…**. After recycling, the MP Widgets script will accept requests from your local dev origins.
+
+> **Important**: Without these entries, the MP-hosted widgets inside `next-user-menu` will be rejected by the MP Widgets origin allowlist even though the app's own JWT/CORS auth (`EMBED_ALLOWED_ORIGINS`) already permits the origin. See the [Ministry Platform Provider docs](./src/lib/providers/ministry-platform/docs/README.md#mp-widgets-dev-setup) for the full walkthrough (including the IIS recycle screenshot).
+
 ### 4. Generate Ministry Platform Types
 
 > **Note**: A full set of generated models is **committed to the repo**, so the project builds and runs without a live MP connection. They come from a **reference tenant**, so a first build always succeeds — but on a fork pointed at a different MP instance they may not match your schema (custom fields, table differences). The build will compile against the committed types either way, so **regenerate against your own instance before relying on the types**:
@@ -335,10 +361,11 @@ When deploying to production:
 2. Add production redirect URI (`https://yourdomain.com/api/auth/oauth2/callback/ministry-platform`) to the MP OAuth client
 3. Add production post-logout redirect URIs
 4. Add the external host site origin(s) to `EMBED_ALLOWED_ORIGINS`
-5. Ensure all environment variables are set in your hosting provider
-6. Enable HTTPS/SSL certificates
-7. Run `pnpm build` to produce a hashed SDK bundle in `public/embed-sdk/`
-8. Test the complete embed flow against a staging host page before going live
+5. Add the external host site origin(s) to the **core MinistryPlatform Widgets origin allowlist** (`customer.config` on the MP Web Server) and recycle the **Widgets** IIS app pool — required for the MP-hosted widgets inside `next-user-menu` (see [MinistryPlatform Widget Origins](#ministryplatform-widget-origins-local-dev) and the [provider docs](./src/lib/providers/ministry-platform/docs/README.md#mp-widgets-dev-setup))
+6. Ensure all environment variables are set in your hosting provider
+7. Enable HTTPS/SSL certificates
+8. Run `pnpm build` to produce a hashed SDK bundle in `public/embed-sdk/`
+9. Test the complete embed flow against a staging host page before going live
 
 ## Project Structure
 
