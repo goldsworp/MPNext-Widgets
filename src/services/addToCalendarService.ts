@@ -83,7 +83,7 @@ export class AddToCalendarService {
         if (location.Address_ID) {
           const addresses = await this.mp!.getTableRecords<AddressRecord>({
             table: "Addresses",
-            select: "Address_ID,Address_Line_1,City,State/Region,Postal_Code",
+            select: "Address_ID,Address_Line_1,City,[State/Region],Postal_Code",
             filter: `Address_ID = ${location.Address_ID}`,
             top: 1,
           });
