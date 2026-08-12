@@ -55,7 +55,14 @@ export class FullCalendarWidget extends MPNextWidget {
   private campusLabel: string = "Campus";
 
   static get observedAttributes() {
-    return ["api-host", "congregation-id", "view", "show-toolbar"];
+    return [
+      "api-host",
+      "congregation-id",
+      "view",
+      "show-toolbar",
+      "campus-label",
+      "event-detail-url-template",
+    ];
   }
 
   async connectedCallback() {
@@ -123,6 +130,11 @@ export class FullCalendarWidget extends MPNextWidget {
       this.showToolbar = next !== "false";
       this.render();
       this.rebuildCurrentView();
+    } else if (name === "campus-label") {
+      this.campusLabel = next || "Campus";
+      this.rebuildCurrentView();
+    } else if (name === "event-detail-url-template") {
+      this.eventDetailUrlTemplate = next || undefined;
     }
   }
 
