@@ -5,7 +5,7 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Early returns for public paths
-  if (pathname.startsWith('/api') || pathname === '/signin' || pathname.startsWith('/demo')) {
+  if (pathname.startsWith('/api') || pathname === '/signin' || pathname.startsWith('/demo') || pathname.startsWith('/embed-sdk')) {
     return NextResponse.next();
   }
 

@@ -61,7 +61,12 @@
       "minimatch@3>brace-expansion": "1.1.15",
       "postcss": ">=8.5.10",
       "kysely": "^0.28.17"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
   },
   "devDependencies": {
     "@inquirer/prompts": "^8.5.1",
