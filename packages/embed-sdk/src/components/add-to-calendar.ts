@@ -131,6 +131,19 @@ export class AddToCalendarWidget extends MPNextWidget {
     this.eventId = parseInt(this.getAttribute("event-id") || "0", 10);
   }
 
+  static get observedAttributes() {
+    return ["event-id"];
+  }
+
+  attributeChangedCallback(name: string, _old: string | null, next: string | null) {
+    if (name === "event-id" && this.isConnected) {
+      this.eventId = parseInt(next || "0", 10);
+      this.state = { loading: true, error: null, event: null, cdnLoaded: false };
+      this.renderLoading();
+      this.loadEvent();
+    }
+  }
+
   async connectedCallback() {
     this.injectStyles(this.getStyles());
     this.renderLoading();
