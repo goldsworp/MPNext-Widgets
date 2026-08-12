@@ -13,6 +13,7 @@ interface CalendarEventData {
   City: string | null;
   State: string | null;
   Postal_Code: string | null;
+  Time_Zone: string;
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -37,18 +38,27 @@ function pad2(n: number): string {
 }
 
 /**
- * Parse an ISO datetime string and return { date: "YYYY-MM-DD", time: "HH:MM" }
- * without any timezone conversion — the raw values from MP are local time.
+ * Parse an MP datetime string and return { date: "YYYY-MM-DD", time: "HH:MM" }
+ * without any timezone conversion. MP sends wall-clock values with no zone
+ * marker (e.g. "2026-08-14T18:00:00") — `new Date(...)` would parse a
+ * zone-less date-*time* string as the browser's own local time (per the JS
+ * spec) and silently shift it, so this parses the components directly out
+ * of the string instead of ever constructing a Date from it.
  */
 function parseDateTime(isoString: string): { date: string; time: string } {
+  const match = isoString.match(/^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+  if (match) {
+    const [, year, month, day, hours, minutes] = match;
+    return { date: `${year}-${month}-${day}`, time: `${hours}:${minutes}` };
+  }
+  // Fallback for an unexpected format (e.g. a zone-aware instant) — MP never
+  // sends this today, but parse it as an actual instant rather than guessing.
   const d = new Date(isoString);
-  // Use UTC getters so we don't get browser TZ offset applied on top.
-  // MP datetimes are stored without timezone info so we treat them as-is.
-  const year = d.getUTCFullYear();
-  const month = pad2(d.getUTCMonth() + 1);
-  const day = pad2(d.getUTCDate());
-  const hours = pad2(d.getUTCHours());
-  const minutes = pad2(d.getUTCMinutes());
+  const year = d.getFullYear();
+  const month = pad2(d.getMonth() + 1);
+  const day = pad2(d.getDate());
+  const hours = pad2(d.getHours());
+  const minutes = pad2(d.getMinutes());
   return { date: `${year}-${month}-${day}`, time: `${hours}:${minutes}` };
 }
 
@@ -95,8 +105,8 @@ function buildIcsContent(event: CalendarEventData): string {
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${dtStamp}`,
-    `DTSTART;TZID=America/Chicago:${dtStart}`,
-    `DTEND;TZID=America/Chicago:${dtEnd}`,
+    `DTSTART;TZID=${event.Time_Zone}:${dtStart}`,
+    `DTEND;TZID=${event.Time_Zone}:${dtEnd}`,
     `SUMMARY:${event.Event_Title}`,
     ...(description ? [`DESCRIPTION:${description}`] : []),
     ...(location ? [`LOCATION:${location}`] : []),
@@ -248,8 +258,8 @@ export class AddToCalendarWidget extends MPNextWidget {
     btn.setAttribute("endDate", end.date);
     btn.setAttribute("startTime", start.time);
     btn.setAttribute("endTime", end.time);
-    btn.setAttribute("timeZone", "America/Chicago");
-    btn.setAttribute("options", "'Apple','Google','iCal','Outlook.com'");
+    btn.setAttribute("timeZone", event.Time_Zone);
+    btn.setAttribute("options", "'Apple','Google','iCal','Microsoft365','Teams','Outlook.com','Yahoo'");
     btn.setAttribute("buttonStyle", "flat");
     btn.setAttribute("lightMode", "bodyScheme");
     if (location) btn.setAttribute("location", location);

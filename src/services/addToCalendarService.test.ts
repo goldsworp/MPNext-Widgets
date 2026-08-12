@@ -1,21 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AddToCalendarService } from '@/services/addToCalendarService';
 
-const mockGetTableRecords = vi.fn();
+const { mockGetTableRecords, mockGetDomainInfo } = vi.hoisted(() => ({
+  mockGetTableRecords: vi.fn(),
+  mockGetDomainInfo: vi.fn(),
+}));
 
 vi.mock('@/lib/providers/ministry-platform', () => {
   return {
     MPHelper: class {
       getTableRecords = mockGetTableRecords;
+      getDomainInfo = mockGetDomainInfo;
     },
   };
 });
+
+import { AddToCalendarService } from '@/services/addToCalendarService';
+import { DomainTimezoneService } from '@/services/domainTimezoneService';
 
 describe('AddToCalendarService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (AddToCalendarService as any).instance = undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (DomainTimezoneService as any).instance = null;
+    mockGetDomainInfo.mockResolvedValue({ TimeZoneName: 'America/Chicago' });
   });
 
   describe('getInstance', () => {
@@ -71,6 +80,7 @@ describe('AddToCalendarService', () => {
         City: null,
         State: null,
         Postal_Code: null,
+        Time_Zone: 'America/Chicago',
       });
     });
 
@@ -118,7 +128,7 @@ describe('AddToCalendarService', () => {
       expect(mockGetTableRecords).toHaveBeenCalledTimes(3);
       expect(mockGetTableRecords).toHaveBeenNthCalledWith(3, {
         table: 'Addresses',
-        select: 'Address_ID,Address_Line_1,City,State/Region,Postal_Code',
+        select: 'Address_ID,Address_Line_1,City,[State/Region],Postal_Code',
         filter: 'Address_ID = 99',
         top: 1,
       });
@@ -133,6 +143,7 @@ describe('AddToCalendarService', () => {
         City: 'Springfield',
         State: 'IL',
         Postal_Code: '62701',
+        Time_Zone: 'America/Chicago',
       });
     });
 

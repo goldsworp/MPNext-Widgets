@@ -11,6 +11,7 @@ export const CalendarEventDataSchema = z.object({
   City: z.string().nullable(),
   State: z.string().nullable(),
   Postal_Code: z.string().nullable(),
+  Time_Zone: z.string(),
 });
 
 export type CalendarEventData = z.infer<typeof CalendarEventDataSchema>;

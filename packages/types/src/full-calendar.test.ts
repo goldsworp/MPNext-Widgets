@@ -26,6 +26,7 @@ const validEvent: CalendarEvent = {
   Description: 'Weekly youth gathering',
   Featured_On_Calendar: true,
   Registration_URL: 'https://example.com/register',
+  Has_Online_Registration: true,
   Image_URL: 'https://example.com/image.png',
   Program_ID: 9,
   Program_Name: 'Students',
@@ -89,6 +90,7 @@ describe('CalendarEventSchema', () => {
       'Event_Start_Date',
       'Event_End_Date',
       'Featured_On_Calendar',
+      'Has_Online_Registration',
     ];
 
     for (const field of required) {

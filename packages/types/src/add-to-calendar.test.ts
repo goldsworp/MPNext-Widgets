@@ -17,6 +17,7 @@ const validEvent: CalendarEventData = {
   City: 'Anywhere',
   State: 'TX',
   Postal_Code: '75001',
+  Time_Zone: 'America/Chicago',
 };
 
 describe('CalendarEventDataSchema', () => {
@@ -56,6 +57,7 @@ describe('CalendarEventDataSchema', () => {
       'City',
       'State',
       'Postal_Code',
+      'Time_Zone',
     ];
 
     for (const field of requiredFields) {

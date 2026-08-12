@@ -226,7 +226,7 @@ describe('FullCalendarService', () => {
       expect(result.filters.ministries).toEqual([{ id: 200, name: 'Worship Ministry' }]);
     });
 
-    it('should derive Registration_URL from online product when no external URL is set', async () => {
+    it('should report Has_Online_Registration (and leave Registration_URL null) when no external URL is set', async () => {
       mockGetTableRecords
         .mockResolvedValueOnce([
           {
@@ -246,7 +246,10 @@ describe('FullCalendarService', () => {
 
       // Only the Events query happens — all foreign-key sets are empty so no lookups
       expect(result.events).toHaveLength(1);
-      expect(result.events[0].Registration_URL).toContain('/portal/event_detail.aspx?id=1');
+      // No explicit external URL from MP — the SDK builds a Register link from
+      // its own event-detail-url-template attribute instead (see full-calendar-modal.ts).
+      expect(result.events[0].Registration_URL).toBeNull();
+      expect(result.events[0].Has_Online_Registration).toBe(true);
     });
 
     it('should return null Registration_URL when Registration_Active is false', async () => {

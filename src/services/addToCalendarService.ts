@@ -1,4 +1,5 @@
 import { MPHelper } from "@/lib/providers/ministry-platform";
+import { DomainTimezoneService } from "@/services/domainTimezoneService";
 import type { CalendarEventData } from "@mpnext/types";
 
 interface EventRecord {
@@ -49,12 +50,15 @@ export class AddToCalendarService {
    * Resolves Location and Address in sequential steps when IDs are present.
    */
   public async getEventForCalendar(eventId: number): Promise<CalendarEventData | null> {
-    const events = await this.mp!.getTableRecords<EventRecord>({
-      table: "Events",
-      select: "Event_ID,Event_Title,Description,Event_Start_Date,Event_End_Date,Location_ID",
-      filter: `Event_ID = ${eventId}`,
-      top: 1,
-    });
+    const [events, timeZone] = await Promise.all([
+      this.mp!.getTableRecords<EventRecord>({
+        table: "Events",
+        select: "Event_ID,Event_Title,Description,Event_Start_Date,Event_End_Date,Location_ID",
+        filter: `Event_ID = ${eventId}`,
+        top: 1,
+      }),
+      DomainTimezoneService.getInstance().getMpTimezone(),
+    ]);
 
     const event = events[0];
     if (!event) return null;
@@ -110,6 +114,7 @@ export class AddToCalendarService {
       City: city,
       State: state,
       Postal_Code: postalCode,
+      Time_Zone: timeZone,
     };
   }
 }
