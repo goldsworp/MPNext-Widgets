@@ -13,6 +13,7 @@ interface CalendarEvent {
   Description: string | null;
   Featured_On_Calendar: boolean;
   Registration_URL: string | null;
+  Has_Online_Registration: boolean;
   Image_URL: string | null;
   Program_ID: number | null;
   Program_Name: string | null;

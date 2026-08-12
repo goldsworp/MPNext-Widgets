@@ -13,6 +13,7 @@ export const CalendarEventSchema = z.object({
   Description: z.string().nullable(),
   Featured_On_Calendar: z.boolean(),
   Registration_URL: z.string().nullable(),
+  Has_Online_Registration: z.boolean(),
   Image_URL: z.string().nullable(),
   Program_ID: z.number().nullable(),
   Program_Name: z.string().nullable(),

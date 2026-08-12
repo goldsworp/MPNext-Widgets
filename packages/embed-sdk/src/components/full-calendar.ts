@@ -51,6 +51,7 @@ export class FullCalendarWidget extends MPNextWidget {
     ministryNames: new Set(),
   };
   private fcLoaded = false;
+  private eventDetailUrlTemplate: string | undefined;
 
   static get observedAttributes() {
     return ["api-host", "congregation-id", "view", "show-toolbar"];
@@ -58,6 +59,7 @@ export class FullCalendarWidget extends MPNextWidget {
 
   async connectedCallback() {
     this.congregationId = this.getAttribute("congregation-id") || "";
+    this.eventDetailUrlTemplate = this.getAttribute("event-detail-url-template") || undefined;
 
     // Read view/toolbar attributes
     const viewAttr = this.getAttribute("view") as ViewType | null;
@@ -441,6 +443,7 @@ export class FullCalendarWidget extends MPNextWidget {
       isAdmin,
       onClose: () => this.closeModal(),
       getEventColor: (typeId) => this.getEventColor(typeId),
+      eventDetailUrlTemplate: this.eventDetailUrlTemplate,
     });
 
     this.root.appendChild(modal);

@@ -13,6 +13,7 @@ interface CalendarEvent {
   Description: string | null;
   Featured_On_Calendar: boolean;
   Registration_URL: string | null;
+  Has_Online_Registration: boolean;
   Image_URL: string | null;
   Program_Name: string | null;
   Ministry_Name: string | null;
@@ -31,6 +32,13 @@ interface RenderDetailModalOptions {
   isAdmin: boolean;
   onClose: () => void;
   getEventColor: (typeId: number | null) => string;
+  /**
+   * Template for building a Register link when MP has no explicit
+   * External_Registration_URL but online registration is available.
+   * `{eventId}` is replaced with the event's Event_ID, e.g.
+   * "/mp-event-detail?id={eventId}".
+   */
+  eventDetailUrlTemplate?: string;
 }
 
 // ── SVG Icons ──
@@ -101,7 +109,7 @@ function formatDateTime(date: Date): string {
 // ── Exported Render Function ──
 
 export function renderDetailModal(options: RenderDetailModalOptions): HTMLElement {
-  const { event, fcEvent, isAdmin, onClose, getEventColor } = options;
+  const { event, fcEvent, isAdmin, onClose, getEventColor, eventDetailUrlTemplate } = options;
 
   // Resolve start/end dates: prefer fcEvent dates, fall back to parsing event strings
   const startDate = fcEvent?.start ?? new Date(event.Event_Start_Date);
@@ -168,11 +176,19 @@ export function renderDetailModal(options: RenderDetailModalOptions): HTMLElemen
       </div>`;
   }
 
-  // Register button
-  if (event.Registration_URL) {
+  // Register button: prefer MP's explicit external URL; otherwise, if MP has
+  // online registration open and the host page configured a template, build
+  // a link to that page's own event-detail route.
+  const registrationHref =
+    event.Registration_URL ||
+    (event.Has_Online_Registration && eventDetailUrlTemplate
+      ? eventDetailUrlTemplate.replace("{eventId}", String(event.Event_ID))
+      : null);
+
+  if (registrationHref) {
     bodyHtml += `
       <div class="nw-fc-modal-actions">
-        <a class="nw-fc-register-btn" href="${escapeHtml(event.Registration_URL)}" target="_blank" rel="noopener noreferrer">Register</a>
+        <a class="nw-fc-register-btn" href="${escapeHtml(registrationHref)}" target="_blank" rel="noopener noreferrer">Register</a>
       </div>`;
   }
 

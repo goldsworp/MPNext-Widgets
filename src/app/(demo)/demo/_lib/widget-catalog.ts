@@ -114,6 +114,7 @@ export const widgetCatalog: WidgetConfig[] = [
         defaultValue: "true",
       },
       { name: "congregationId", label: "Congregation ID", type: "number", attribute: "congregation-id", placeholder: "e.g. 1" },
+      { name: "eventDetailUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /events?id={eventId}" },
     ],
     implementationCode: `<next-full-calendar></next-full-calendar>
 
@@ -121,7 +122,11 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-full-calendar view="list" show-toolbar="false"></next-full-calendar>
 
 <!-- Filtered by congregation -->
-<next-full-calendar congregation-id="1" view="month"></next-full-calendar>`,
+<next-full-calendar congregation-id="1" view="month"></next-full-calendar>
+
+<!-- Register button links to your own site's event page when MP has -->
+<!-- online registration open but no external registration URL set -->
+<next-full-calendar event-detail-url-template="/events?id={eventId}"></next-full-calendar>`,
   },
 
   // ─── Authenticated Widgets ─────────────────────────────────────────

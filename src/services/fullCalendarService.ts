@@ -87,6 +87,7 @@ export class FullCalendarService {
   private static instance: FullCalendarService;
   private mp: MPHelper | null = null;
   private mpBaseUrl: string = "";
+  private apiBaseUrl: string = "";
 
   private constructor() {
     this.initialize();
@@ -102,8 +103,10 @@ export class FullCalendarService {
 
   private async initialize(): Promise<void> {
     this.mp = new MPHelper();
-    // Strip /ministryplatformapi so MP links use the correct /mp/{pageId}/{recordId} format
     const raw = process.env.MINISTRY_PLATFORM_BASE_URL || "";
+    // /files/{id} is served under /ministryplatformapi, unlike /mp/{pageId}/{recordId} portal links below
+    this.apiBaseUrl = raw.replace(/\/$/, "");
+    // Strip /ministryplatformapi so MP links use the correct /mp/{pageId}/{recordId} format
     this.mpBaseUrl = raw.replace(/\/ministryplatformapi\/?$/, "");
   }
 
@@ -187,6 +190,7 @@ export class FullCalendarService {
         Description: e.Description,
         Featured_On_Calendar: e.Featured_On_Calendar,
         Registration_URL: this.buildRegistrationUrl(e),
+        Has_Online_Registration: this.hasOnlineRegistration(e),
         Image_URL: imageMap.get(e.Event_ID) ?? null,
         Program_ID: e.Program_ID,
         Program_Name: programInfo?.programName ?? null,
@@ -282,6 +286,7 @@ export class FullCalendarService {
       Description: e.Description,
       Featured_On_Calendar: e.Featured_On_Calendar,
       Registration_URL: this.buildRegistrationUrl(e),
+      Has_Online_Registration: this.hasOnlineRegistration(e),
       Image_URL: imageMap.get(e.Event_ID) ?? null,
       Program_ID: e.Program_ID,
       Program_Name: programInfo?.programName ?? null,
@@ -409,7 +414,7 @@ export class FullCalendarService {
               defaultOnly: true,
             });
             if (files.length > 0 && files[0].IsImage) {
-              return { eventId, url: `${this.mpBaseUrl}/files/${files[0].UniqueFileId}` };
+              return { eventId, url: `${this.apiBaseUrl}/files/${files[0].UniqueFileId}` };
             }
             return null;
           } catch {
@@ -513,16 +518,18 @@ export class FullCalendarService {
 
   // ── Registration URL ──
 
+  // Only returns an explicit external registration link. MP's own classic
+  // portal (event_detail.aspx) isn't reliably present across tenants, and
+  // every embedding site needs its own event-detail URL anyway — that's
+  // handled client-side via the widget's event-detail-url-template attribute
+  // (see hasOnlineRegistration below for the signal that one should be shown).
   private buildRegistrationUrl(event: EventRecord): string | null {
     if (!event.Registration_Active) return null;
+    return event.External_Registration_URL || null;
+  }
 
-    if (event.External_Registration_URL) return event.External_Registration_URL;
-
-    if (event.Online_Registration_Product) {
-      return `${this.mpBaseUrl}/portal/event_detail.aspx?id=${event.Event_ID}`;
-    }
-
-    return null;
+  private hasOnlineRegistration(event: EventRecord): boolean {
+    return event.Registration_Active && !!event.Online_Registration_Product;
   }
 
   // ── Lookup Helpers ──
