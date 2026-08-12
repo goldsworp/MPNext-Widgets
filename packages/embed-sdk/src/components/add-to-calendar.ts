@@ -259,7 +259,7 @@ export class AddToCalendarWidget extends MPNextWidget {
     btn.setAttribute("startTime", start.time);
     btn.setAttribute("endTime", end.time);
     btn.setAttribute("timeZone", event.Time_Zone);
-    btn.setAttribute("options", "'Apple','Google','iCal','Microsoft365','Teams','Outlook.com','Yahoo'");
+    btn.setAttribute("options", "'Apple','Google','iCal','Microsoft365','MicrosoftTeams','Outlook.com','Yahoo'");
     btn.setAttribute("buttonStyle", "flat");
     btn.setAttribute("lightMode", "bodyScheme");
     if (location) btn.setAttribute("location", location);
