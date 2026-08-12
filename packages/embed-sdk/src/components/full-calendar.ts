@@ -52,6 +52,7 @@ export class FullCalendarWidget extends MPNextWidget {
   };
   private fcLoaded = false;
   private eventDetailUrlTemplate: string | undefined;
+  private campusLabel: string = "Campus";
 
   static get observedAttributes() {
     return ["api-host", "congregation-id", "view", "show-toolbar"];
@@ -60,6 +61,7 @@ export class FullCalendarWidget extends MPNextWidget {
   async connectedCallback() {
     this.congregationId = this.getAttribute("congregation-id") || "";
     this.eventDetailUrlTemplate = this.getAttribute("event-detail-url-template") || undefined;
+    this.campusLabel = this.getAttribute("campus-label") || "Campus";
 
     // Read view/toolbar attributes
     const viewAttr = this.getAttribute("view") as ViewType | null;
@@ -624,7 +626,7 @@ export class FullCalendarWidget extends MPNextWidget {
             this.activeFilters = newFilters;
             this.cardsPage = 1;
             this.renderCardsOrCalendarView();
-          })
+          }, this.campusLabel)
         );
       }
 
@@ -648,7 +650,7 @@ export class FullCalendarWidget extends MPNextWidget {
           renderFilterChips(this.filters, this.activeFilters, (newFilters) => {
             this.activeFilters = newFilters;
             this.renderCardsOrCalendarView();
-          })
+          }, this.campusLabel)
         );
       }
 
@@ -667,7 +669,7 @@ export class FullCalendarWidget extends MPNextWidget {
             this.activeFilters = newFilters;
             this.cardsPage = 1;
             this.renderCardsOrCalendarView();
-          })
+          }, this.campusLabel)
         );
       }
 
@@ -718,7 +720,7 @@ export class FullCalendarWidget extends MPNextWidget {
             this.activeFilters = newFilters;
             this.cardsPage = 1;
             this.renderCardsOrCalendarView();
-          })
+          }, this.campusLabel)
         );
       }
 

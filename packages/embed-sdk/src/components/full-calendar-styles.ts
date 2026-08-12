@@ -592,6 +592,42 @@ export const FILTER_STYLES = `
   .nw-fc-filter-chip.active .nw-fc-chip-check {
     display: inline;
   }
+
+  /* ── Searchable filter sections (large lists, e.g. 200+ parishes) ── */
+
+  .nw-fc-filter-section--searchable {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .nw-fc-filter-search {
+    width: 100%;
+    max-width: 320px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1.5px solid #d0d0d0;
+    font-size: 0.85em;
+    box-sizing: border-box;
+  }
+
+  .nw-fc-filter-search:focus {
+    outline: none;
+    border-color: #004C97;
+  }
+
+  .nw-fc-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .nw-fc-filter-chips-scroll {
+    max-height: 160px;
+    overflow-y: auto;
+    padding: 2px;
+    width: 100%;
+  }
 `;
 
 // ── 5. Mini Calendar Styles ─────────────────────────────────────────────────

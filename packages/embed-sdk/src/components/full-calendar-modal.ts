@@ -188,7 +188,7 @@ export function renderDetailModal(options: RenderDetailModalOptions): HTMLElemen
   if (registrationHref) {
     bodyHtml += `
       <div class="nw-fc-modal-actions">
-        <a class="nw-fc-register-btn" href="${escapeHtml(registrationHref)}" target="_blank" rel="noopener noreferrer">Register</a>
+        <a class="nw-fc-register-btn" href="${escapeHtml(registrationHref)}">Register</a>
       </div>`;
   }
 

@@ -115,6 +115,7 @@ export const widgetCatalog: WidgetConfig[] = [
       },
       { name: "congregationId", label: "Congregation ID", type: "number", attribute: "congregation-id", placeholder: "e.g. 1" },
       { name: "eventDetailUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /events?id={eventId}" },
+      { name: "campusLabel", label: "Campus Filter Label", type: "text", attribute: "campus-label", placeholder: "e.g. Parish" },
     ],
     implementationCode: `<next-full-calendar></next-full-calendar>
 
@@ -126,7 +127,12 @@ export const widgetCatalog: WidgetConfig[] = [
 
 <!-- Register button links to your own site's event page when MP has -->
 <!-- online registration open but no external registration URL set -->
-<next-full-calendar event-detail-url-template="/events?id={eventId}"></next-full-calendar>`,
+<next-full-calendar event-detail-url-template="/events?id={eventId}"></next-full-calendar>
+
+<!-- Relabel the campus filter for orgs where "Campus" isn't the right term -->
+<!-- (e.g. a diocese with Parishes). Lists over 8 options automatically get -->
+<!-- a search box and a scrollable chip list instead of showing every chip. -->
+<next-full-calendar campus-label="Parish"></next-full-calendar>`,
   },
 
   // ─── Authenticated Widgets ─────────────────────────────────────────

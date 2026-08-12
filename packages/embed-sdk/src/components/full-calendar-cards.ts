@@ -82,133 +82,157 @@ function formatCardDate(dateStr: string): { dow: string; day: string; month: str
 
 // ── Exported Functions ──
 
+const CHIP_CHECK_ICON = `<svg class="nw-fc-chip-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+// Above this many options, a chip row of on/off buttons stops being a usable
+// picker (e.g. a diocese with 200+ parishes) — switch to a search box that
+// filters the (scrollable) chip list instead of showing every option at once.
+const SEARCHABLE_CHIP_THRESHOLD = 8;
+
+/**
+ * Renders one filter section (e.g. Campus/Parish or Ministry) as a row of
+ * toggle chips. Sections with more than SEARCHABLE_CHIP_THRESHOLD options get
+ * a search box that filters the chip list, which is capped to a scrollable
+ * height so large lists (e.g. 200+ parishes) don't take over the page.
+ */
+function renderFilterSection(
+  labelText: string,
+  items: CalendarFilter[],
+  isActive: (item: CalendarFilter) => boolean,
+  isAllActive: boolean,
+  onToggle: (item: CalendarFilter) => void,
+  onSelectAll: () => void
+): HTMLElement {
+  const searchable = items.length > SEARCHABLE_CHIP_THRESHOLD;
+
+  const section = document.createElement("div");
+  section.className = searchable
+    ? "nw-fc-filter-section nw-fc-filter-section--searchable"
+    : "nw-fc-filter-section";
+
+  const label = document.createElement("span");
+  label.className = "nw-fc-filter-label";
+  label.textContent = labelText;
+  section.appendChild(label);
+
+  let searchInput: HTMLInputElement | null = null;
+  if (searchable) {
+    searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.className = "nw-fc-filter-search";
+    searchInput.placeholder = `Search ${labelText.toLowerCase()}…`;
+    section.appendChild(searchInput);
+  }
+
+  const chipsWrap = document.createElement("div");
+  chipsWrap.className = searchable
+    ? "nw-fc-filter-chips nw-fc-filter-chips-scroll"
+    : "nw-fc-filter-chips";
+  section.appendChild(chipsWrap);
+
+  const allChip = document.createElement("button");
+  allChip.className = "nw-fc-filter-chip";
+  if (isAllActive) allChip.classList.add("active");
+  allChip.innerHTML = isAllActive ? `${CHIP_CHECK_ICON} All` : "All";
+  allChip.addEventListener("click", onSelectAll);
+  chipsWrap.appendChild(allChip);
+
+  const searchableChips: { el: HTMLButtonElement; name: string }[] = [];
+  for (const item of items) {
+    const chip = document.createElement("button");
+    chip.className = "nw-fc-filter-chip";
+    const active = isActive(item);
+    if (active) chip.classList.add("active");
+    chip.innerHTML = active
+      ? `${CHIP_CHECK_ICON} ${escapeHtml(item.name)}`
+      : escapeHtml(item.name);
+    chip.addEventListener("click", () => onToggle(item));
+    chipsWrap.appendChild(chip);
+    searchableChips.push({ el: chip, name: item.name.toLowerCase() });
+  }
+
+  if (searchInput) {
+    searchInput.addEventListener("input", () => {
+      const query = searchInput!.value.trim().toLowerCase();
+      for (const { el, name } of searchableChips) {
+        el.style.display = query === "" || name.includes(query) ? "" : "none";
+      }
+    });
+  }
+
+  return section;
+}
+
 /**
  * Renders campus and ministry filter chips.
+ *
+ * @param campusLabel  Section label for the campus filter (e.g. "Parish" or
+ *                      "Organization" for dioceses where "Campus" isn't the
+ *                      right term). Defaults to "Campus".
  */
 export function renderFilterChips(
   filters: { campuses: CalendarFilter[]; ministries: CalendarFilter[] },
   activeFilters: ActiveFilters,
-  onFilterChange: (filters: ActiveFilters) => void
+  onFilterChange: (filters: ActiveFilters) => void,
+  campusLabel: string = "Campus"
 ): HTMLElement {
   const container = document.createElement("div");
   container.className = "nw-fc-filters";
 
-  // ── Campus section ──
   if (filters.campuses.length > 0) {
-    const section = document.createElement("div");
-    section.className = "nw-fc-filter-section";
-
-    const label = document.createElement("span");
-    label.className = "nw-fc-filter-label";
-    label.textContent = "Campus";
-    section.appendChild(label);
-
-    // "All" chip
-    const allChip = document.createElement("button");
-    allChip.className = "nw-fc-filter-chip";
-    if (activeFilters.campusIds.size === 0) {
-      allChip.classList.add("active");
-    }
-    allChip.innerHTML =
-      activeFilters.campusIds.size === 0
-        ? `<svg class="nw-fc-chip-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> All`
-        : "All";
-    allChip.addEventListener("click", () => {
-      const next: ActiveFilters = {
-        campusIds: new Set<number>(),
-        ministryNames: new Set(activeFilters.ministryNames),
-      };
-      onFilterChange(next);
-    });
-    section.appendChild(allChip);
-
-    // Individual campus chips
-    for (const campus of filters.campuses) {
-      const chip = document.createElement("button");
-      chip.className = "nw-fc-filter-chip";
-      const isActive = activeFilters.campusIds.has(campus.id);
-      if (isActive) {
-        chip.classList.add("active");
-      }
-      chip.innerHTML = isActive
-        ? `<svg class="nw-fc-chip-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${escapeHtml(campus.name)}`
-        : escapeHtml(campus.name);
-      chip.addEventListener("click", () => {
-        const nextIds = new Set(activeFilters.campusIds);
-        if (nextIds.has(campus.id)) {
-          nextIds.delete(campus.id);
-        } else {
-          nextIds.add(campus.id);
-        }
-        const next: ActiveFilters = {
-          campusIds: nextIds,
-          ministryNames: new Set(activeFilters.ministryNames),
-        };
-        onFilterChange(next);
-      });
-      section.appendChild(chip);
-    }
-
-    container.appendChild(section);
+    container.appendChild(
+      renderFilterSection(
+        campusLabel,
+        filters.campuses,
+        (campus) => activeFilters.campusIds.has(campus.id),
+        activeFilters.campusIds.size === 0,
+        (campus) => {
+          const nextIds = new Set(activeFilters.campusIds);
+          if (nextIds.has(campus.id)) {
+            nextIds.delete(campus.id);
+          } else {
+            nextIds.add(campus.id);
+          }
+          onFilterChange({
+            campusIds: nextIds,
+            ministryNames: new Set(activeFilters.ministryNames),
+          });
+        },
+        () =>
+          onFilterChange({
+            campusIds: new Set<number>(),
+            ministryNames: new Set(activeFilters.ministryNames),
+          })
+      )
+    );
   }
 
-  // ── Ministry section ──
   if (filters.ministries.length > 0) {
-    const section = document.createElement("div");
-    section.className = "nw-fc-filter-section";
-
-    const label = document.createElement("span");
-    label.className = "nw-fc-filter-label";
-    label.textContent = "Ministry";
-    section.appendChild(label);
-
-    // "All" chip
-    const allChip = document.createElement("button");
-    allChip.className = "nw-fc-filter-chip";
-    if (activeFilters.ministryNames.size === 0) {
-      allChip.classList.add("active");
-    }
-    allChip.innerHTML =
-      activeFilters.ministryNames.size === 0
-        ? `<svg class="nw-fc-chip-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> All`
-        : "All";
-    allChip.addEventListener("click", () => {
-      const next: ActiveFilters = {
-        campusIds: new Set(activeFilters.campusIds),
-        ministryNames: new Set<string>(),
-      };
-      onFilterChange(next);
-    });
-    section.appendChild(allChip);
-
-    // Individual ministry chips
-    for (const ministry of filters.ministries) {
-      const chip = document.createElement("button");
-      chip.className = "nw-fc-filter-chip";
-      const isActive = activeFilters.ministryNames.has(ministry.name);
-      if (isActive) {
-        chip.classList.add("active");
-      }
-      chip.innerHTML = isActive
-        ? `<svg class="nw-fc-chip-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${escapeHtml(ministry.name)}`
-        : escapeHtml(ministry.name);
-      chip.addEventListener("click", () => {
-        const nextNames = new Set(activeFilters.ministryNames);
-        if (nextNames.has(ministry.name)) {
-          nextNames.delete(ministry.name);
-        } else {
-          nextNames.add(ministry.name);
-        }
-        const next: ActiveFilters = {
-          campusIds: new Set(activeFilters.campusIds),
-          ministryNames: nextNames,
-        };
-        onFilterChange(next);
-      });
-      section.appendChild(chip);
-    }
-
-    container.appendChild(section);
+    container.appendChild(
+      renderFilterSection(
+        "Ministry",
+        filters.ministries,
+        (ministry) => activeFilters.ministryNames.has(ministry.name),
+        activeFilters.ministryNames.size === 0,
+        (ministry) => {
+          const nextNames = new Set(activeFilters.ministryNames);
+          if (nextNames.has(ministry.name)) {
+            nextNames.delete(ministry.name);
+          } else {
+            nextNames.add(ministry.name);
+          }
+          onFilterChange({
+            campusIds: new Set(activeFilters.campusIds),
+            ministryNames: nextNames,
+          });
+        },
+        () =>
+          onFilterChange({
+            campusIds: new Set(activeFilters.campusIds),
+            ministryNames: new Set<string>(),
+          })
+      )
+    );
   }
 
   return container;
