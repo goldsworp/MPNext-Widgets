@@ -226,6 +226,36 @@ export const widgetCatalog: WidgetConfig[] = [
   event-detail-url-template="/masses?id={eventId}"
 ></next-mass-intention-calendar>`,
   },
+  {
+    slug: "perpetual-adoration",
+    tag: "next-perpetual-adoration",
+    title: "Perpetual Adoration Calendar",
+    description: "Signed-in parishioners find and claim open Perpetual Adoration hours.",
+    category: "Authenticated",
+    // Fully native (no classic mpp-* elements) — auth comes from the host
+    // app's own session, not the classic widget system.
+    needsUserMenu: true,
+    needsMpWidgets: false,
+    attributes: { "congregation-ids": "4" },
+    events: ["adorationError", "adorationRegistered"],
+    controls: [
+      { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4,8" },
+      { name: "successTitle", label: "Success Title", type: "text", attribute: "success-title", placeholder: "e.g. You're signed up" },
+      { name: "successMessage", label: "Success Message", type: "text", attribute: "success-message", placeholder: "Uses {count}" },
+      { name: "failTitle", label: "Fail Title", type: "text", attribute: "fail-title", placeholder: "e.g. Registration problem" },
+      { name: "failMessage", label: "Fail Message", type: "text", attribute: "fail-message", placeholder: "Uses {error}" },
+    ],
+    implementationCode: `<next-perpetual-adoration></next-perpetual-adoration>
+
+<!-- Filtered to specific congregations -->
+<next-perpetual-adoration congregation-ids="4,8"></next-perpetual-adoration>
+
+<!-- Customize the confirmation dialog wording ({count} / {error} are replaced automatically) -->
+<next-perpetual-adoration
+  success-message="Thank you for saying yes to {count} hour(s) of adoration."
+  fail-message="We couldn't complete that. {error}"
+></next-perpetual-adoration>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {

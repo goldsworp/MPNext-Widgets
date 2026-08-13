@@ -2,6 +2,7 @@ export * from "./add-to-calendar";
 export * from "./faith-formation";
 export * from "./full-calendar";
 export * from "./mass-intention-calendar";
+export * from "./perpetual-adoration";
 export * from "./invoices";
 export * from "./profile";
 export * from "./subscription";

@@ -21,6 +21,7 @@ export { ProfileWidget } from "./components/profile";
 export { MyInvoicesWidget } from "./components/my-invoices";
 export { FaithFormationWidget } from "./components/faith-formation";
 export { MassIntentionCalendarWidget } from "./components/mass-intention-calendar";
+export { PerpetualAdorationWidget } from "./components/perpetual-adoration";
 
 // Auto-register components
 import "./components/user-menu";
@@ -30,6 +31,7 @@ import "./components/profile";
 import "./components/my-invoices";
 import "./components/faith-formation";
 import "./components/mass-intention-calendar";
+import "./components/perpetual-adoration";
 
 // ---------------------------------------------------------------------------
 // Auto-initialization
@@ -68,7 +70,7 @@ function detectApiHost(): string {
   // 4. Read api-host from the first widget element on the page
   //    (handles Vite dev where the SDK is a local module import)
   const widget = document.querySelector(
-    "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar",
+    "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar, next-perpetual-adoration",
   );
   if (widget) {
     const host = widget.getAttribute("api-host");
@@ -124,6 +126,7 @@ function detectFirstWidgetId(): string | null {
     "NEXT-MY-INVOICES": "invoices",
     "NEXT-FAITH-FORMATION": "faith-formation",
     "NEXT-MASS-INTENTION-CALENDAR": "mass-intention-calendar",
+    "NEXT-PERPETUAL-ADORATION": "perpetual-adoration",
   };
 
   for (const [tag, wid] of Object.entries(widgetMap)) {
