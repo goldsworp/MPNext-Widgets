@@ -256,6 +256,74 @@ export const widgetCatalog: WidgetConfig[] = [
   fail-message="We couldn't complete that. {error}"
 ></next-perpetual-adoration>`,
   },
+  {
+    slug: "journey-milestones-individual",
+    tag: "next-journey-milestones-individual",
+    title: "Milestone Tracker (Individual)",
+    description: "A parishioner's progress through a Journey's milestones.",
+    category: "Authenticated",
+    needsUserMenu: true,
+    needsMpWidgets: false,
+    attributes: { "journey-id": "18", "group-id": "136" },
+    events: ["milestonesLoaded", "milestonesError"],
+    controls: [
+      { name: "journeyId", label: "Journey ID", type: "number", attribute: "journey-id", placeholder: "e.g. 18" },
+      { name: "groupId", label: "Group ID", type: "number", attribute: "group-id", placeholder: "e.g. 136" },
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. My Journey" },
+      { name: "formBaseUrl", label: "Form Base URL", type: "text", attribute: "form-base-url", placeholder: "e.g. /forms?id=" },
+      { name: "eventDetailsPage", label: "Event Details URL", type: "text", attribute: "event-details-page", placeholder: "e.g. /events?id=" },
+      {
+        name: "showAllGetStartedButtons", label: "Get Started Buttons", type: "select", attribute: "show-all-get-started-buttons",
+        options: [
+          { label: "On every incomplete step", value: "true" },
+          { label: "Only the next step", value: "false" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+    implementationCode: `<next-journey-milestones-individual
+  journey-id="18"
+  group-id="136"
+></next-journey-milestones-individual>
+
+<!-- Link "Get Started" to your own site's form/event pages -->
+<next-journey-milestones-individual
+  journey-id="18"
+  group-id="136"
+  form-base-url="/forms?id="
+  event-details-page="/events?id="
+></next-journey-milestones-individual>`,
+  },
+  {
+    slug: "journey-milestones-family",
+    tag: "next-journey-milestones-family",
+    title: "Milestone Tracker (Family)",
+    description: "Every household member's progress through a Journey's milestones.",
+    category: "Authenticated",
+    needsUserMenu: true,
+    needsMpWidgets: false,
+    attributes: { "journey-id": "18", "group-id": "136" },
+    events: ["milestonesLoaded", "milestonesError"],
+    controls: [
+      { name: "journeyId", label: "Journey ID", type: "number", attribute: "journey-id", placeholder: "e.g. 18" },
+      { name: "groupId", label: "Group ID", type: "number", attribute: "group-id", placeholder: "e.g. 136" },
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Our Journey" },
+      { name: "formBaseUrl", label: "Form Base URL", type: "text", attribute: "form-base-url", placeholder: "e.g. /forms?id=" },
+      { name: "eventDetailsPage", label: "Event Details URL", type: "text", attribute: "event-details-page", placeholder: "e.g. /events?id=" },
+      {
+        name: "showAllGetStartedButtons", label: "Get Started Buttons", type: "select", attribute: "show-all-get-started-buttons",
+        options: [
+          { label: "On every incomplete step", value: "true" },
+          { label: "Only the next step", value: "false" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+    implementationCode: `<next-journey-milestones-family
+  journey-id="18"
+  group-id="136"
+></next-journey-milestones-family>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {
