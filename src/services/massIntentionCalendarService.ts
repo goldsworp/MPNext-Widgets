@@ -68,14 +68,23 @@ export class MassIntentionCalendarService {
   }): Promise<MassEvent[]> {
     const { startDate, endDate, congregationIds } = params;
 
+    // MP $filter literals are interpreted in the domain's wall-clock time zone.
+    // Routing through DomainTimezoneService converts any incoming instant (Z or
+    // offset-tagged, e.g. from FullCalendar's fetchInfo) to MP-TZ wall-clock so
+    // the date-boundary query doesn't fail to parse or silently shift. See
+    // fullCalendarService.ts's getEvents() for the same pattern.
+    const tz = DomainTimezoneService.getInstance();
+    const mpStartDate = await tz.toMpSqlDatetime(startDate);
+    const mpEndDate = await tz.toMpSqlDatetime(endDate);
+
     let filter =
       `Events.Event_Type_ID = ${MASS_EVENT_TYPE_ID} ` +
       `AND Events.Cancelled = 0 ` +
       `AND ISNULL(Events._Approved, 0) = 1 ` +
       `AND ISNULL(Events._Web_Approved, 0) = 1 ` +
       `AND Events.Visibility_Level_ID = 4 ` +
-      `AND Events.Event_Start_Date >= '${startDate}' ` +
-      `AND Events.Event_Start_Date < '${endDate}'`;
+      `AND Events.Event_Start_Date >= '${mpStartDate}' ` +
+      `AND Events.Event_Start_Date < '${mpEndDate}'`;
 
     if (congregationIds && congregationIds.length > 0) {
       filter += ` AND Events.Congregation_ID IN (${congregationIds.join(",")})`;
