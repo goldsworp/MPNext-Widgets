@@ -160,6 +160,47 @@ export const widgetCatalog: WidgetConfig[] = [
     events: ["invoicesLoaded", "invoiceSelected", "invoiceError"],
     implementationCode: `<next-my-invoices></next-my-invoices>`,
   },
+  {
+    slug: "faith-formation",
+    tag: "next-faith-formation",
+    title: "Family Faith Formation",
+    description: "Household members' Faith Formation groups, leaders, and meeting history.",
+    category: "Authenticated",
+    // Fully native (no classic mpp-* elements) — auth comes from the host
+    // app's own session, not the classic widget system, so neither flag
+    // below is needed for this widget to function.
+    needsUserMenu: false,
+    needsMpWidgets: false,
+    attributes: { "ministry-id": "13" },
+    events: ["faithFormationLoaded", "faithFormationError"],
+    controls: [
+      { name: "ministryId", label: "Ministry ID", type: "number", attribute: "ministry-id", placeholder: "e.g. 13" },
+      {
+        name: "showLeaderEmail", label: "Show Leader Email", type: "select", attribute: "show-leader-email",
+        options: [
+          { label: "Show", value: "true" },
+          { label: "Hide", value: "false" },
+        ],
+        defaultValue: "true",
+      },
+      {
+        name: "showLeaderMobilePhone", label: "Show Leader Phone", type: "select", attribute: "show-leader-mobile-phone",
+        options: [
+          { label: "Show", value: "true" },
+          { label: "Hide", value: "false" },
+        ],
+        defaultValue: "true",
+      },
+    ],
+    implementationCode: `<next-faith-formation ministry-id="13"></next-faith-formation>
+
+<!-- Hide leader contact info -->
+<next-faith-formation
+  ministry-id="13"
+  show-leader-email="false"
+  show-leader-mobile-phone="false"
+></next-faith-formation>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {
