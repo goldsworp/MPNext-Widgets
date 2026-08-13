@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const origin = resolveRequestOrigin(req);
 
   try {
-    const claims = await requireWidgetAuth(req, { widget: "perpetual-adoration" });
+    const claims = await requireWidgetAuth(req, { widget: ["perpetual-adoration", "user-menu"] });
 
     if (claims.sub === "public") {
       return NextResponse.json(
