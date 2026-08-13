@@ -479,3 +479,5 @@ export class FaithFormationWidget extends MPNextWidget {
     `;
   }
 }
+
+customElements.define("next-faith-formation", FaithFormationWidget);
