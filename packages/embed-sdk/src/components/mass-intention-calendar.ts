@@ -156,6 +156,10 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
         listWeek: { buttonText: "List Week" },
       },
       height: "auto",
+      // Day-grid views (Month/Week/Day) default to a dot+time+title row for
+      // timed events; "block" renders the full colored bar instead. Has no
+      // effect on list view, which always uses its own row layout.
+      eventDisplay: "block",
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       events: (info: { startStr: string; endStr: string }, success: (e: object[]) => void, failure: (e: Error) => void) => {
         this.fetchMassEvents(info.startStr, info.endStr)
