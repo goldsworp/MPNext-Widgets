@@ -398,6 +398,30 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
       .nw-mic-legend-reserved { background-color: ${COLOR_RESERVED}; }
       .nw-mic-legend-past { background-color: ${COLOR_PAST}; }
 
+      /* List view (listWeek/listDay): FullCalendar only colors the small dot
+         by default — color the whole row to match the classic widget. */
+      .fc-list-event.nw-mic-available td,
+      .fc-list-event.nw-mic-reserved td,
+      .fc-list-event.nw-mic-past td {
+        color: #fff;
+      }
+      .fc-list-event.nw-mic-available td { background-color: ${COLOR_AVAILABLE} !important; }
+      .fc-list-event.nw-mic-reserved td { background-color: ${COLOR_RESERVED} !important; }
+      .fc-list-event.nw-mic-past td { background-color: ${COLOR_PAST} !important; }
+      .fc-list-event.nw-mic-available:hover td { background-color: #2e7d32 !important; }
+      .fc-list-event.nw-mic-reserved:hover td { background-color: #b71c1c !important; }
+      .fc-list-event.nw-mic-past:hover td { background-color: #5a6268 !important; }
+      .fc-list-event.nw-mic-available .fc-list-event-dot,
+      .fc-list-event.nw-mic-reserved .fc-list-event-dot,
+      .fc-list-event.nw-mic-past .fc-list-event-dot {
+        border-color: #fff;
+      }
+      .fc-list-event.nw-mic-available a,
+      .fc-list-event.nw-mic-reserved a,
+      .fc-list-event.nw-mic-past a {
+        color: #fff;
+      }
+
       .nw-mic-find-next-btn {
         background-color: ${COLOR_AVAILABLE}; color: #fff; border: none; border-radius: 8px;
         padding: 0.55rem 1.15rem; font-size: 0.95em; font-weight: 600; cursor: pointer;
