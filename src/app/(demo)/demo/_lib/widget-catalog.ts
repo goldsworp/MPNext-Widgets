@@ -201,6 +201,31 @@ export const widgetCatalog: WidgetConfig[] = [
   show-leader-mobile-phone="false"
 ></next-faith-formation>`,
   },
+  {
+    slug: "mass-intention-calendar",
+    tag: "next-mass-intention-calendar",
+    title: "Mass Intention Calendar",
+    description: "Calendar of Masses showing intention availability, with a next-available finder.",
+    category: "Public",
+    needsUserMenu: false,
+    needsMpWidgets: false,
+    attributes: {},
+    events: ["massIntentionError"],
+    controls: [
+      { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4,8" },
+      { name: "eventDetailUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /masses?id={eventId}" },
+      { name: "searchMonthsAhead", label: "Search Months Ahead", type: "number", attribute: "search-months-ahead", placeholder: "e.g. 12" },
+    ],
+    implementationCode: `<next-mass-intention-calendar></next-mass-intention-calendar>
+
+<!-- Filtered to specific congregations -->
+<next-mass-intention-calendar congregation-ids="4,8"></next-mass-intention-calendar>
+
+<!-- Link the modal's action button to your own site's Mass detail page -->
+<next-mass-intention-calendar
+  event-detail-url-template="/masses?id={eventId}"
+></next-mass-intention-calendar>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {
