@@ -35,8 +35,10 @@ interface OrganizationDetail {
 // ── Constants ──
 
 const LEAFLET_VERSION = "1.9.4";
-const LEAFLET_CSS_URL = `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist/leaflet.css`;
-const LEAFLET_JS_URL = `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`;
+// jsdelivr, not unpkg — matches the CDN already used (and proven reliable in
+// production) for FullCalendar elsewhere in this SDK.
+const LEAFLET_CSS_URL = `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.css`;
+const LEAFLET_JS_URL = `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`;
 
 const TILE_LAYERS: Record<string, { url: string; attribution: string }> = {
   light: {
@@ -89,6 +91,7 @@ export class OrganizationDetailWidget extends MPNextWidget {
 
   private authRequired = false;
   private leafletLoaded = false;
+  private mapLoadError: string | null = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapInstance: any = null;
 
@@ -249,7 +252,7 @@ export class OrganizationDetailWidget extends MPNextWidget {
 
       if (this.organization?.Latitude !== null && this.organization?.Longitude !== null) {
         await this.ensureMapLoaded();
-        this.renderMap();
+        if (!this.mapLoadError) this.renderMap();
       }
     } catch (err) {
       this.error = "Error loading organization: " + (err instanceof Error ? err.message : String(err));
@@ -262,11 +265,16 @@ export class OrganizationDetailWidget extends MPNextWidget {
   // ── Map ──
 
   private async ensureMapLoaded(): Promise<void> {
-    if (this.leafletLoaded) return;
-    await injectExternalCSS(this.root, LEAFLET_CSS_URL);
-    await loadScript(LEAFLET_JS_URL);
-    this.leafletLoaded = true;
-    this.render();
+    if (this.leafletLoaded || this.mapLoadError) return;
+    try {
+      await injectExternalCSS(this.root, LEAFLET_CSS_URL);
+      await loadScript(LEAFLET_JS_URL);
+      this.leafletLoaded = true;
+      this.render();
+    } catch (err) {
+      this.mapLoadError = "Map failed to load. " + (err instanceof Error ? err.message : String(err));
+      this.render();
+    }
   }
 
   private renderMap(): void {
@@ -388,7 +396,7 @@ export class OrganizationDetailWidget extends MPNextWidget {
             ${this.renderMassSchedule(org)}
           </div>
 
-          ${hasCoords ? `<div class="odd-map-wrap"><div id="odd-map" class="odd-map"></div>${!this.leafletLoaded ? `<div class="odd-map-loading">Loading map…</div>` : ""}</div>` : ""}
+          ${hasCoords ? `<div class="odd-map-wrap"><div id="odd-map" class="odd-map"></div>${this.mapLoadError ? `<div class="odd-map-loading odd-map-error">${escapeHtml(this.mapLoadError)}</div>` : !this.leafletLoaded ? `<div class="odd-map-loading">Loading map…</div>` : ""}</div>` : ""}
         </div>
       </div>
     `;
@@ -465,8 +473,9 @@ export class OrganizationDetailWidget extends MPNextWidget {
       .odd-map { height: 260px; border-radius: 10px; overflow: hidden; z-index: 0; }
       .odd-map-loading {
         position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        background: #f4f8fb; color: #6b7a88; border-radius: 10px;
+        background: #f4f8fb; color: #6b7a88; border-radius: 10px; text-align: center; padding: 16px; box-sizing: border-box;
       }
+      .odd-map-error { color: #c62828; background: #fef3f2; }
 
       @media (max-width: 640px) {
         .odd-hero { height: ${this.heroHeightMobile}; }

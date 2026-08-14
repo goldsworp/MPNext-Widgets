@@ -76,6 +76,6 @@ With no settings, it shows every organization marked Available Online, across ev
 
 - Each result has up to three actions: **Map** (locates and highlights that organization's pin), **Directions** (opens Google Maps directions in a new tab), and **Details** (goes to its [Organization Detail](organization-detail.md) page). "Map" and "Directions" only appear for organizations whose address has been geocoded (see above).
 - There's no "Give" link on the directory list itself — that only appears on each organization's own [Organization Detail](organization-detail.md) page, so it always points to that specific organization's own giving page rather than a generic one shared across every result.
-- "Search near me" geocodes the ZIP/postal code the visitor types in using a free public lookup service — no address or personal information is sent anywhere beyond that ZIP code itself.
+- Visitors can search by distance either by typing a ZIP/postal code (geocoded via a free public lookup service — no address or personal information is sent anywhere beyond that ZIP code itself) or by clicking "Use my location," which asks their browser's permission to share their device location directly. Either way works the same once a starting point is set.
 - The map is drawn with [Leaflet](https://leafletjs.com/) and free OpenStreetMap/CARTO map tiles — there's no map API key to obtain or pay for.
 - This widget doesn't require anything from [Database/](../Database/) — it's a direct read of records you already manage day to day in MinistryPlatform.

@@ -24,8 +24,10 @@ interface OrganizationSummary {
 // ── Constants ──
 
 const LEAFLET_VERSION = "1.9.4";
-const LEAFLET_CSS_URL = `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist/leaflet.css`;
-const LEAFLET_JS_URL = `https://unpkg.com/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`;
+// jsdelivr, not unpkg — matches the CDN already used (and proven reliable in
+// production) for FullCalendar elsewhere in this SDK.
+const LEAFLET_CSS_URL = `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.css`;
+const LEAFLET_JS_URL = `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`;
 
 const TILE_LAYERS: Record<string, { url: string; attribution: string }> = {
   light: {
@@ -128,6 +130,8 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   private geocodeError: string | null = null;
   private authRequired = false;
   private leafletLoaded = false;
+  private mapLoadError: string | null = null;
+  private geolocating = false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapInstance: any = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -363,6 +367,37 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     this.render();
   }
 
+  private handleUseMyLocation(radius: number): void {
+    this.geocodeError = null;
+
+    if (!navigator.geolocation) {
+      this.geocodeError = "Your browser doesn't support finding your location. Try entering a ZIP code instead.";
+      this.render();
+      return;
+    }
+
+    this.geolocating = true;
+    this.render();
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        this.originPoint = { lat: position.coords.latitude, lng: position.coords.longitude };
+        this.radiusMiles = this.units === "km" ? radius / 1.60934 : radius;
+        this.geolocating = false;
+        this.render();
+      },
+      (error) => {
+        this.geocodeError =
+          error.code === error.PERMISSION_DENIED
+            ? "Location access was denied. Try entering a ZIP code instead."
+            : "Couldn't determine your location. Try entering a ZIP code instead.";
+        this.geolocating = false;
+        this.render();
+      },
+      { timeout: 10000 }
+    );
+  }
+
   // ── Filtering / grouping ──
 
   private matchesSearch(org: OrganizationSummary): boolean {
@@ -569,6 +604,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
               ${this.radiusOptions.map((r) => `<option value="${r}" ${r === this.defaultRadius ? "selected" : ""}>${r} ${this.units}</option>`).join("")}
             </select>
             <button type="button" class="od-btn" id="od-search-distance">${this.geocoding ? "Searching…" : "Near Me"}</button>
+            <button type="button" class="od-btn od-btn-secondary" id="od-use-my-location">${this.geolocating ? "Locating…" : "Use my location"}</button>
             ${this.originPoint ? `<button type="button" class="od-btn od-btn-clear" id="od-clear-distance">Clear</button>` : ""}
           </div>
 
@@ -593,16 +629,18 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
           <div class="od-map-panel">
             <div class="od-map-wrap">
               <div id="od-map" class="od-map"></div>
-              ${!this.leafletLoaded ? `<div class="od-map-loading">Loading map…</div>` : ""}
+              ${this.mapLoadError ? `<div class="od-map-loading od-map-error">${escapeHtml(this.mapLoadError)}</div>` : !this.leafletLoaded ? `<div class="od-map-loading">Loading map…</div>` : ""}
             </div>
-            <p class="od-map-hint">Click a pin for its address and directions, or use a card's "Map" button to locate it here.</p>
+            ${!this.mapLoadError ? `<p class="od-map-hint">Click a pin for its address and directions, or use a card's "Map" button to locate it here.</p>` : ""}
           </div>
         </div>
       </div>
     `;
 
     this.attachControlListeners();
-    void this.ensureMapLoaded().then(() => this.renderMap(orgs));
+    void this.ensureMapLoaded().then(() => {
+      if (!this.mapLoadError) this.renderMap(orgs);
+    });
   }
 
   private attachControlListeners(): void {
@@ -647,16 +685,26 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     zipInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") triggerDistanceSearch();
     });
+
+    this.root.querySelector("#od-use-my-location")?.addEventListener("click", () => {
+      const radius = parseFloat(radiusSelect?.value || String(this.defaultRadius));
+      this.handleUseMyLocation(radius);
+    });
   }
 
   // ── Map ──
 
   private async ensureMapLoaded(): Promise<void> {
-    if (this.leafletLoaded) return;
-    await injectExternalCSS(this.root, LEAFLET_CSS_URL);
-    await loadScript(LEAFLET_JS_URL);
-    this.leafletLoaded = true;
-    this.render();
+    if (this.leafletLoaded || this.mapLoadError) return;
+    try {
+      await injectExternalCSS(this.root, LEAFLET_CSS_URL);
+      await loadScript(LEAFLET_JS_URL);
+      this.leafletLoaded = true;
+      this.render();
+    } catch (err) {
+      this.mapLoadError = "Map failed to load. " + (err instanceof Error ? err.message : String(err));
+      this.render();
+    }
   }
 
   private clusterPins(orgs: OrganizationSummary[]): { lat: number; lng: number; orgs: OrganizationSummary[] }[] {
@@ -817,6 +865,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         font-weight: 600; font-size: 0.9em; cursor: pointer; white-space: nowrap;
       }
       .od-btn-clear { background: #e9ecef; color: #555; }
+      .od-btn-secondary { background: #fff; color: ${this.brandColor}; border: 1px solid ${this.brandColor}; }
 
       .od-toggle-group { display: flex; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
       .od-toggle {
@@ -886,8 +935,9 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-map { height: 560px; border-radius: 10px; overflow: hidden; z-index: 0; }
       .od-map-loading {
         position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        background: #f4f8fb; color: #6b7a88; border-radius: 10px;
+        background: #f4f8fb; color: #6b7a88; border-radius: 10px; text-align: center; padding: 16px; box-sizing: border-box;
       }
+      .od-map-error { color: #c62828; background: #fef3f2; }
       .od-map-hint { margin: 10px 2px 0; font-size: 0.82em; color: #6b7a88; line-height: 1.4; }
 
       .od-pin-popup strong { color: ${this.brandColor}; }
