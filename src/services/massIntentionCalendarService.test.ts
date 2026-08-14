@@ -54,7 +54,7 @@ describe('MassIntentionCalendarService', () => {
       mockGetTableRecords.mockResolvedValueOnce([]);
 
       const service = await MassIntentionCalendarService.getInstance();
-      const result = await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      const result = await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 13 });
 
       expect(result).toEqual([]);
       expect(mockGetTableRecords).toHaveBeenCalledTimes(1);
@@ -66,7 +66,7 @@ describe('MassIntentionCalendarService', () => {
         .mockResolvedValueOnce([]);
 
       const service = await MassIntentionCalendarService.getInstance();
-      const result = await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      const result = await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 13 });
 
       expect(result).toHaveLength(1);
       expect(result[0].Registrant_Count).toBe(0);
@@ -79,7 +79,7 @@ describe('MassIntentionCalendarService', () => {
         .mockResolvedValueOnce([{ Event_ID: 752, Registrant_Count: 2 }]);
 
       const service = await MassIntentionCalendarService.getInstance();
-      const result = await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      const result = await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 13 });
 
       expect(result[0].Registrant_Count).toBe(2);
       expect(result[0].Intention_Status).toBe('Reserved');
@@ -91,16 +91,29 @@ describe('MassIntentionCalendarService', () => {
         .mockResolvedValueOnce([]);
 
       const service = await MassIntentionCalendarService.getInstance();
-      const result = await service.getMassEvents({ startDate: '2000-01-01', endDate: '2000-02-01' });
+      const result = await service.getMassEvents({ startDate: '2000-01-01', endDate: '2000-02-01', eventTypeId: 13 });
 
       expect(result[0].Intention_Status).toBe('Past');
+    });
+
+    it('filters on the given eventTypeId rather than a hardcoded value', async () => {
+      mockGetTableRecords.mockResolvedValueOnce([]);
+
+      const service = await MassIntentionCalendarService.getInstance();
+      await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 99 });
+
+      expect(mockGetTableRecords).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filter: expect.stringContaining('Events.Event_Type_ID = 99'),
+        })
+      );
     });
 
     it('includes a congregation filter in the events query when provided', async () => {
       mockGetTableRecords.mockResolvedValueOnce([]);
 
       const service = await MassIntentionCalendarService.getInstance();
-      await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01', congregationIds: [4, 8] });
+      await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 13, congregationIds: [4, 8] });
 
       expect(mockGetTableRecords).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -113,7 +126,7 @@ describe('MassIntentionCalendarService', () => {
       mockGetTableRecords.mockResolvedValueOnce([]);
 
       const service = await MassIntentionCalendarService.getInstance();
-      await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      await service.getMassEvents({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 13 });
 
       expect(mockGetTableRecords).toHaveBeenCalledWith(
         expect.objectContaining({

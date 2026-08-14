@@ -225,6 +225,10 @@
       <!-- Controls -->
       <div class="controls-card">
         <div class="control-group">
+          <label for="event-type-id-input">Event Type ID</label>
+          <input type="number" id="event-type-id-input" value="13" min="1" placeholder="e.g. 13">
+        </div>
+        <div class="control-group">
           <label for="congregation-ids-input">Congregation IDs</label>
           <input type="text" id="congregation-ids-input" placeholder="e.g. 4,8">
         </div>
@@ -242,7 +246,7 @@
       <!-- Demo container -->
       <div class="demo-box">
         <div id="status"></div>
-        <next-mass-intention-calendar api-host="__API_HOST__"></next-mass-intention-calendar>
+        <next-mass-intention-calendar event-type-id="13" api-host="__API_HOST__"></next-mass-intention-calendar>
       </div>
 
       <!-- Event log -->
@@ -293,6 +297,7 @@
 
     const statusEl = document.getElementById("status");
     const eventLog = document.getElementById("event-log");
+    const eventTypeIdInput = document.getElementById("event-type-id-input");
     const congregationIdsInput = document.getElementById("congregation-ids-input");
     const urlTemplateInput = document.getElementById("url-template-input");
     const searchMonthsInput = document.getElementById("search-months-input");
@@ -327,6 +332,7 @@
       if (oldWidget) oldWidget.remove();
 
       const newWidget = document.createElement("next-mass-intention-calendar");
+      newWidget.setAttribute("event-type-id", eventTypeIdInput.value.trim() || "13");
       if (congregationIdsInput.value.trim()) {
         newWidget.setAttribute("congregation-ids", congregationIdsInput.value.trim());
       }

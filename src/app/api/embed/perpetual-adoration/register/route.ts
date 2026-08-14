@@ -1,6 +1,6 @@
 /**
  * Perpetual Adoration Calendar registration endpoint for embed widgets
- * POST /api/embed/perpetual-adoration/register  { eventIds: number[] }
+ * POST /api/embed/perpetual-adoration/register  { eventIds: number[], eventTypeId: number }
  * Requires a signed-in user — registers them as the adorer for each eligible slot.
  */
 
@@ -11,6 +11,7 @@ import { z } from "zod";
 
 const RegisterRequestSchema = z.object({
   eventIds: z.array(z.number().int().positive()).min(1),
+  eventTypeId: z.number().int().positive(),
 });
 
 export async function POST(req: NextRequest) {
@@ -31,13 +32,17 @@ export async function POST(req: NextRequest) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid request: eventIds must be a non-empty array of positive integers" },
+        { error: "Invalid request: eventIds must be a non-empty array of positive integers, and eventTypeId a positive integer" },
         { status: 400, headers: buildFallbackCorsHeaders(origin) }
       );
     }
 
     const service = await PerpetualAdorationService.getInstance();
-    const result = await service.registerSlots({ userGuid: claims.sub, eventIds: parsed.data.eventIds });
+    const result = await service.registerSlots({
+      userGuid: claims.sub,
+      eventIds: parsed.data.eventIds,
+      eventTypeId: parsed.data.eventTypeId,
+    });
 
     const headers: HeadersInit = getCorsHeaders(origin);
 

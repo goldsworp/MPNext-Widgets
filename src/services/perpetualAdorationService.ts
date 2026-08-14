@@ -33,7 +33,6 @@ interface ContactRecord {
 // Awaiting Payment). Matches massIntentionCalendarService.ts.
 const RESERVED_STATUS_IDS = [2, 3, 4];
 const REGISTERED_STATUS_ID = 2;
-const ADORATION_EVENT_TYPE_ID = 14;
 
 // A large IN (...) list can push the request URL past the server's length
 // limit — batch large ID lists instead. See faithFormationService.ts.
@@ -68,28 +67,37 @@ export class PerpetualAdorationService {
   }
 
   /**
-   * Perpetual Adoration slots (Event_Type_ID 14) in a date range, with a
-   * registrant count and the first committed adorer's name per slot. Native
-   * REST-query translation of the classic widget's
+   * Perpetual Adoration slots in a date range, with a registrant count and
+   * the first committed adorer's name per slot. Native REST-query
+   * translation of the classic widget's
    * dbo.api_custom_PerpetualAdorationCalendar_JSON stored procedure.
    *
    * Deliberately does NOT filter on _Web_Approved / Visibility_Level_ID —
    * adoration slots are high-volume and kept off the public events calendar
    * on purpose, matching the source procedure's own comment.
+   *
+   * @param eventTypeId - The Event_Type_ID that identifies a "Perpetual
+   *   Adoration" event on this MP tenant. This varies per instance (the
+   *   classic widget's install guide has the admin verify it on the Event
+   *   Types page and edit the SQL accordingly); here it's a required
+   *   parameter instead, supplied by the widget's `event-type-id` attribute
+   *   — there's no safe default, since the wrong ID would silently show
+   *   unrelated events.
    */
   public async getSlots(params: {
     startDate: string;
     endDate: string;
+    eventTypeId: number;
     congregationIds?: number[];
   }): Promise<AdorationSlot[]> {
-    const { startDate, endDate, congregationIds } = params;
+    const { startDate, endDate, eventTypeId, congregationIds } = params;
 
     const tz = DomainTimezoneService.getInstance();
     const mpStartDate = await tz.toMpSqlDatetime(startDate);
     const mpEndDate = await tz.toMpSqlDatetime(endDate);
 
     let filter =
-      `Events.Event_Type_ID = ${ADORATION_EVENT_TYPE_ID} ` +
+      `Events.Event_Type_ID = ${eventTypeId} ` +
       `AND Events.Cancelled = 0 ` +
       `AND ISNULL(Events._Approved, 0) = 1 ` +
       `AND Events.Event_Start_Date >= '${mpStartDate}' ` +
@@ -172,8 +180,9 @@ export class PerpetualAdorationService {
   public async registerSlots(params: {
     userGuid: string;
     eventIds: number[];
+    eventTypeId: number;
   }): Promise<PerpetualAdorationRegisterResponse> {
-    const { userGuid, eventIds } = params;
+    const { userGuid, eventIds, eventTypeId } = params;
     const requestedCount = eventIds.length;
 
     if (requestedCount === 0) {
@@ -229,7 +238,7 @@ export class PerpetualAdorationService {
       select: "Event_ID",
       filter:
         `Event_ID IN (${eventIds.join(",")}) ` +
-        `AND Event_Type_ID = ${ADORATION_EVENT_TYPE_ID} ` +
+        `AND Event_Type_ID = ${eventTypeId} ` +
         `AND Cancelled = 0 ` +
         `AND Event_Start_Date >= '${nowMpString}'`,
     });

@@ -84,6 +84,7 @@ export class PerpetualAdorationWidget extends MPNextWidget {
   private error: string | null = null;
   private authRequired = false;
 
+  private eventTypeId: number | null = null;
   private congregationIds: string | undefined;
   private successTitle = DEFAULT_SUCCESS_TITLE;
   private successMessage = DEFAULT_SUCCESS_MESSAGE;
@@ -99,11 +100,14 @@ export class PerpetualAdorationWidget extends MPNextWidget {
   private registering = false;
 
   static get observedAttributes() {
-    return ["congregation-ids", "success-title", "success-message", "fail-title", "fail-message"];
+    return ["event-type-id", "congregation-ids", "success-title", "success-message", "fail-title", "fail-message"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
-    if (name === "congregation-ids") {
+    if (name === "event-type-id") {
+      const parsed = next ? parseInt(next, 10) : NaN;
+      this.eventTypeId = !isNaN(parsed) && parsed > 0 ? parsed : null;
+    } else if (name === "congregation-ids") {
       this.congregationIds = next || undefined;
     } else if (name === "success-title") {
       this.successTitle = next || DEFAULT_SUCCESS_TITLE;
@@ -117,11 +121,22 @@ export class PerpetualAdorationWidget extends MPNextWidget {
   }
 
   async connectedCallback() {
+    const eventTypeIdAttr = this.getAttribute("event-type-id");
+    const parsedEventTypeId = eventTypeIdAttr ? parseInt(eventTypeIdAttr, 10) : NaN;
+    this.eventTypeId = !isNaN(parsedEventTypeId) && parsedEventTypeId > 0 ? parsedEventTypeId : null;
     this.congregationIds = this.getAttribute("congregation-ids") || undefined;
     this.successTitle = this.getAttribute("success-title") || DEFAULT_SUCCESS_TITLE;
     this.successMessage = this.getAttribute("success-message") || DEFAULT_SUCCESS_MESSAGE;
     this.failTitle = this.getAttribute("fail-title") || DEFAULT_FAIL_TITLE;
     this.failMessage = this.getAttribute("fail-message") || DEFAULT_FAIL_MESSAGE;
+
+    if (this.eventTypeId === null) {
+      this.error =
+        "Missing required attribute: event-type-id. Find your Perpetual Adoration Event Type's ID on the Event Types page in MinistryPlatform.";
+      this.injectStyles(this.getStyles());
+      this.render();
+      return;
+    }
 
     this.injectStyles(this.getStyles());
     this.render();
@@ -155,7 +170,7 @@ export class PerpetualAdorationWidget extends MPNextWidget {
   // ── Data ──
 
   private async fetchSlots(startStr: string, endStr: string): Promise<AdorationSlot[]> {
-    const params = new URLSearchParams({ start: startStr, end: endStr });
+    const params = new URLSearchParams({ start: startStr, end: endStr, eventTypeId: String(this.eventTypeId) });
     if (this.congregationIds) params.set("congregationIds", this.congregationIds);
 
     const res = await this.fetch(`/api/embed/perpetual-adoration?${params}`);
@@ -176,7 +191,7 @@ export class PerpetualAdorationWidget extends MPNextWidget {
     const res = await this.fetch("/api/embed/perpetual-adoration/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventIds }),
+      body: JSON.stringify({ eventIds, eventTypeId: this.eventTypeId }),
     });
     if (res.status === 401) {
       this.authRequired = true;

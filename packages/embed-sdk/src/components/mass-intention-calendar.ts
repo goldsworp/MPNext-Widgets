@@ -39,6 +39,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
   private calendarInstance: any = null;
   private error: string | null = null;
 
+  private eventTypeId: number | null = null;
   private congregationIds: string | undefined;
   private eventDetailUrlTemplate: string | undefined;
   private searchMonthsAhead = 12;
@@ -48,11 +49,15 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
   private currentModalMass: MassEvent | null = null;
 
   static get observedAttributes() {
-    return ["congregation-ids", "event-detail-url-template", "search-months-ahead"];
+    return ["event-type-id", "congregation-ids", "event-detail-url-template", "search-months-ahead"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
-    if (name === "congregation-ids") {
+    if (name === "event-type-id") {
+      const parsed = next ? parseInt(next, 10) : NaN;
+      this.eventTypeId = !isNaN(parsed) && parsed > 0 ? parsed : null;
+      this.calendarInstance?.refetchEvents();
+    } else if (name === "congregation-ids") {
       this.congregationIds = next || undefined;
       this.calendarInstance?.refetchEvents();
     } else if (name === "event-detail-url-template") {
@@ -64,6 +69,10 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
   }
 
   async connectedCallback() {
+    const eventTypeIdAttr = this.getAttribute("event-type-id");
+    const parsedEventTypeId = eventTypeIdAttr ? parseInt(eventTypeIdAttr, 10) : NaN;
+    this.eventTypeId = !isNaN(parsedEventTypeId) && parsedEventTypeId > 0 ? parsedEventTypeId : null;
+
     this.congregationIds = this.getAttribute("congregation-ids") || undefined;
     this.eventDetailUrlTemplate = this.getAttribute("event-detail-url-template") || undefined;
     const monthsAttr = this.getAttribute("search-months-ahead");
@@ -71,6 +80,13 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
     this.searchMonthsAhead = !isNaN(parsedMonths) && parsedMonths > 0 ? parsedMonths : 12;
 
     this.injectStyles(this.getStyles());
+
+    if (!this.eventTypeId) {
+      this.error = "Missing required attribute: event-type-id. Find your Mass Event Type's ID on the Event Types page in MinistryPlatform.";
+      this.render();
+      return;
+    }
+
     this.render();
 
     try {
@@ -99,7 +115,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
   // ── Data ──
 
   private async fetchMassEvents(startStr: string, endStr: string): Promise<MassEvent[]> {
-    const params = new URLSearchParams({ start: startStr, end: endStr });
+    const params = new URLSearchParams({ start: startStr, end: endStr, eventTypeId: String(this.eventTypeId) });
     if (this.congregationIds) params.set("congregationIds", this.congregationIds);
 
     const res = await this.fetch(`/api/embed/mass-intention-calendar?${params}`);

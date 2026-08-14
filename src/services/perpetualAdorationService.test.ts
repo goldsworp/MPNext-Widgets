@@ -55,7 +55,7 @@ describe('PerpetualAdorationService', () => {
       mockGetTableRecords.mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      const result = await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 14 });
 
       expect(result).toEqual([]);
       expect(mockGetTableRecords).toHaveBeenCalledTimes(1);
@@ -67,7 +67,7 @@ describe('PerpetualAdorationService', () => {
         .mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      const result = await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 14 });
 
       expect(result).toHaveLength(1);
       expect(result[0].Registrant_Count).toBe(0);
@@ -84,7 +84,7 @@ describe('PerpetualAdorationService', () => {
         ]);
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      const result = await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 14 });
 
       expect(result[0].Registrant_Count).toBe(2);
       expect(result[0].Slot_Status).toBe('Adorer Committed');
@@ -95,7 +95,7 @@ describe('PerpetualAdorationService', () => {
       mockGetTableRecords.mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01', congregationIds: [4, 8] });
+      await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 14, congregationIds: [4, 8] });
 
       expect(mockGetTableRecords).toHaveBeenCalledWith(
         expect.objectContaining({ filter: expect.stringContaining('Events.Congregation_ID IN (4,8)') })
@@ -106,10 +106,21 @@ describe('PerpetualAdorationService', () => {
       mockGetTableRecords.mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01' });
+      await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 14 });
 
       expect(mockGetTableRecords).toHaveBeenCalledWith(
         expect.objectContaining({ filter: expect.not.stringContaining('Congregation_ID IN') })
+      );
+    });
+
+    it('filters on the given eventTypeId rather than a hardcoded value', async () => {
+      mockGetTableRecords.mockResolvedValueOnce([]);
+
+      const service = await PerpetualAdorationService.getInstance();
+      await service.getSlots({ startDate: '2099-08-01', endDate: '2099-09-01', eventTypeId: 99 });
+
+      expect(mockGetTableRecords).toHaveBeenCalledWith(
+        expect.objectContaining({ filter: expect.stringContaining('Events.Event_Type_ID = 99') })
       );
     });
   });
@@ -117,7 +128,7 @@ describe('PerpetualAdorationService', () => {
   describe('registerSlots', () => {
     it('returns an error result immediately when no event IDs are given', async () => {
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.registerSlots({ userGuid: 'abc', eventIds: [] });
+      const result = await service.registerSlots({ userGuid: 'abc', eventIds: [], eventTypeId: 14 });
 
       expect(result.result).toBe('error');
       expect(mockGetTableRecords).not.toHaveBeenCalled();
@@ -127,7 +138,7 @@ describe('PerpetualAdorationService', () => {
       mockGetTableRecords.mockResolvedValueOnce([]); // dp_Users lookup finds nothing
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.registerSlots({ userGuid: 'unknown-guid', eventIds: [852] });
+      const result = await service.registerSlots({ userGuid: 'unknown-guid', eventIds: [852], eventTypeId: 14 });
 
       expect(result.result).toBe('error');
       expect(result.message).toMatch(/could not identify/i);
@@ -143,7 +154,7 @@ describe('PerpetualAdorationService', () => {
       mockCreateTableRecords.mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852, 853] });
+      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852, 853], eventTypeId: 14 });
 
       expect(result.result).toBe('ok');
       expect(result.participantId).toBe(55);
@@ -169,7 +180,7 @@ describe('PerpetualAdorationService', () => {
       mockCreateTableRecords.mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852] });
+      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852], eventTypeId: 14 });
 
       expect(result.participantId).toBe(77);
     });
@@ -183,7 +194,7 @@ describe('PerpetualAdorationService', () => {
       mockCreateTableRecords.mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852, 853] });
+      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852, 853], eventTypeId: 14 });
 
       expect(result.registeredCount).toBe(1);
       expect(result.registeredEventIds).toEqual([853]);
@@ -201,7 +212,7 @@ describe('PerpetualAdorationService', () => {
         .mockResolvedValueOnce([{ Event_ID: 852, Participant_ID: 55 }]); // this user already holds it
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852] });
+      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852], eventTypeId: 14 });
 
       expect(result.result).toBe('ok');
       expect(result.registeredCount).toBe(0);
@@ -217,9 +228,25 @@ describe('PerpetualAdorationService', () => {
       mockCreateTableRecords.mockResolvedValueOnce([]);
 
       const service = await PerpetualAdorationService.getInstance();
-      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852, 999] });
+      const result = await service.registerSlots({ userGuid: 'guid-1', eventIds: [852, 999], eventTypeId: 14 });
 
       expect(result.registeredEventIds).toEqual([852]);
+    });
+
+    it('filters the eligibility check on the given eventTypeId rather than a hardcoded value', async () => {
+      mockGetTableRecords
+        .mockResolvedValueOnce([{ Contact_ID: 10 }])
+        .mockResolvedValueOnce([{ Participant_Record: 55 }])
+        .mockResolvedValueOnce([{ Event_ID: 852 }])
+        .mockResolvedValueOnce([]);
+      mockCreateTableRecords.mockResolvedValueOnce([]);
+
+      const service = await PerpetualAdorationService.getInstance();
+      await service.registerSlots({ userGuid: 'guid-1', eventIds: [852], eventTypeId: 99 });
+
+      expect(mockGetTableRecords).toHaveBeenCalledWith(
+        expect.objectContaining({ filter: expect.stringContaining('Event_Type_ID = 99') })
+      );
     });
   });
 });

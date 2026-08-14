@@ -1,6 +1,6 @@
 /**
  * Perpetual Adoration Calendar slots endpoint for embed widgets
- * GET /api/embed/perpetual-adoration?start=<ISO>&end=<ISO>[&congregationIds=4,8]
+ * GET /api/embed/perpetual-adoration?start=<ISO>&end=<ISO>&eventTypeId=<id>[&congregationIds=4,8]
  * Requires a signed-in user — adoration slots and adorer names are not public.
  */
 
@@ -24,11 +24,20 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const start = url.searchParams.get("start");
     const end = url.searchParams.get("end");
+    const eventTypeIdParam = url.searchParams.get("eventTypeId");
     const congregationIdsParam = url.searchParams.get("congregationIds");
 
     if (!start || !end) {
       return NextResponse.json(
         { error: "Missing required query parameters: start and end" },
+        { status: 400, headers: buildFallbackCorsHeaders(origin) }
+      );
+    }
+
+    const eventTypeId = parseInt(eventTypeIdParam || "", 10);
+    if (!eventTypeIdParam || isNaN(eventTypeId) || eventTypeId <= 0) {
+      return NextResponse.json(
+        { error: "Missing required query parameter: eventTypeId" },
         { status: 400, headers: buildFallbackCorsHeaders(origin) }
       );
     }
@@ -73,7 +82,7 @@ export async function GET(req: NextRequest) {
     }
 
     const service = await PerpetualAdorationService.getInstance();
-    const slots = await service.getSlots({ startDate: start, endDate: end, congregationIds });
+    const slots = await service.getSlots({ startDate: start, endDate: end, eventTypeId, congregationIds });
 
     const headers: HeadersInit = {
       ...getCorsHeaders(origin),

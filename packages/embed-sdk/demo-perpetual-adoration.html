@@ -238,6 +238,10 @@
       <!-- Controls -->
       <div class="controls-card">
         <div class="control-group">
+          <label for="event-type-id-input">Event Type ID</label>
+          <input type="number" id="event-type-id-input" value="14" min="1" placeholder="e.g. 14">
+        </div>
+        <div class="control-group">
           <label for="congregation-ids-input">Congregation IDs</label>
           <input type="text" id="congregation-ids-input" value="4" placeholder="e.g. 4,8">
         </div>
@@ -252,7 +256,7 @@
       <!-- Demo container -->
       <div class="demo-box">
         <div id="status"></div>
-        <next-perpetual-adoration congregation-ids="4" api-host="__API_HOST__"></next-perpetual-adoration>
+        <next-perpetual-adoration event-type-id="14" congregation-ids="4" api-host="__API_HOST__"></next-perpetual-adoration>
       </div>
 
       <!-- Event log -->
@@ -306,6 +310,7 @@
 
     const statusEl = document.getElementById("status");
     const eventLog = document.getElementById("event-log");
+    const eventTypeIdInput = document.getElementById("event-type-id-input");
     const congregationIdsInput = document.getElementById("congregation-ids-input");
     const reloadBtn = document.getElementById("reload-btn");
 
@@ -342,6 +347,7 @@
       if (oldWidget) oldWidget.remove();
 
       const newWidget = document.createElement("next-perpetual-adoration");
+      newWidget.setAttribute("event-type-id", eventTypeIdInput.value.trim() || "14");
       if (congregationIdsInput.value.trim()) {
         newWidget.setAttribute("congregation-ids", congregationIdsInput.value.trim());
       }

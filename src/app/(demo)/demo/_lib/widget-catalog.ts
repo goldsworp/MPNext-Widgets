@@ -209,20 +209,22 @@ export const widgetCatalog: WidgetConfig[] = [
     category: "Public",
     needsUserMenu: false,
     needsMpWidgets: false,
-    attributes: {},
+    attributes: { "event-type-id": "13" },
     events: ["massIntentionError"],
     controls: [
+      { name: "eventTypeId", label: "Event Type ID", type: "number", attribute: "event-type-id", placeholder: "e.g. 13" },
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4,8" },
       { name: "eventDetailUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /masses?id={eventId}" },
       { name: "searchMonthsAhead", label: "Search Months Ahead", type: "number", attribute: "search-months-ahead", placeholder: "e.g. 12" },
     ],
-    implementationCode: `<next-mass-intention-calendar></next-mass-intention-calendar>
+    implementationCode: `<next-mass-intention-calendar event-type-id="13"></next-mass-intention-calendar>
 
 <!-- Filtered to specific congregations -->
-<next-mass-intention-calendar congregation-ids="4,8"></next-mass-intention-calendar>
+<next-mass-intention-calendar event-type-id="13" congregation-ids="4,8"></next-mass-intention-calendar>
 
 <!-- Link the modal's action button to your own site's Mass detail page -->
 <next-mass-intention-calendar
+  event-type-id="13"
   event-detail-url-template="/masses?id={eventId}"
 ></next-mass-intention-calendar>`,
   },
@@ -236,22 +238,24 @@ export const widgetCatalog: WidgetConfig[] = [
     // app's own session, not the classic widget system.
     needsUserMenu: true,
     needsMpWidgets: false,
-    attributes: { "congregation-ids": "4" },
+    attributes: { "event-type-id": "14", "congregation-ids": "4" },
     events: ["adorationError", "adorationRegistered"],
     controls: [
+      { name: "eventTypeId", label: "Event Type ID", type: "number", attribute: "event-type-id", placeholder: "e.g. 14" },
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4,8" },
       { name: "successTitle", label: "Success Title", type: "text", attribute: "success-title", placeholder: "e.g. You're signed up" },
       { name: "successMessage", label: "Success Message", type: "text", attribute: "success-message", placeholder: "Uses {count}" },
       { name: "failTitle", label: "Fail Title", type: "text", attribute: "fail-title", placeholder: "e.g. Registration problem" },
       { name: "failMessage", label: "Fail Message", type: "text", attribute: "fail-message", placeholder: "Uses {error}" },
     ],
-    implementationCode: `<next-perpetual-adoration></next-perpetual-adoration>
+    implementationCode: `<next-perpetual-adoration event-type-id="14"></next-perpetual-adoration>
 
 <!-- Filtered to specific congregations -->
-<next-perpetual-adoration congregation-ids="4,8"></next-perpetual-adoration>
+<next-perpetual-adoration event-type-id="14" congregation-ids="4,8"></next-perpetual-adoration>
 
 <!-- Customize the confirmation dialog wording ({count} / {error} are replaced automatically) -->
 <next-perpetual-adoration
+  event-type-id="14"
   success-message="Thank you for saying yes to {count} hour(s) of adoration."
   fail-message="We couldn't complete that. {error}"
 ></next-perpetual-adoration>`,

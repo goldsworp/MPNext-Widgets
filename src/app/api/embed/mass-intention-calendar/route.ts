@@ -1,6 +1,6 @@
 /**
  * Mass Intention Calendar events endpoint for embed widgets
- * GET /api/embed/mass-intention-calendar?start=<ISO>&end=<ISO>[&congregationIds=4,8]
+ * GET /api/embed/mass-intention-calendar?start=<ISO>&end=<ISO>&eventTypeId=<id>[&congregationIds=4,8]
  * Public widget auth — no user sign-in required.
  */
 
@@ -17,11 +17,20 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const start = url.searchParams.get("start");
     const end = url.searchParams.get("end");
+    const eventTypeIdParam = url.searchParams.get("eventTypeId");
     const congregationIdsParam = url.searchParams.get("congregationIds");
 
     if (!start || !end) {
       return NextResponse.json(
         { error: "Missing required query parameters: start and end" },
+        { status: 400, headers: buildFallbackCorsHeaders(origin) }
+      );
+    }
+
+    const eventTypeId = parseInt(eventTypeIdParam || "", 10);
+    if (!eventTypeIdParam || isNaN(eventTypeId) || eventTypeId <= 0) {
+      return NextResponse.json(
+        { error: "Missing required query parameter: eventTypeId" },
         { status: 400, headers: buildFallbackCorsHeaders(origin) }
       );
     }
@@ -66,7 +75,7 @@ export async function GET(req: NextRequest) {
     }
 
     const service = await MassIntentionCalendarService.getInstance();
-    const events = await service.getMassEvents({ startDate: start, endDate: end, congregationIds });
+    const events = await service.getMassEvents({ startDate: start, endDate: end, eventTypeId, congregationIds });
 
     const headers: HeadersInit = {
       ...getCorsHeaders(origin),

@@ -22,7 +22,6 @@ interface RegistrantCountRecord {
 // "Registered" / "Attended" / "Confirmed" — the only statuses that count as
 // "an intention has been made" for this event. Matches Event_Participants.
 const RELEVANT_STATUS_IDS = [2, 3, 4];
-const MASS_EVENT_TYPE_ID = 13;
 
 // A large IN (...) list can push the request URL past the server's length
 // limit — batch large ID lists instead. See faithFormationService.ts.
@@ -57,16 +56,24 @@ export class MassIntentionCalendarService {
   }
 
   /**
-   * Mass events (Event_Type_ID 13) in a date range, with registrant counts
-   * and availability status. Native REST-query translation of the classic
-   * widget's dbo.api_custom_MassIntentionCalendar_JSON stored procedure.
+   * Mass events in a date range, with registrant counts and availability
+   * status. Native REST-query translation of the classic widget's
+   * dbo.api_custom_MassIntentionCalendar_JSON stored procedure.
+   *
+   * @param eventTypeId - The Event_Type_ID that identifies a "Mass" event on
+   *   this MP tenant. This varies per instance (the classic widget's install
+   *   guide has the admin verify it on the Event Types page and edit the SQL
+   *   accordingly); here it's a required parameter instead, supplied by the
+   *   widget's `event-type-id` attribute — there's no safe default to fall
+   *   back to, since the wrong ID would silently show unrelated events.
    */
   public async getMassEvents(params: {
     startDate: string;
     endDate: string;
+    eventTypeId: number;
     congregationIds?: number[];
   }): Promise<MassEvent[]> {
-    const { startDate, endDate, congregationIds } = params;
+    const { startDate, endDate, eventTypeId, congregationIds } = params;
 
     // MP $filter literals are interpreted in the domain's wall-clock time zone.
     // Routing through DomainTimezoneService converts any incoming instant (Z or
@@ -78,7 +85,7 @@ export class MassIntentionCalendarService {
     const mpEndDate = await tz.toMpSqlDatetime(endDate);
 
     let filter =
-      `Events.Event_Type_ID = ${MASS_EVENT_TYPE_ID} ` +
+      `Events.Event_Type_ID = ${eventTypeId} ` +
       `AND Events.Cancelled = 0 ` +
       `AND ISNULL(Events._Approved, 0) = 1 ` +
       `AND ISNULL(Events._Web_Approved, 0) = 1 ` +
