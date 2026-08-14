@@ -60,11 +60,14 @@ export function WidgetDemo({
       // 3. Build the demo HTML — same structure as Vite demos
       let html = "";
 
-      // User menu bar for auth widgets
+      // User menu for auth widgets — no extra caption here. The widget's own
+      // rendered state (classic sign-in prompt vs. avatar/dropdown) already
+      // communicates whether the visitor is signed in; a static "Sign in to
+      // continue" label next to it would just go stale and mislead once
+      // they actually are.
       if (widget.needsUserMenu) {
         html += `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px;background:#002855;border-radius:8px;margin-bottom:24px;">
-            <span style="color:white;font-weight:600;font-size:16px;">Sign in to continue</span>
+          <div style="padding:16px 24px;background:#002855;border-radius:8px;margin-bottom:24px;">
             <next-user-menu mp-base-url="${mpBaseUrl}" api-host="${apiHost}"></next-user-menu>
           </div>`;
       }
