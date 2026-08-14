@@ -1,0 +1,50 @@
+# Milestone Tracker (Individual)
+
+**Tag:** `<next-journey-milestones-individual>` · **Category:** Requires sign-in · **Database setup:** see [Database/milestone-tracker/](../Database/milestone-tracker/)
+
+Shows a signed-in parishioner their own progress through a MinistryPlatform Journey — Confirmation, OCIA, marriage preparation, volunteer formation, whatever you're tracking. Completed steps show a green check and the date; each remaining step offers a "Get Started" button straight to its form or event, when one is set up.
+
+## Before adding this widget
+
+This widget reads a mapping table that tells it which form or event completes each milestone at each parish — that has to be set up once, and populated with your Journey's specific milestones, before "Get Started" buttons will appear. See [Database/milestone-tracker/](../Database/milestone-tracker/).
+
+## Add it to a page
+
+Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout):
+
+```html
+<next-user-menu></next-user-menu>
+<next-journey-milestones-individual
+  journey-id="18"
+  group-id="136"
+></next-journey-milestones-individual>
+```
+
+## Settings
+
+| Attribute | What it does | Example |
+|---|---|---|
+| `journey-id` | **Required.** Which Journey to show. Find the number on the **Journeys** page in MinistryPlatform. | `journey-id="18"` |
+| `group-id` | **Required.** The Group whose current participants are on this Journey — its parish (Congregation) is used to pick the right form/event links. Find the number on the **Groups** page. | `group-id="136"` |
+| `page-heading` | The heading shown above the list. Defaults to "My Journey." | `page-heading="My Confirmation Journey"` |
+| `form-base-url` | The page on your site that hosts your online forms. The specific form's ID is appended automatically. | `form-base-url="/forms?id="` |
+| `event-details-page` | The page on your site that shows event details. The specific event's ID is appended automatically. | `event-details-page="/events?id="` |
+| `show-all-get-started-buttons` | `true` (default) — a button on every incomplete step that has one. `false` — only the very next incomplete step gets a button, so the parishioner focuses on one thing at a time. | `show-all-get-started-buttons="false"` |
+
+## Examples
+
+```html
+<!-- Point "Get Started" at your own site's form/event pages -->
+<next-journey-milestones-individual
+  journey-id="18"
+  group-id="136"
+  form-base-url="/forms?id="
+  event-details-page="/events?id="
+></next-journey-milestones-individual>
+```
+
+## Notes
+
+- Shows the signed-in parishioner's own progress only — never anyone else's.
+- If someone signed in isn't a current participant of the Group you specified, they'll see an empty tracker rather than an error. Confirm they're actually enrolled in the Group in MinistryPlatform if that happens unexpectedly.
+- For a household view instead of one person, see [milestone-tracker-family.md](milestone-tracker-family.md) — same settings, different tag.

@@ -662,6 +662,7 @@ Command definitions live in `.claude/commands/`. See [`CLAUDE.md`](./CLAUDE.md) 
 
 ## Documentation
 
+- **[Administrators/](./Administrators/)** — non-technical setup and reference guides for church/diocesan staff (deploying the app, database setup per widget, and a plain-language page per widget covering its purpose and settings). Point administrators here instead of this README.
 - **[CLAUDE.md](./CLAUDE.md)** — Architecture overview, services, brand colors, key file map, code conventions
 - **[Ministry Platform Provider](./src/lib/providers/ministry-platform/docs/README.md)** — Provider documentation
 - **[Type Generator](./src/lib/providers/ministry-platform/scripts/README.md)** — CLI tool documentation
