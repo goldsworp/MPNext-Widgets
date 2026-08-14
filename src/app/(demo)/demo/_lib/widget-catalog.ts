@@ -483,6 +483,59 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-user-menu></next-user-menu>
 <next-organization-detail require-sign-in="true"></next-organization-detail>`,
   },
+  {
+    slug: "personnel-directory",
+    tag: "next-personnel-directory",
+    title: "Personnel Directory",
+    description: "Searchable directory of clergy, staff, and religious — photo, role, location, phone, and email.",
+    category: "Public",
+    // See the note on the Organization Directory entry above — same reason
+    // (require-sign-in below needs next-user-menu on the page to preview).
+    needsUserMenu: true,
+    needsMpWidgets: false,
+    attributes: {},
+    events: ["personnelDirectoryError"],
+    controls: [
+      {
+        name: "requireSignIn", label: "Require Sign-in", type: "select", attribute: "require-sign-in",
+        options: [
+          { label: "No (public, default)", value: "false" },
+          { label: "Yes (gate behind sign-in)", value: "true" },
+        ],
+        defaultValue: "false",
+      },
+      { name: "personnelCategoryIds", label: "Personnel Category IDs", type: "text", attribute: "personnel-category-ids", placeholder: "e.g. 2,4 (Clergy, Staff)" },
+      { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 1,2,4" },
+      {
+        name: "phoneSource", label: "Phone Source", type: "select", attribute: "phone-source",
+        options: [
+          { label: "Company Phone", value: "1" },
+          { label: "Location Phone", value: "2" },
+          { label: "Mobile Phone", value: "3" },
+        ],
+        defaultValue: "1",
+      },
+      { name: "organizationDetailUrlTemplate", label: "Organization Detail URL Template", type: "text", attribute: "organization-detail-url-template", placeholder: "/organization-detail?id={congregationId}" },
+      { name: "pageTitle", label: "Page Title", type: "text", attribute: "page-title", placeholder: "e.g. Diocesan Staff Directory" },
+    ],
+    implementationCode: `<next-personnel-directory></next-personnel-directory>
+
+<!-- Only clergy and staff -->
+<next-personnel-directory personnel-category-ids="2,4"></next-personnel-directory>
+
+<!-- Prefer each person's mobile number, with no fallback to other phone fields -->
+<next-personnel-directory phone-source="3" phone-strict-source="true"></next-personnel-directory>
+
+<!-- Prefer a diocesan alternate email over each person's personal Contact email -->
+<next-personnel-directory alternate-email-type-id="1"></next-personnel-directory>
+
+<!-- Link each person's location to your Organization Detail page -->
+<next-personnel-directory organization-detail-url-template="/find-a-parish/{congregationId}"></next-personnel-directory>
+
+<!-- Require sign-in to view staff contact details -->
+<next-user-menu></next-user-menu>
+<next-personnel-directory require-sign-in="true"></next-personnel-directory>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {

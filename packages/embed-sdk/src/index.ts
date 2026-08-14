@@ -26,6 +26,7 @@ export { JourneyMilestonesIndividualWidget } from "./components/journey-mileston
 export { JourneyMilestonesFamilyWidget } from "./components/journey-milestones-family";
 export { OrganizationDirectoryWidget } from "./components/organization-directory";
 export { OrganizationDetailWidget } from "./components/organization-detail";
+export { PersonnelDirectoryWidget } from "./components/personnel-directory";
 
 // Auto-register components
 import "./components/user-menu";
@@ -40,6 +41,7 @@ import "./components/journey-milestones-individual";
 import "./components/journey-milestones-family";
 import "./components/organization-directory";
 import "./components/organization-detail";
+import "./components/personnel-directory";
 
 // ---------------------------------------------------------------------------
 // Auto-initialization
@@ -78,7 +80,7 @@ function detectApiHost(): string {
   // 4. Read api-host from the first widget element on the page
   //    (handles Vite dev where the SDK is a local module import)
   const widget = document.querySelector(
-    "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar, next-perpetual-adoration, next-journey-milestones-individual, next-journey-milestones-family, next-organization-directory, next-organization-detail",
+    "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar, next-perpetual-adoration, next-journey-milestones-individual, next-journey-milestones-family, next-organization-directory, next-organization-detail, next-personnel-directory",
   );
   if (widget) {
     const host = widget.getAttribute("api-host");
@@ -139,6 +141,7 @@ function detectFirstWidgetId(): string | null {
     "NEXT-JOURNEY-MILESTONES-FAMILY": "journey-milestones-family",
     "NEXT-ORGANIZATION-DIRECTORY": "organization-directory",
     "NEXT-ORGANIZATION-DETAIL": "organization-detail",
+    "NEXT-PERSONNEL-DIRECTORY": "personnel-directory",
   };
 
   for (const [tag, wid] of Object.entries(widgetMap)) {

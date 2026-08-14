@@ -5,6 +5,7 @@ export * from "./mass-intention-calendar";
 export * from "./perpetual-adoration";
 export * from "./journey-milestones";
 export * from "./organization-directory";
+export * from "./personnel-directory";
 export * from "./invoices";
 export * from "./profile";
 export * from "./subscription";

@@ -62,6 +62,7 @@ The deployed application includes a **demo gallery** — visit `https://<your-ap
 - **[perpetual-adoration.md](perpetual-adoration.md)** *(requires sign-in to claim an hour, viewable by anyone)*
 - **[organization-directory.md](organization-directory.md)** — searchable directory of parishes, schools, and other locations
 - **[organization-detail.md](organization-detail.md)** — the detail page each directory result links to
+- **[personnel-directory.md](personnel-directory.md)** — searchable directory of clergy, staff, and religious
 
 ### Requires sign-in
 - **[profile.md](profile.md)** — edit your own profile
