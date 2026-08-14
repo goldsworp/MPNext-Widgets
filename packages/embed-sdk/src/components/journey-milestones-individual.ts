@@ -59,8 +59,10 @@ export class JourneyMilestonesIndividualWidget extends MPNextWidget {
       if (this.isConnected && this.loaded) this.loadMilestones();
     } else if (name === "form-base-url") {
       this.formBaseUrl = next || "";
+      if (this.loaded) this.render();
     } else if (name === "event-details-page") {
       this.eventDetailsPage = next || "";
+      if (this.loaded) this.render();
     } else if (name === "page-heading") {
       this.pageHeading = next || "My Journey";
       if (this.loaded) this.render();
