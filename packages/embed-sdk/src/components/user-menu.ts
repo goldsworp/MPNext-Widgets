@@ -35,6 +35,7 @@ export class UserMenuWidget extends MPNextWidget {
   private authPollTimer: ReturnType<typeof setInterval> | null = null;
   private expiryTimer: ReturnType<typeof setTimeout> | null = null;
   private isRefreshingToken = false;
+  private sessionBridgeAttempted = false;
   private cachedUserInfo: UserInfo | null = null;
   private fetchingUserInfo = false;
   private userInfoFetchExhausted = false;
@@ -313,9 +314,14 @@ export class UserMenuWidget extends MPNextWidget {
         this.ensureLightDOMLogin();
       }
       this.startAuthPoll();
-      // Page loaded with a present-but-expired token — attempt silent refresh
-      if (!this.isRefreshingToken && this.hasExpiredToken()) {
-        void this.handleTokenExpiry();
+      // Try to populate the classic MP tokens from the host app's own Better
+      // Auth session — covers both a present-but-expired token AND no token
+      // at all (e.g. the visitor signed in via the host app's own sign-in
+      // page and never touched the classic MP login widget in this tab).
+      // Attempted once per widget instance; a hard refresh will retry.
+      if (!this.isRefreshingToken && !this.sessionBridgeAttempted && (this.hasExpiredToken() || !this.hasLocalStorageAuth())) {
+        this.sessionBridgeAttempted = true;
+        void this.attemptSessionBridge();
       }
     }
 
@@ -394,10 +400,10 @@ export class UserMenuWidget extends MPNextWidget {
       if (isNaN(expiryDate.getTime())) return;
       const msUntilExpiry = expiryDate.getTime() - Date.now();
       if (msUntilExpiry <= 0) {
-        void this.handleTokenExpiry();
+        void this.attemptSessionBridge();
         return;
       }
-      this.expiryTimer = setTimeout(() => void this.handleTokenExpiry(), msUntilExpiry);
+      this.expiryTimer = setTimeout(() => void this.attemptSessionBridge(), msUntilExpiry);
     } catch {}
   }
 
@@ -408,7 +414,7 @@ export class UserMenuWidget extends MPNextWidget {
     }
   }
 
-  private async handleTokenExpiry(): Promise<void> {
+  private async attemptSessionBridge(): Promise<void> {
     if (this.isRefreshingToken) return;
     this.isRefreshingToken = true;
     try {
@@ -436,7 +442,8 @@ export class UserMenuWidget extends MPNextWidget {
         }
       }
     } catch {}
-    // Refresh failed or session expired — clear tokens and show login
+    // No Better Auth session either, or the bridge attempt failed — clear any
+    // stale classic tokens and fall back to the light-DOM MP login widget.
     this.isRefreshingToken = false;
     this.clearAllMppTokens();
     this.render();
