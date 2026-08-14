@@ -226,7 +226,10 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-mass-intention-calendar
   event-type-id="13"
   event-detail-url-template="/masses?id={eventId}"
-></next-mass-intention-calendar>`,
+></next-mass-intention-calendar>
+
+<!-- Widen or narrow how far ahead "Find Next Available Mass" searches (defaults to 12 months) -->
+<next-mass-intention-calendar event-type-id="13" search-months-ahead="6"></next-mass-intention-calendar>`,
   },
   {
     slug: "perpetual-adoration",
@@ -256,7 +259,9 @@ export const widgetCatalog: WidgetConfig[] = [
 <!-- Customize the confirmation dialog wording ({count} / {error} are replaced automatically) -->
 <next-perpetual-adoration
   event-type-id="14"
+  success-title="You're signed up"
   success-message="Thank you for saying yes to {count} hour(s) of adoration."
+  fail-title="Registration problem"
   fail-message="We couldn't complete that. {error}"
 ></next-perpetual-adoration>`,
   },
@@ -296,6 +301,20 @@ export const widgetCatalog: WidgetConfig[] = [
   group-id="136"
   form-base-url="/forms?id="
   event-details-page="/events?id="
+></next-journey-milestones-individual>
+
+<!-- Custom page heading -->
+<next-journey-milestones-individual
+  journey-id="18"
+  group-id="136"
+  page-heading="My Confirmation Journey"
+></next-journey-milestones-individual>
+
+<!-- Only show "Get Started" on the next incomplete step, not every incomplete one -->
+<next-journey-milestones-individual
+  journey-id="18"
+  group-id="136"
+  show-all-get-started-buttons="false"
 ></next-journey-milestones-individual>`,
   },
   {
@@ -326,6 +345,28 @@ export const widgetCatalog: WidgetConfig[] = [
     implementationCode: `<next-journey-milestones-family
   journey-id="18"
   group-id="136"
+></next-journey-milestones-family>
+
+<!-- Link "Get Started" to your own site's form/event pages -->
+<next-journey-milestones-family
+  journey-id="18"
+  group-id="136"
+  form-base-url="/forms?id="
+  event-details-page="/events?id="
+></next-journey-milestones-family>
+
+<!-- Custom page heading -->
+<next-journey-milestones-family
+  journey-id="18"
+  group-id="136"
+  page-heading="Our Confirmation Journey"
+></next-journey-milestones-family>
+
+<!-- Only show "Get Started" on the next incomplete step, not every incomplete one -->
+<next-journey-milestones-family
+  journey-id="18"
+  group-id="136"
+  show-all-get-started-buttons="false"
 ></next-journey-milestones-family>`,
   },
 ];
