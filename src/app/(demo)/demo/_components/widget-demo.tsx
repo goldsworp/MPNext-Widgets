@@ -156,8 +156,16 @@ export function WidgetDemo({
 
     for (const control of widget.controls) {
       const value = controlValues[control.name];
+      const catalogDefault = widget.attributes[control.attribute];
       if (value) {
         widgetEl.setAttribute(control.attribute, value);
+      } else if (catalogDefault !== undefined) {
+        // Leaving a control blank restores the widget's catalog-provided
+        // default rather than erasing the attribute outright — otherwise
+        // clicking Apply for an unrelated control would silently wipe out
+        // any baked-in default (e.g. detail-page-url-template) the moment
+        // the admin hadn't also typed something into this field.
+        widgetEl.setAttribute(control.attribute, catalogDefault);
       } else {
         widgetEl.removeAttribute(control.attribute);
       }

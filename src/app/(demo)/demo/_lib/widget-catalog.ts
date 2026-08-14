@@ -373,14 +373,17 @@ export const widgetCatalog: WidgetConfig[] = [
     slug: "organization-directory",
     tag: "next-organization-directory",
     title: "Organization Directory",
-    description: "Public directory of parishes, schools, and other organizations — search, browse, and map view.",
+    description: "Public directory of parishes, schools, and other organizations — search, browse, and a map alongside the list.",
     category: "Public",
     // needsUserMenu is true here (unlike other Public widgets) so the demo
     // gallery can exercise the optional require-sign-in gate below — the
     // widget itself defaults to fully public, no sign-in required.
     needsUserMenu: true,
     needsMpWidgets: false,
-    attributes: {},
+    // Points "Details" links (and each result's own name link) at this demo
+    // gallery's own Organization Detail page rather than the widget's
+    // generic /organization-detail default, which isn't a real page here.
+    attributes: { "detail-page-url-template": "/demo/organization-detail?id={congregationId}" },
     events: ["organizationDirectoryError"],
     controls: [
       {
@@ -398,7 +401,7 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "pageTitle", label: "Page Title", type: "text", attribute: "page-title", placeholder: "e.g. Find a Parish" },
       { name: "nounSingular", label: "Noun (Singular)", type: "text", attribute: "noun-singular", placeholder: "e.g. Parish" },
       { name: "nounPlural", label: "Noun (Plural)", type: "text", attribute: "noun-plural", placeholder: "e.g. Parishes" },
-      { name: "detailPageUrlTemplate", label: "Detail Page URL Template", type: "text", attribute: "detail-page-url-template", placeholder: "/organization-detail?id={congregationId}" },
+      { name: "detailPageUrlTemplate", label: "Detail Page URL Template", type: "text", attribute: "detail-page-url-template", placeholder: "/demo/organization-detail?id={congregationId}" },
       {
         name: "mapStyle", label: "Map Style", type: "select", attribute: "map-style",
         options: [

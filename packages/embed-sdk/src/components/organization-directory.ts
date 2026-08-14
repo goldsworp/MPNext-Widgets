@@ -112,7 +112,6 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   private logoFit: "cover" | "contain" = "cover";
   private showPhone = true;
   private showDescription = true;
-  private showGivingLink = true;
   private pageSize = 24;
   private compactThreshold = 60;
   private clusterThreshold = 40;
@@ -122,7 +121,6 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   private allOrganizations: OrganizationSummary[] = [];
   private searchTerm = "";
   private browseMode: "alphabetical" | "group" = "alphabetical";
-  private viewMode: "list" | "map" = "list";
   private visibleCount = 0;
   private originPoint: { lat: number; lng: number } | null = null;
   private radiusMiles: number | null = null;
@@ -134,6 +132,8 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   private mapInstance: any = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapMarkers: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private singleMarkersByOrgId: Map<number, any> = new Map();
 
   static get observedAttributes() {
     return [
@@ -161,7 +161,6 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       "logo-fit",
       "show-phone",
       "show-description",
-      "show-giving-link",
       "page-size",
       "compact-threshold",
       "cluster-threshold",
@@ -266,9 +265,6 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         break;
       case "show-description":
         this.showDescription = next !== "false";
-        break;
-      case "show-giving-link":
-        this.showGivingLink = next !== "false";
         break;
       case "page-size":
         this.pageSize = next ? parseInt(next, 10) || 24 : 24;
@@ -415,6 +411,11 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     return `${value.toFixed(1)} ${this.units}`;
   }
 
+  private directionsHrefFor(org: OrganizationSummary): string | null {
+    if (org.Latitude === null || org.Longitude === null) return null;
+    return `https://www.google.com/maps/dir/?api=1&destination=${org.Latitude},${org.Longitude}`;
+  }
+
   private orgCardHtml(org: OrganizationSummary, compact: boolean): string {
     const distance = this.distanceFor(org);
     const href = fillTemplate(this.detailPageUrlTemplate, { congregationId: org.Congregation_ID });
@@ -437,23 +438,28 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       `;
     }
 
+    const directionsHref = this.directionsHrefFor(org);
+    const hasCoords = org.Latitude !== null && org.Longitude !== null;
+
     return `
-      <a class="od-card" href="${escapeHtml(href)}">
+      <div class="od-card">
         ${logo}
         <div class="od-card-body">
-          <div class="od-card-name">${escapeHtml(org.Name)}</div>
+          <a class="od-card-name" href="${escapeHtml(href)}">${escapeHtml(org.Name)}</a>
           ${org.Location_Category ? `<div class="od-card-category">${escapeHtml(org.Location_Category)}</div>` : ""}
           ${this.showDescription && org.Description ? `<div class="od-card-desc">${escapeHtml(org.Description)}</div>` : ""}
           <div class="od-card-meta">
             ${cityState ? `<span>${escapeHtml(cityState)}</span>` : ""}
             ${this.showPhone && org.Phone ? `<span>${escapeHtml(org.Phone)}</span>` : ""}
+            ${distance !== null ? `<span class="od-distance-chip">${this.formatDistance(distance)} away</span>` : ""}
           </div>
-          <div class="od-card-footer">
-            ${distance !== null ? `<span class="od-distance-chip">${this.formatDistance(distance)} away</span>` : "<span></span>"}
-            ${this.showGivingLink && org.Giving_URL ? `<span class="od-giving-link">Give Online →</span>` : ""}
+          <div class="od-card-actions">
+            ${hasCoords ? `<button type="button" class="od-action-btn" data-action="map" data-congregation-id="${org.Congregation_ID}">Map</button>` : ""}
+            ${directionsHref ? `<a class="od-action-btn" href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Directions</a>` : ""}
+            <a class="od-action-btn od-action-btn-primary" href="${escapeHtml(href)}">Details</a>
           </div>
         </div>
-      </a>
+      </div>
     `;
   }
 
@@ -546,7 +552,6 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     }
 
     const orgs = this.filteredOrganizations();
-    const categories = [...new Set(this.allOrganizations.map((o) => o.Location_Category).filter(Boolean))] as string[];
 
     this.root.innerHTML = `
       <div class="od-card-wrap">
@@ -567,40 +572,37 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
             ${this.originPoint ? `<button type="button" class="od-btn od-btn-clear" id="od-clear-distance">Clear</button>` : ""}
           </div>
 
-          <div class="od-toggle-group">
-            ${
-              this.browseGroupTypeId
-                ? `
+          ${
+            this.browseGroupTypeId
+              ? `
+            <div class="od-toggle-group">
               <button type="button" class="od-toggle ${this.browseMode === "alphabetical" ? "active" : ""}" data-browse="alphabetical">A–Z</button>
               <button type="button" class="od-toggle ${this.browseMode === "group" ? "active" : ""}" data-browse="group">By ${escapeHtml(this.groupNounPlural)}</button>
-            `
-                : ""
-            }
-          </div>
-
-          <div class="od-toggle-group">
-            <button type="button" class="od-toggle ${this.viewMode === "list" ? "active" : ""}" data-view="list">List</button>
-            <button type="button" class="od-toggle ${this.viewMode === "map" ? "active" : ""}" data-view="map">Map</button>
-          </div>
+            </div>
+          `
+              : ""
+          }
         </div>
 
         ${this.geocodeError ? `<div class="od-error-msg">${escapeHtml(this.geocodeError)}</div>` : ""}
 
-        <div class="od-count">${orgs.length} ${orgs.length === 1 ? this.nounSingular.toLowerCase() : this.nounPlural.toLowerCase()}${categories.length > 0 && this.locationCategoryIds ? "" : ""}</div>
+        <div class="od-count">${orgs.length} ${orgs.length === 1 ? this.nounSingular.toLowerCase() : this.nounPlural.toLowerCase()}</div>
 
-        ${
-          this.viewMode === "map"
-            ? `<div class="od-map-wrap"><div id="od-map" class="od-map"></div>${!this.leafletLoaded ? `<div class="od-map-loading">Loading map…</div>` : ""}</div>`
-            : `<div class="od-list">${this.renderListBody(orgs)}</div>`
-        }
+        <div class="od-layout">
+          <div class="od-list">${this.renderListBody(orgs)}</div>
+          <div class="od-map-panel">
+            <div class="od-map-wrap">
+              <div id="od-map" class="od-map"></div>
+              ${!this.leafletLoaded ? `<div class="od-map-loading">Loading map…</div>` : ""}
+            </div>
+            <p class="od-map-hint">Click a pin for its address and directions, or use a card's "Map" button to locate it here.</p>
+          </div>
+        </div>
       </div>
     `;
 
     this.attachControlListeners();
-
-    if (this.viewMode === "map") {
-      void this.ensureMapLoaded().then(() => this.renderMap(orgs));
-    }
+    void this.ensureMapLoaded().then(() => this.renderMap(orgs));
   }
 
   private attachControlListeners(): void {
@@ -619,10 +621,10 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       });
     });
 
-    this.root.querySelectorAll<HTMLButtonElement>("[data-view]").forEach((btn) => {
+    this.root.querySelectorAll<HTMLButtonElement>("[data-action='map']").forEach((btn) => {
       btn.addEventListener("click", () => {
-        this.viewMode = btn.dataset.view as "list" | "map";
-        this.render();
+        const congregationId = parseInt(btn.dataset.congregationId || "", 10);
+        if (!isNaN(congregationId)) this.panToOrg(congregationId);
       });
     });
 
@@ -677,6 +679,36 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     return [...cells.values()];
   }
 
+  private pinPopupHtml(org: OrganizationSummary): string {
+    const cityStateZip = [[org.City, org.State].filter(Boolean).join(", "), org.Postal_Code].filter(Boolean).join(" ");
+    const directionsHref = this.directionsHrefFor(org);
+    return `
+      <div class="od-pin-popup">
+        <strong>${escapeHtml(org.Name)}</strong>
+        ${cityStateZip ? `<div>${escapeHtml(cityStateZip)}</div>` : ""}
+        ${org.Phone ? `<div><a href="tel:${escapeHtml(org.Phone.replace(/[^\d+]/g, ""))}">${escapeHtml(org.Phone)}</a></div>` : ""}
+        ${directionsHref ? `<a href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Get directions →</a>` : ""}
+      </div>
+    `;
+  }
+
+  /** Pans the map to a single organization's marker and opens its popup — used by each card's "Map" button. */
+  private panToOrg(congregationId: number): void {
+    if (!this.mapInstance) return;
+    const marker = this.singleMarkersByOrgId.get(congregationId);
+    if (marker) {
+      this.mapInstance.setView(marker.getLatLng(), Math.max(this.mapInstance.getZoom(), 14));
+      marker.openPopup();
+      return;
+    }
+    // Bucketed into a cluster — no marker of its own to pop open, so just
+    // center on the organization's coordinates instead.
+    const org = this.allOrganizations.find((o) => o.Congregation_ID === congregationId);
+    if (org && org.Latitude !== null && org.Longitude !== null) {
+      this.mapInstance.setView([org.Latitude, org.Longitude], Math.max(this.mapInstance.getZoom(), 14));
+    }
+  }
+
   private renderMap(orgs: OrganizationSummary[]): void {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const L = (window as any).L;
@@ -685,25 +717,35 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     const mount = this.root.querySelector<HTMLElement>("#od-map");
     if (!mount) return;
 
-    if (!this.mapInstance) {
-      this.mapInstance = L.map(mount);
-      const layer = TILE_LAYERS[this.mapStyle];
-      L.tileLayer(layer.url, { attribution: layer.attribution, maxZoom: 19 }).addTo(this.mapInstance);
+    // The map's mount node is a fresh DOM element on every render() call
+    // (the whole shadow root is rebuilt each time now that the map is
+    // always visible, not just on toggle) — reusing a prior Leaflet
+    // instance here would leave it bound to a now-detached node and the
+    // new #od-map div would stay blank, so it's destroyed and recreated.
+    if (this.mapInstance) {
+      try {
+        this.mapInstance.remove();
+      } catch {
+        // ignore
+      }
     }
-
-    this.mapMarkers.forEach((m) => m.remove());
     this.mapMarkers = [];
+    this.singleMarkersByOrgId = new Map();
+
+    this.mapInstance = L.map(mount);
+    const layer = TILE_LAYERS[this.mapStyle];
+    L.tileLayer(layer.url, { attribution: layer.attribution, maxZoom: 19 }).addTo(this.mapInstance);
 
     const clusters = this.clusterPins(orgs);
     for (const cluster of clusters) {
       const marker = L.marker([cluster.lat, cluster.lng]).addTo(this.mapInstance);
       if (cluster.orgs.length === 1) {
         const o = cluster.orgs[0];
-        const href = fillTemplate(this.detailPageUrlTemplate, { congregationId: o.Congregation_ID });
-        marker.bindPopup(`<strong>${escapeHtml(o.Name)}</strong><br>${escapeHtml([o.City, o.State].filter(Boolean).join(", "))}<br><a href="${escapeHtml(href)}">View details →</a>`);
+        marker.bindPopup(this.pinPopupHtml(o));
+        this.singleMarkersByOrgId.set(o.Congregation_ID, marker);
       } else {
         marker.bindPopup(
-          `<strong>${cluster.orgs.length} ${this.nounPlural}</strong><br>${cluster.orgs.map((o) => escapeHtml(o.Name)).join("<br>")}`
+          `<strong>${cluster.orgs.length} ${escapeHtml(this.nounPlural)}</strong><br>${cluster.orgs.map((o) => escapeHtml(o.Name)).join("<br>")}`
         );
       }
       this.mapMarkers.push(marker);
@@ -720,7 +762,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       this.mapInstance.setView([39.8283, -98.5795], 4); // continental US fallback
     }
 
-    requestAnimationFrame(() => this.mapInstance.invalidateSize());
+    requestAnimationFrame(() => this.mapInstance?.invalidateSize());
   }
 
   disconnectedCallback(): void {
@@ -792,25 +834,34 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         letter-spacing: 0.04em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid ${this.accentColor};
       }
 
-      .od-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+      .od-cards { display: flex; flex-direction: column; gap: 12px; }
       .od-card {
-        display: flex; flex-direction: column; text-decoration: none; color: inherit; border: 1px solid #e3ebf3;
-        border-radius: 10px; overflow: hidden; background: #fff; transition: box-shadow 0.15s, border-color 0.15s;
+        display: flex; gap: 14px; padding: 14px; border: 1px solid #e3ebf3; border-radius: 10px;
+        background: #fff; transition: box-shadow 0.15s, border-color 0.15s;
       }
       .od-card:hover { border-color: ${this.brandColor}; box-shadow: 0 4px 16px rgba(30,60,90,0.12); }
-      .od-logo { width: 100%; height: 120px; object-fit: cover; background: #f4f8fb; }
+      .od-logo { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: #f4f8fb; flex: 0 0 auto; }
       .od-logo-monogram {
-        display: flex; align-items: center; justify-content: center; height: 120px; font-size: 2.4em; font-weight: 700;
+        display: flex; align-items: center; justify-content: center; font-size: 1.6em; font-weight: 700;
         color: #fff; background: ${this.brandColor};
       }
-      .od-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-      .od-card-name { font-weight: 700; font-size: 1.05em; color: #2c3e50; }
+      .od-card-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+      .od-card-name {
+        font-weight: 700; font-size: 1.05em; color: ${this.brandColor}; text-decoration: none; align-self: flex-start;
+      }
+      .od-card-name:hover { text-decoration: underline; }
       .od-card-category { font-size: 0.78em; color: ${this.brandColor}; font-weight: 600; text-transform: uppercase; }
       .od-card-desc { font-size: 0.88em; color: #667080; line-height: 1.4; }
-      .od-card-meta { display: flex; flex-direction: column; gap: 2px; font-size: 0.85em; color: #6b7a88; margin-top: auto; }
-      .od-card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.82em; }
+      .od-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 0.85em; color: #6b7a88; margin-top: 2px; }
       .od-distance-chip { background: #eef4fb; color: ${this.brandColor}; padding: 3px 9px; border-radius: 999px; font-weight: 600; }
-      .od-giving-link { color: ${this.brandColor}; font-weight: 600; }
+      .od-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+      .od-action-btn {
+        display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd;
+        background: #fff; color: #444; font-size: 0.85em; font-weight: 600; text-decoration: none; cursor: pointer;
+      }
+      .od-action-btn:hover { border-color: ${this.brandColor}; color: ${this.brandColor}; }
+      .od-action-btn-primary { background: ${this.brandColor}; color: #fff; border-color: ${this.brandColor}; }
+      .od-action-btn-primary:hover { background: #002855; border-color: #002855; color: #fff; }
 
       .od-rows { display: flex; flex-direction: column; gap: 2px; }
       .od-row {
@@ -829,16 +880,29 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         background: #fff; color: ${this.brandColor}; font-weight: 600; cursor: pointer;
       }
 
+      .od-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
+      .od-map-panel { position: sticky; top: 20px; }
       .od-map-wrap { position: relative; }
-      .od-map { height: 480px; border-radius: 10px; overflow: hidden; z-index: 0; }
+      .od-map { height: 560px; border-radius: 10px; overflow: hidden; z-index: 0; }
       .od-map-loading {
         position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
         background: #f4f8fb; color: #6b7a88; border-radius: 10px;
       }
+      .od-map-hint { margin: 10px 2px 0; font-size: 0.82em; color: #6b7a88; line-height: 1.4; }
+
+      .od-pin-popup strong { color: ${this.brandColor}; }
+      .od-pin-popup div { font-size: 0.85em; color: #444; margin-top: 2px; }
+      .od-pin-popup a { color: ${this.brandColor}; font-size: 0.85em; font-weight: 600; text-decoration: none; display: inline-block; margin-top: 4px; }
+      .od-pin-popup a:hover { text-decoration: underline; }
+
+      @media (max-width: 900px) {
+        .od-layout { grid-template-columns: 1fr; }
+        .od-map-panel { position: static; }
+        .od-map { height: 360px; }
+      }
 
       @media (max-width: 640px) {
         .od-card-wrap { padding: 16px; border-radius: 10px; }
-        .od-cards { grid-template-columns: 1fr; }
       }
     `;
   }

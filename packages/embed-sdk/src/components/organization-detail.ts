@@ -382,7 +382,7 @@ export class OrganizationDetailWidget extends MPNextWidget {
               ${this.showPhone && org.Phone ? `<p class="odd-phone">${escapeHtml(org.Phone)}</p>` : ""}
               ${org.Pastor_Name ? `<p class="odd-pastor">Pastor: ${escapeHtml(org.Pastor_Name)}</p>` : ""}
               ${directionsHref ? `<a class="odd-directions" href="${directionsHref}" target="_blank" rel="noopener">Get Directions →</a>` : ""}
-              ${this.showGivingLink && org.Giving_URL ? `<a class="odd-giving" href="${escapeHtml(org.Giving_URL)}" target="_blank" rel="noopener">Give Online →</a>` : ""}
+              ${this.showGivingLink && org.Giving_URL ? `<a class="odd-giving" href="${escapeHtml(org.Giving_URL)}" target="_blank" rel="noopener">Give →</a>` : ""}
             </div>
 
             ${this.renderMassSchedule(org)}
