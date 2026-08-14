@@ -17,7 +17,15 @@ export async function GET(
   const origin = resolveRequestOrigin(req);
 
   try {
-    const claims = await requireWidgetAuth(req, { widget: ["organization-directory", "organization-detail"] });
+    // "user-menu" is allowed alongside this widget's own names because the
+    // SDK's token provider resolves a single shared `wid` per page from
+    // whichever known widget tag appears first in the DOM — when
+    // <next-user-menu> co-exists on a page (e.g. for require-sign-in), it
+    // can "win" that resolution instead of this widget. Same fix as
+    // mass-intention-calendar and perpetual-adoration's routes.
+    const claims = await requireWidgetAuth(req, {
+      widget: ["organization-directory", "organization-detail", "user-menu"],
+    });
 
     const { congregationId: congregationIdParam } = await params;
     const congregationId = parseInt(congregationIdParam, 10);
@@ -59,12 +67,17 @@ export async function GET(
   } catch (error) {
     console.error("Error loading organization detail:", error);
 
+    // An expired token maps to 401 (not 403) specifically so the widget's
+    // built-in fetch() retry-on-401 silently refreshes and retries instead
+    // of surfacing a hard error for what's normally a transient condition.
     const status =
       error instanceof Error && error.message === "Organization not found"
         ? 404
-        : error instanceof Error && error.message.includes("Token")
-          ? 403
-          : 500;
+        : error instanceof Error && /expired/i.test(error.message)
+          ? 401
+          : error instanceof Error && error.message.includes("Token")
+            ? 403
+            : 500;
 
     return NextResponse.json(
       {

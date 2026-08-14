@@ -239,7 +239,23 @@
             <option value="terrain">Terrain</option>
           </select>
         </div>
+        <div class="control-group">
+          <label for="require-sign-in-input">Require Sign-in</label>
+          <select id="require-sign-in-input">
+            <option value="false">No (public, default)</option>
+            <option value="true">Yes (gate behind sign-in)</option>
+          </select>
+        </div>
         <button class="apply-btn" id="reload-btn" type="button">Apply</button>
+      </div>
+
+      <!-- Sign-in — present so the require-sign-in gate above can actually be exercised.
+           Also matters even when require-sign-in is off: the SDK's shared token provider
+           resolves one `wid` per page from whichever known widget tag appears first in the
+           DOM, so having <next-user-menu> on the same page as this widget is exactly the
+           scenario the "user-menu" auth fallback (in the API routes) exists to cover. -->
+      <div class="demo-box">
+        <next-user-menu api-host="__API_HOST__"></next-user-menu>
       </div>
 
       <!-- Demo container -->
@@ -303,6 +319,7 @@
     const congregationIdsInput = document.getElementById("congregation-ids-input");
     const browseGroupTypeInput = document.getElementById("browse-group-type-input");
     const mapStyleInput = document.getElementById("map-style-input");
+    const requireSignInInput = document.getElementById("require-sign-in-input");
     const reloadBtn = document.getElementById("reload-btn");
 
     function showStatus(message, type = "info") {
@@ -329,7 +346,7 @@
     logEvent("info", "Widget initialized");
 
     reloadBtn.addEventListener("click", () => {
-      const demoBox = document.querySelector(".demo-box");
+      const demoBox = document.querySelectorAll(".demo-box")[1];
       const oldWidget = demoBox.querySelector("next-organization-directory");
       if (oldWidget) oldWidget.remove();
 
@@ -344,6 +361,7 @@
         newWidget.setAttribute("browse-group-type-id", browseGroupTypeInput.value.trim());
       }
       newWidget.setAttribute("map-style", mapStyleInput.value);
+      newWidget.setAttribute("require-sign-in", requireSignInInput.value);
       newWidget.setAttribute("detail-page-url-template", "/demo-organization-detail.html?id={congregationId}");
       newWidget.setAttribute("api-host", "__API_HOST__");
       demoBox.appendChild(newWidget);
