@@ -369,6 +369,120 @@ export const widgetCatalog: WidgetConfig[] = [
   show-all-get-started-buttons="false"
 ></next-journey-milestones-family>`,
   },
+  {
+    slug: "organization-directory",
+    tag: "next-organization-directory",
+    title: "Organization Directory",
+    description: "Public directory of parishes, schools, and other organizations — search, browse, and map view.",
+    category: "Public",
+    // needsUserMenu is true here (unlike other Public widgets) so the demo
+    // gallery can exercise the optional require-sign-in gate below — the
+    // widget itself defaults to fully public, no sign-in required.
+    needsUserMenu: true,
+    needsMpWidgets: false,
+    attributes: {},
+    events: ["organizationDirectoryError"],
+    controls: [
+      {
+        name: "requireSignIn", label: "Require Sign-in", type: "select", attribute: "require-sign-in",
+        options: [
+          { label: "No (public, default)", value: "false" },
+          { label: "Yes (gate behind sign-in)", value: "true" },
+        ],
+        defaultValue: "false",
+      },
+      { name: "locationCategoryIds", label: "Location Category IDs", type: "text", attribute: "location-category-ids", placeholder: "e.g. 1,9,10" },
+      { name: "pinnedCategoryIds", label: "Pinned Category IDs", type: "text", attribute: "pinned-category-ids", placeholder: "e.g. 4 (exempt from distance filter)" },
+      { name: "browseGroupTypeId", label: "Browse Group Type ID", type: "number", attribute: "browse-group-type-id", placeholder: "e.g. 1 (Deanery)" },
+      { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 1,2,4" },
+      { name: "pageTitle", label: "Page Title", type: "text", attribute: "page-title", placeholder: "e.g. Find a Parish" },
+      { name: "nounSingular", label: "Noun (Singular)", type: "text", attribute: "noun-singular", placeholder: "e.g. Parish" },
+      { name: "nounPlural", label: "Noun (Plural)", type: "text", attribute: "noun-plural", placeholder: "e.g. Parishes" },
+      { name: "detailPageUrlTemplate", label: "Detail Page URL Template", type: "text", attribute: "detail-page-url-template", placeholder: "/organization-detail?id={congregationId}" },
+      {
+        name: "mapStyle", label: "Map Style", type: "select", attribute: "map-style",
+        options: [
+          { label: "Light", value: "light" },
+          { label: "Street", value: "street" },
+          { label: "Terrain", value: "terrain" },
+        ],
+        defaultValue: "light",
+      },
+      { name: "defaultRadius", label: "Default Search Radius", type: "number", attribute: "default-radius", placeholder: "e.g. 25" },
+      {
+        name: "units", label: "Distance Units", type: "select", attribute: "units",
+        options: [
+          { label: "Miles", value: "mi" },
+          { label: "Kilometers", value: "km" },
+        ],
+        defaultValue: "mi",
+      },
+    ],
+    implementationCode: `<next-organization-directory></next-organization-directory>
+
+<!-- Only parishes and schools -->
+<next-organization-directory location-category-ids="1,9"></next-organization-directory>
+
+<!-- Enable "Browse by Deanery" alongside the default A–Z view -->
+<next-organization-directory browse-group-type-id="1" group-noun-plural="Deaneries"></next-organization-directory>
+
+<!-- Point results at your own site's detail page -->
+<next-organization-directory detail-page-url-template="/find-a-parish/{congregationId}"></next-organization-directory>
+
+<!-- Relabel for a non-parish directory -->
+<next-organization-directory
+  page-title="Find a School"
+  noun-singular="School"
+  noun-plural="Schools"
+  location-category-ids="9"
+></next-organization-directory>
+
+<!-- Gate the whole directory behind sign-in (needs next-user-menu on the page too) -->
+<next-user-menu></next-user-menu>
+<next-organization-directory require-sign-in="true"></next-organization-directory>`,
+  },
+  {
+    slug: "organization-detail",
+    tag: "next-organization-detail",
+    title: "Organization Detail",
+    description: "Detail page for a single organization from the directory — photo, address, pastor, and Mass schedule.",
+    category: "Public",
+    // See the note on the Organization Directory entry above — same reason.
+    needsUserMenu: true,
+    needsMpWidgets: false,
+    attributes: {},
+    events: ["organizationDetailLoaded", "organizationDetailError"],
+    controls: [
+      {
+        name: "requireSignIn", label: "Require Sign-in", type: "select", attribute: "require-sign-in",
+        options: [
+          { label: "No (public, default)", value: "false" },
+          { label: "Yes (gate behind sign-in)", value: "true" },
+        ],
+        defaultValue: "false",
+      },
+      { name: "directoryPage", label: "Directory Page", type: "text", attribute: "directory-page", placeholder: "/organization-directory" },
+      { name: "backLabel", label: "Back Link Label", type: "text", attribute: "back-label", placeholder: "e.g. ← All Parishes" },
+      { name: "idParam", label: "URL ID Parameter", type: "text", attribute: "id-param", placeholder: "id" },
+      { name: "massEventTypeId", label: "Mass Event Type ID", type: "number", attribute: "mass-event-type-id", placeholder: "e.g. 13 (optional)" },
+    ],
+    implementationCode: `<!-- Reads the organization's ID from ?id= in this page's own URL -->
+<next-organization-detail></next-organization-detail>
+
+<!-- Show a weekly Mass schedule section (omit for organizations that aren't parishes) -->
+<next-organization-detail mass-event-type-id="13"></next-organization-detail>
+
+<!-- Custom back link and a different query-string parameter name -->
+<next-organization-detail
+  directory-page="/find-a-parish"
+  back-label="← All Parishes"
+  id-param="parishId"
+></next-organization-detail>
+
+<!-- Gate this page behind sign-in too, matching a gated directory -->
+<next-user-menu></next-user-menu>
+<next-organization-detail require-sign-in="true"></next-organization-detail>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {
