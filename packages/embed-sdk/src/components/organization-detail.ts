@@ -95,6 +95,7 @@ export class OrganizationDetailWidget extends MPNextWidget {
   private mapLoadError: string | null = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapInstance: any = null;
+  private mapResizeObserver: ResizeObserver | null = null;
 
   static get observedAttributes() {
     return [
@@ -191,6 +192,8 @@ export class OrganizationDetailWidget extends MPNextWidget {
   }
 
   disconnectedCallback(): void {
+    this.mapResizeObserver?.disconnect();
+    this.mapResizeObserver = null;
     if (this.mapInstance) {
       try {
         this.mapInstance.remove();
@@ -305,13 +308,22 @@ export class OrganizationDetailWidget extends MPNextWidget {
         // ignore
       }
     }
+    this.mapResizeObserver?.disconnect();
 
     this.mapInstance = L.map(mount).setView([org.Latitude, org.Longitude], this.mapZoom);
     const layer = TILE_LAYERS[this.mapStyle];
     L.tileLayer(layer.url, { attribution: layer.attribution, maxZoom: 19 }).addTo(this.mapInstance);
     L.marker([org.Latitude, org.Longitude]).addTo(this.mapInstance).bindPopup(escapeHtml(org.Name));
 
-    requestAnimationFrame(() => this.mapInstance.invalidateSize());
+    requestAnimationFrame(() => this.mapInstance?.invalidateSize());
+
+    // See organization-directory.ts's renderMap for why a single rAF isn't
+    // always enough — a ResizeObserver re-checks whenever the mount div's
+    // actual size changes afterward.
+    if (typeof ResizeObserver !== "undefined") {
+      this.mapResizeObserver = new ResizeObserver(() => this.mapInstance?.invalidateSize());
+      this.mapResizeObserver.observe(mount);
+    }
   }
 
   // ── Rendering ──

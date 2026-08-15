@@ -139,6 +139,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   private mapMarkers: any[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private singleMarkersByOrgId: Map<number, any> = new Map();
+  private mapResizeObserver: ResizeObserver | null = null;
 
   static get observedAttributes() {
     return [
@@ -806,6 +807,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         // ignore
       }
     }
+    this.mapResizeObserver?.disconnect();
     this.mapMarkers = [];
     this.singleMarkersByOrgId = new Map();
 
@@ -840,9 +842,24 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     }
 
     requestAnimationFrame(() => this.mapInstance?.invalidateSize());
+
+    // A single rAF isn't always enough to catch the container reaching its
+    // final size — in a host page with its own layout/hydration in flight
+    // (e.g. the Next.js demo gallery's React tree, or a slow web font
+    // reflowing the grid), Leaflet can end up measuring the mount div
+    // before it has settled, leaving the map only partially rendered.
+    // A ResizeObserver re-checks on every actual size change afterward,
+    // which also keeps the map correctly sized across the layout's
+    // single-column breakpoint at 900px.
+    if (typeof ResizeObserver !== "undefined") {
+      this.mapResizeObserver = new ResizeObserver(() => this.mapInstance?.invalidateSize());
+      this.mapResizeObserver.observe(mount);
+    }
   }
 
   disconnectedCallback(): void {
+    this.mapResizeObserver?.disconnect();
+    this.mapResizeObserver = null;
     if (this.mapInstance) {
       try {
         this.mapInstance.remove();
