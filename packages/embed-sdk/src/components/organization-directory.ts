@@ -478,7 +478,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     const hasCoords = org.Latitude !== null && org.Longitude !== null;
 
     return `
-      <div class="od-card">
+      <div class="od-card"${hasCoords ? ` data-congregation-id="${org.Congregation_ID}"` : ""}>
         ${logo}
         <div class="od-card-body">
           <a class="od-card-name" href="${escapeHtml(href)}">${escapeHtml(org.Name)}</a>
@@ -664,6 +664,21 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       btn.addEventListener("click", () => {
         const congregationId = parseInt(btn.dataset.congregationId || "", 10);
         if (!isNaN(congregationId)) this.panToOrg(congregationId);
+      });
+    });
+
+    // Matches the classic directory: hovering a card opens its pin's popup;
+    // Leaflet's default autoPan nudges the map to keep the popup in view,
+    // which reads as the map "following" the card without an explicit
+    // flyTo/panTo call.
+    this.root.querySelectorAll<HTMLElement>(".od-card[data-congregation-id]").forEach((card) => {
+      const congregationId = parseInt(card.dataset.congregationId || "", 10);
+      if (isNaN(congregationId)) return;
+      card.addEventListener("mouseenter", () => {
+        this.singleMarkersByOrgId.get(congregationId)?.openPopup();
+      });
+      card.addEventListener("mouseleave", () => {
+        this.singleMarkersByOrgId.get(congregationId)?.closePopup();
       });
     });
 
