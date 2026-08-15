@@ -28,6 +28,7 @@ const LEAFLET_VERSION = "1.9.4";
 // production) for FullCalendar elsewhere in this SDK.
 const LEAFLET_CSS_URL = `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.css`;
 const LEAFLET_JS_URL = `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/leaflet.js`;
+const LEAFLET_IMAGES_BASE = `https://cdn.jsdelivr.net/npm/leaflet@${LEAFLET_VERSION}/dist/images`;
 
 const TILE_LAYERS: Record<string, { url: string; attribution: string }> = {
   light: {
@@ -699,6 +700,19 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     try {
       await injectExternalCSS(this.root, LEAFLET_CSS_URL);
       await loadScript(LEAFLET_JS_URL);
+      // Leaflet auto-detects its default marker icon path by scanning
+      // <script> tags in the document — unreliable once the script is one
+      // of many dynamically injected into a host page's <head> (Next.js
+      // chunks, MPWidgets.js, etc.), so it resolves against the host page's
+      // own origin instead of the CDN and every marker icon 404s (pins
+      // still exist, just invisible). Point it at the CDN explicitly.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const L = (window as any).L;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: `${LEAFLET_IMAGES_BASE}/marker-icon-2x.png`,
+        iconUrl: `${LEAFLET_IMAGES_BASE}/marker-icon.png`,
+        shadowUrl: `${LEAFLET_IMAGES_BASE}/marker-shadow.png`,
+      });
       this.leafletLoaded = true;
       this.render();
     } catch (err) {
