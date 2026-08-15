@@ -127,37 +127,105 @@ describe("cdn-loader", () => {
   });
 
   describe("injectExternalCSS()", () => {
-    it("appends a <link rel=stylesheet> to the shadow root and resolves on load", async () => {
-      const { injectExternalCSS } = await loadFresh();
-
-      const host = document.createElement("div");
-      const shadow = host.attachShadow({ mode: "open" });
-
-      const promise = injectExternalCSS(shadow, "https://cdn.example.com/styles.css");
-
-      const link = shadow.querySelector("link") as HTMLLinkElement | null;
-      expect(link).not.toBeNull();
-      expect(link!.rel).toBe("stylesheet");
-      expect(link!.href).toBe("https://cdn.example.com/styles.css");
-
-      link!.onload?.(new Event("load"));
-      await expect(promise).resolves.toBeUndefined();
+    beforeEach(() => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async (url: string) => {
+          if (url.includes("missing")) {
+            return { ok: false, status: 404, text: async () => "" } as Response;
+          }
+          return { ok: true, text: async () => ".leaflet-pane { position: absolute; }" } as Response;
+        }),
+      );
     });
 
-    it("rejects when the CSS link emits an error", async () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it("fetches the CSS and never appends a <link> child (jsdom-version-agnostic)", async () => {
       const { injectExternalCSS } = await loadFresh();
 
       const host = document.createElement("div");
       const shadow = host.attachShadow({ mode: "open" });
 
-      const promise = injectExternalCSS(shadow, "https://cdn.example.com/missing.css");
+      await injectExternalCSS(shadow, "https://cdn.example.com/styles.css");
 
-      const link = shadow.querySelector("link") as HTMLLinkElement;
-      link.onerror?.(new Event("error"));
+      // Not a DOM child — a <link> here would be destroyed by the component's
+      // next `shadowRoot.innerHTML = ...` re-render, which is the whole bug
+      // this approach avoids. Whether this jsdom version actually implements
+      // adoptedStyleSheets varies, so accept either real path (matching the
+      // conditional pattern base-widget.test.ts already uses for the same
+      // feature-detected API).
+      expect(shadow.querySelector("link")).toBeNull();
+      const sheets = shadow.adoptedStyleSheets;
+      if (sheets && sheets.length > 0) {
+        expect(sheets[0].cssRules[0].cssText).toContain("position: absolute");
+      } else {
+        const style = shadow.querySelector("style");
+        expect(style).not.toBeNull();
+        expect(style!.textContent).toContain("position: absolute");
+      }
+    });
 
-      await expect(promise).rejects.toThrow(
-        "Failed to load CSS: https://cdn.example.com/missing.css",
-      );
+    it("appends to, rather than replaces, existing adopted stylesheets (constructable-stylesheet path)", async () => {
+      // This jsdom version may not natively implement adoptedStyleSheets
+      // (confirmed: a fresh shadow root's `.adoptedStyleSheets` reads back
+      // undefined here) — force the feature-detected branch so the
+      // spread-append logic itself, which is the actual fix for the bug
+      // where a <link> got wiped by the widget's next render(), is verified
+      // deterministically rather than silently skipped.
+      const hadAdopted = "adoptedStyleSheets" in Document.prototype;
+      const hadReplace = "replace" in CSSStyleSheet.prototype;
+      if (!hadAdopted) {
+        Object.defineProperty(Document.prototype, "adoptedStyleSheets", {
+          value: [],
+          writable: true,
+          configurable: true,
+        });
+      }
+      if (!hadReplace) {
+        Object.defineProperty(CSSStyleSheet.prototype, "replace", {
+          value: function (this: CSSStyleSheet) {
+            return Promise.resolve(this);
+          },
+          writable: true,
+          configurable: true,
+        });
+      }
+
+      try {
+        const { injectExternalCSS } = await loadFresh();
+
+        const host = document.createElement("div");
+        const shadow = host.attachShadow({ mode: "open" });
+        const ownSheet = new CSSStyleSheet();
+        ownSheet.replaceSync(".od-card { color: red; }");
+        Object.defineProperty(shadow, "adoptedStyleSheets", {
+          value: [ownSheet],
+          writable: true,
+          configurable: true,
+        });
+
+        await injectExternalCSS(shadow, "https://cdn.example.com/styles.css");
+
+        expect(shadow.adoptedStyleSheets.length).toBe(2);
+        expect(shadow.adoptedStyleSheets[0]).toBe(ownSheet);
+      } finally {
+        if (!hadAdopted) delete (Document.prototype as unknown as Record<string, unknown>).adoptedStyleSheets;
+        if (!hadReplace) delete (CSSStyleSheet.prototype as unknown as Record<string, unknown>).replace;
+      }
+    });
+
+    it("rejects when the CSS fetch fails", async () => {
+      const { injectExternalCSS } = await loadFresh();
+
+      const host = document.createElement("div");
+      const shadow = host.attachShadow({ mode: "open" });
+
+      await expect(
+        injectExternalCSS(shadow, "https://cdn.example.com/missing.css"),
+      ).rejects.toThrow("Failed to load CSS: https://cdn.example.com/missing.css");
     });
   });
 });
