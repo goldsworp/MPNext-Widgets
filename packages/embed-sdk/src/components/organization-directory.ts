@@ -830,16 +830,19 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       this.mapMarkers.push(marker);
     }
 
-    if (this.originPoint) {
-      this.mapInstance.setView([this.originPoint.lat, this.originPoint.lng], this.mapZoom);
-    } else if (clusters.length > 0) {
-      const bounds = L.latLngBounds(clusters.map((c) => [c.lat, c.lng]));
-      this.mapInstance.fitBounds(bounds, { padding: [24, 24] });
-    } else if (this.mapCenter) {
-      this.mapInstance.setView([this.mapCenter.lat, this.mapCenter.lng], this.mapZoom);
-    } else {
-      this.mapInstance.setView([39.8283, -98.5795], 4); // continental US fallback
-    }
+    const fitView = () => {
+      if (this.originPoint) {
+        this.mapInstance.setView([this.originPoint.lat, this.originPoint.lng], this.mapZoom);
+      } else if (clusters.length > 0) {
+        const bounds = L.latLngBounds(clusters.map((c) => [c.lat, c.lng]));
+        this.mapInstance.fitBounds(bounds, { padding: [24, 24] });
+      } else if (this.mapCenter) {
+        this.mapInstance.setView([this.mapCenter.lat, this.mapCenter.lng], this.mapZoom);
+      } else {
+        this.mapInstance.setView([39.8283, -98.5795], 4); // continental US fallback
+      }
+    };
+    fitView();
 
     requestAnimationFrame(() => this.mapInstance?.invalidateSize());
 
@@ -851,8 +854,25 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     // A ResizeObserver re-checks on every actual size change afterward,
     // which also keeps the map correctly sized across the layout's
     // single-column breakpoint at 900px.
+    //
+    // invalidateSize() alone only re-tiles for the corrected size — it
+    // doesn't redo fitBounds()'s zoom/center choice, which was made against
+    // whatever (possibly stale) size the container had at construction
+    // time. Left uncorrected, tiles fill the newly-correct area while pins
+    // stay positioned for the old, wrong one, landing outside the visible
+    // viewport. Re-running fitView() on every observed size change (not
+    // just the first) also covers a visitor resizing their window across
+    // the layout's single-column breakpoint at 900px, which changes the
+    // map's aspect ratio without any render() call to recreate it — a
+    // plain invalidateSize() would keep tiles filling the new size while
+    // pins stayed positioned for the old one, same as the initial-race
+    // case. This does mean a resize also resets any manual pan/zoom, but
+    // for a results directory, pins staying on-screen matters more.
     if (typeof ResizeObserver !== "undefined") {
-      this.mapResizeObserver = new ResizeObserver(() => this.mapInstance?.invalidateSize());
+      this.mapResizeObserver = new ResizeObserver(() => {
+        this.mapInstance?.invalidateSize();
+        fitView();
+      });
       this.mapResizeObserver.observe(mount);
     }
   }
