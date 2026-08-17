@@ -21,6 +21,20 @@ export default defineConfig({
         baseURL: "http://localhost:5173",
       },
     },
+    {
+      // One-off asset-generation script (public/gallery/*.png for the
+      // /gallery page), not a CI test — deliberately excluded from the
+      // "widget" project's default testMatch (**/*.@(spec|test).ts) via
+      // its filename, and given its own explicit testMatch here so it's
+      // only ever run when asked for by name (`--project=gallery-capture`).
+      name: "gallery-capture",
+      testDir: "./e2e/widget",
+      testMatch: "capture-gallery-screenshots.ts",
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: "http://localhost:5173",
+      },
+    },
   ],
 
   webServer: [
