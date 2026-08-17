@@ -47,10 +47,15 @@ export abstract class MPNextWidget extends HTMLElement {
     // Fall back to a sibling widget's api-host (handles Vite dev, where the SDK
     // is a local module import — no "next-embed" script tag — and a widget
     // without an explicit api-host would otherwise fetch the wrong origin).
-    const sibling = document.querySelector(
-      "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar, next-perpetual-adoration, next-journey-milestones-individual, next-journey-milestones-family, next-organization-directory, next-organization-detail, next-personnel-directory",
+    // Checks every match rather than just the first: a plain querySelector()
+    // would return whichever matching tag comes first in the DOM regardless
+    // of whether it actually has api-host set, and demo pages commonly put
+    // <next-user-menu> (which never sets it) before the widget being shown.
+    const siblings = document.querySelectorAll(
+      "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar, next-perpetual-adoration, next-journey-milestones-individual, next-journey-milestones-family, next-organization-directory, next-organization-detail, next-personnel-directory, next-space-availability",
     );
-    if (sibling && sibling !== this) {
+    for (const sibling of siblings) {
+      if (sibling === this) continue;
       const host = sibling.getAttribute("api-host");
       if (host) return host;
     }

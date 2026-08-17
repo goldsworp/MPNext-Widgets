@@ -8,6 +8,7 @@ Most widgets in this collection need nothing from you at all: they read Ministry
 
 - **[milestone-tracker/](milestone-tracker/)** — for the Individual and Family Milestone Tracker widgets.
 - **[perpetual-adoration/](perpetual-adoration/)** — for the Perpetual Adoration Calendar widget.
+- **[space-availability/](space-availability/)** — for the Space Availability widget (permission grant only, no SQL to run).
 
 Each subfolder has its own README explaining exactly what to run and when. This page covers what's common to all of them.
 

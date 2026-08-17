@@ -63,6 +63,7 @@ The deployed application includes a **demo gallery** — visit `https://<your-ap
 - **[organization-directory.md](organization-directory.md)** — searchable directory of parishes, schools, and other locations
 - **[organization-detail.md](organization-detail.md)** — the detail page each directory result links to
 - **[personnel-directory.md](personnel-directory.md)** — searchable directory of clergy, staff, and religious
+- **[space-availability.md](space-availability.md)** — find an open room and time, and optionally request one
 
 ### Requires sign-in
 - **[profile.md](profile.md)** — edit your own profile

@@ -27,6 +27,7 @@ export { JourneyMilestonesFamilyWidget } from "./components/journey-milestones-f
 export { OrganizationDirectoryWidget } from "./components/organization-directory";
 export { OrganizationDetailWidget } from "./components/organization-detail";
 export { PersonnelDirectoryWidget } from "./components/personnel-directory";
+export { SpaceAvailabilityWidget } from "./components/space-availability";
 
 // Auto-register components
 import "./components/user-menu";
@@ -42,6 +43,7 @@ import "./components/journey-milestones-family";
 import "./components/organization-directory";
 import "./components/organization-detail";
 import "./components/personnel-directory";
+import "./components/space-availability";
 
 // ---------------------------------------------------------------------------
 // Auto-initialization
@@ -77,12 +79,17 @@ function detectApiHost(): string {
     } catch { /* continue */ }
   }
 
-  // 4. Read api-host from the first widget element on the page
-  //    (handles Vite dev where the SDK is a local module import)
-  const widget = document.querySelector(
-    "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar, next-perpetual-adoration, next-journey-milestones-individual, next-journey-milestones-family, next-organization-directory, next-organization-detail, next-personnel-directory",
+  // 4. Read api-host from the first widget element on the page that
+  //    actually has one set (handles Vite dev where the SDK is a local
+  //    module import). A plain querySelector() here would return whichever
+  //    matching tag comes FIRST in the DOM regardless of whether it has
+  //    api-host — demo pages commonly put <next-user-menu> (which never
+  //    sets api-host itself) before the widget being demonstrated, so the
+  //    first match is often the wrong element. Check every match instead.
+  const widgets = document.querySelectorAll(
+    "next-user-menu, next-add-to-calendar, next-full-calendar, next-profile, next-my-invoices, next-faith-formation, next-mass-intention-calendar, next-perpetual-adoration, next-journey-milestones-individual, next-journey-milestones-family, next-organization-directory, next-organization-detail, next-personnel-directory, next-space-availability",
   );
-  if (widget) {
+  for (const widget of widgets) {
     const host = widget.getAttribute("api-host");
     if (host) return host;
   }
@@ -142,6 +149,7 @@ function detectFirstWidgetId(): string | null {
     "NEXT-ORGANIZATION-DIRECTORY": "organization-directory",
     "NEXT-ORGANIZATION-DETAIL": "organization-detail",
     "NEXT-PERSONNEL-DIRECTORY": "personnel-directory",
+    "NEXT-SPACE-AVAILABILITY": "space-availability",
   };
 
   for (const [tag, wid] of Object.entries(widgetMap)) {

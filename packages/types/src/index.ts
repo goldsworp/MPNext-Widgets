@@ -6,6 +6,7 @@ export * from "./perpetual-adoration";
 export * from "./journey-milestones";
 export * from "./organization-directory";
 export * from "./personnel-directory";
+export * from "./space-availability";
 export * from "./invoices";
 export * from "./profile";
 export * from "./subscription";

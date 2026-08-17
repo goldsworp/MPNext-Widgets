@@ -539,6 +539,71 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-user-menu></next-user-menu>
 <next-personnel-directory require-sign-in="true"></next-personnel-directory>`,
   },
+  {
+    slug: "space-availability",
+    tag: "next-space-availability",
+    title: "Space Availability",
+    description: "Find open rooms by congregation, building, and date range — and optionally request a reservation.",
+    category: "Public",
+    // See the note on the Organization Directory entry above — same reason
+    // (require-sign-in below needs next-user-menu on the page to preview).
+    needsUserMenu: true,
+    needsMpWidgets: false,
+    attributes: { "event-type-id": "11" },
+    events: ["availabilityChecked", "reservationRequested"],
+    controls: [
+      {
+        name: "requireSignIn", label: "Require Sign-in", type: "select", attribute: "require-sign-in",
+        options: [
+          { label: "No (public, default)", value: "false" },
+          { label: "Yes (gate behind sign-in)", value: "true" },
+        ],
+        defaultValue: "false",
+      },
+      { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4 (single) or 4,8 (a set)" },
+      {
+        name: "showDetailedInfo", label: "Show Detailed Info", type: "select", attribute: "show-detailed-info",
+        options: [
+          { label: "Yes — show event names", value: "true" },
+          { label: "No — busy/free only", value: "false" },
+        ],
+        defaultValue: "true",
+      },
+      {
+        name: "allowRequests", label: "Allow Requests", type: "select", attribute: "allow-requests",
+        options: [
+          { label: "No (view only, default)", value: "false" },
+          { label: "Yes (visitors can request the space)", value: "true" },
+        ],
+        defaultValue: "false",
+      },
+      { name: "eventTypeId", label: "Event Type ID", type: "number", attribute: "event-type-id", placeholder: "e.g. 11 (Meeting)" },
+      { name: "programId", label: "Program ID", type: "number", attribute: "program-id", placeholder: "e.g. 10 (Facilities)" },
+      { name: "visibilityLevelId", label: "Visibility Level ID", type: "number", attribute: "visibility-level-id", placeholder: "e.g. 1 (Private, default)" },
+      { name: "defaultContactId", label: "Default Contact ID", type: "number", attribute: "default-contact-id", placeholder: "Used when allow-requests is on and visitors aren't signed in" },
+      { name: "notifyEmails", label: "Notify Emails", type: "text", attribute: "notify-emails", placeholder: "e.g. office@parish.org,facilities@parish.org" },
+    ],
+    implementationCode: `<next-space-availability event-type-id="11" program-id="10"></next-space-availability>
+
+<!-- Restrict to a single congregation -->
+<next-space-availability event-type-id="11" program-id="10" congregation-ids="4"></next-space-availability>
+
+<!-- Busy/free only — hide event names -->
+<next-space-availability event-type-id="11" program-id="10" show-detailed-info="false"></next-space-availability>
+
+<!-- Allow visitors to request the space, notifying the facilities office -->
+<next-space-availability
+  event-type-id="11"
+  program-id="10"
+  allow-requests="true"
+  notify-emails="facilities@parish.org"
+  default-contact-id="123"
+></next-space-availability>
+
+<!-- Require sign-in to view availability at all -->
+<next-user-menu></next-user-menu>
+<next-space-availability event-type-id="11" program-id="10" require-sign-in="true"></next-space-availability>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {
