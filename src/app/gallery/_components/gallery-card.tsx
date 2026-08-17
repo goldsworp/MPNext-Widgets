@@ -39,10 +39,15 @@ export function GalleryCard({
             >
               <LightboxThumbnail
                 src={img.src}
-                alt={`${widget.title} preview`}
+                alt={img.caption ? `${widget.title}: ${img.caption}` : `${widget.title} preview`}
                 width={img.width}
                 height={img.height}
               />
+              {img.caption && (
+                <div className="border-t border-gray-100 bg-white px-2 py-1.5 text-center text-xs text-gray-500">
+                  {img.caption}
+                </div>
+              )}
             </div>
           ))}
         </div>

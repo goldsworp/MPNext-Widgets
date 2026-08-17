@@ -135,18 +135,51 @@ test.describe("Gallery screenshots — no sign-in required", () => {
 
   test("full-calendar", async ({ page }) => {
     await page.goto("/demo-full-calendar.html");
-    // The demo page shows two instances (main month view + a "cards" view) —
-    // the first is the one worth screenshotting.
+    // The demo page shows two instances (main, toolbar-driven + a static
+    // "cards" one) — the first has the view-switcher toolbar this test
+    // drives through.
     const widget = page.locator("next-full-calendar").first();
     await expect(widget).toBeAttached();
     // The calendar grid renders asynchronously after the widget itself
-    // attaches (this is a hand-built "nw-fc-*" calendar, not the
-    // FullCalendar library despite the name) — wait for the month layout
-    // rather than a blind timeout, which otherwise risks capturing only
-    // the toolbar before layout runs.
+    // attaches — wait for the month layout rather than a blind timeout,
+    // which otherwise risks capturing only the toolbar before layout runs.
     await expect(widget.locator(".nw-fc-month-layout").first()).toBeVisible({ timeout: 10_000 });
     await page.waitForTimeout(500);
-    await shootWidget(widget, "full-calendar");
+    await shootWidget(widget, "full-calendar"); // Month (default) — mini-cal + card grid
+
+    // The widget's own toolbar exposes 6 views total; Month is captured
+    // above and Calendar is visually close to it (same split mini-cal +
+    // cards layout), so these 4 are the most meaningfully different to show.
+    // Grid/Week are the ONLY views that load the real FullCalendar.io
+    // library on demand (everything else is the hand-built "nw-fc-*"
+    // renderer) — they need a longer wait on first switch.
+    await widget.locator('.nw-fc-toolbar-btn[data-view="grid"]').click();
+    await expect(widget.locator(".fc-daygrid, .fc-view-harness").first()).toBeVisible({ timeout: 10_000 });
+    await page.waitForTimeout(800);
+    await shootWidget(widget, "full-calendar", "-2"); // Grid — real FullCalendar month grid
+
+    await widget.locator('.nw-fc-toolbar-btn[data-view="week"]').click();
+    await page.waitForTimeout(1500);
+    await shootWidget(widget, "full-calendar", "-3"); // Week — real FullCalendar week grid
+
+    await widget.locator('.nw-fc-toolbar-btn[data-view="list"]').click();
+    await page.waitForTimeout(500);
+    // The agenda list has no pagination — it renders every upcoming event
+    // with nothing to stop it (20,000+ px tall in this dataset), so a full
+    // widget.screenshot() would be unusably long. Clip to a fixed height
+    // instead, capturing just the toolbar plus the first several days.
+    {
+      const box = await widget.boundingBox();
+      if (!box) throw new Error("Could not measure full-calendar widget bounding box.");
+      await page.screenshot({
+        path: outPath("full-calendar", "-4"),
+        clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, 1400) },
+      });
+    }
+
+    await widget.locator('.nw-fc-toolbar-btn[data-view="cards"]').click();
+    await page.waitForTimeout(500);
+    await shootWidget(widget, "full-calendar", "-5"); // Cards — card grid only
   });
 
   test("mass-intention-calendar", async ({ page }) => {
@@ -187,21 +220,61 @@ test.describe("Gallery screenshots — no sign-in required", () => {
     await expect(widget).toBeAttached();
     await page.waitForTimeout(1500);
 
-    // Drive it to a populated results view rather than the blank first step:
-    // pick a congregation (renders a building <select>), pick a building
-    // (renders the room list + date range), check a room, then search.
-    // St. Leo / Parish Hall / Room A is known to have real bookings on the
-    // demo instance, so the resulting screenshot shows actual reservations
-    // rather than "no reservations found".
-    await widget.locator("select").nth(0).selectOption({ label: "St. Leo" });
+    // ── Image 1: availability results, showing the capacity filter ──
+    // St. Joseph's Main Church has two rooms — Chapel (seats 80, no real
+    // bookings) and Church (seats 1000, real recurring Masses booked) — so
+    // a "seats 100+" filter cleanly narrows to just Church via "Select
+    // all", and the resulting search shows genuine reservations rather
+    // than "no reservations found".
+    await widget.locator("select").nth(0).selectOption({ label: "St. Joseph" });
     await page.waitForTimeout(1000);
-    await widget.locator("select").nth(1).selectOption({ label: "Parish Hall" });
+    await widget.locator("select").nth(1).selectOption({ label: "Main Church" });
     await page.waitForTimeout(1000);
-    await widget.locator('input[type="checkbox"]').first().check({ timeout: 5000 });
-    await widget.locator("#sa-quick-range").selectOption({ value: "d30" });
+    await widget.locator("#sa-room-min-capacity").fill("100");
+    await page.waitForTimeout(300);
+    await widget.locator("#sa-select-all-filtered").click();
+    // "Church" hosts a recurring daily Mass, so d30 produces an absurdly
+    // long results list (6700+ px) — d7 still shows several real, varied
+    // bookings (daily Mass, Bible Study, weekend Masses) at a sane height.
+    await widget.locator("#sa-quick-range").selectOption({ value: "d7" });
     await widget.getByRole("button", { name: /check availability/i }).click();
     await page.waitForTimeout(1500);
     await shootWidget(widget, "space-availability");
+
+    // ── Image 2: the "Request This Space" form filled out ──
+    // Needs allow-requests + program-id, which the default widget instance
+    // above doesn't have — reconfigure via the demo's own controls and
+    // Apply (recreates the widget fresh, built as an HTML string so every
+    // attribute is present at construction time, per the comment in this
+    // demo page's own reload handler).
+    await page.locator("#allow-requests-input").selectOption({ value: "true" });
+    await page.locator("#program-id-input").fill("10");
+    await page.locator("#congregation-ids-input").fill("4"); // St. Joseph — skips straight to Building
+    await page.locator("#reload-btn").click();
+    await page.waitForTimeout(1500);
+
+    const widget2 = page.locator("next-space-availability");
+    await widget2.locator("#sa-building-select").selectOption({ label: "Main Church" });
+    await page.waitForTimeout(1000);
+    await widget2.locator('input[type="checkbox"]').first().check({ timeout: 5000 });
+    await widget2.getByRole("button", { name: /check availability/i }).click();
+    await page.waitForTimeout(1500);
+    await widget2.getByRole("button", { name: /request this space/i }).click();
+    await page.waitForTimeout(300);
+
+    const form = widget2.locator("#sa-request-form");
+    await form.locator("#sa-req-room").selectOption({ label: "Church" });
+    await form.locator("#sa-req-date").fill("2026-09-10");
+    await form.locator("#sa-req-start").selectOption({ value: "18:00" });
+    await form.locator("#sa-req-end").selectOption({ value: "19:30" });
+    await form.locator("#sa-req-setup").fill("15");
+    await form.locator("#sa-req-cleanup").fill("15");
+    await form.locator("#sa-req-name").fill("Jordan Rivera");
+    await form.locator("#sa-req-email").fill("jordan.rivera@example.com");
+    await form.locator("#sa-req-phone").fill("555-201-4488");
+    await form.locator("#sa-req-notes").fill("Monthly parish council meeting — please set up the projector.");
+    await page.waitForTimeout(200);
+    await shootWidget(form, "space-availability", "-2");
   });
 
   test("user-menu", async ({ page }) => {
