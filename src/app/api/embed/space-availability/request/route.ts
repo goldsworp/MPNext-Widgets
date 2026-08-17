@@ -20,6 +20,13 @@ function parsePositiveInt(param: string | null): number | undefined {
   return !isNaN(n) && n > 0 ? n : undefined;
 }
 
+// Visibility_Levels is a fixed, seeded MP lookup table with exactly 5 rows
+// (1 Private – 5 Hidden: URL Required) — anything else isn't a real level.
+function parseVisibilityLevelId(param: string | null): number {
+  const n = param ? parseInt(param, 10) : NaN;
+  return !isNaN(n) && n >= 1 && n <= 5 ? n : 1;
+}
+
 export async function POST(req: NextRequest) {
   const origin = resolveRequestOrigin(req);
 
@@ -37,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     const eventTypeId = parsePositiveInt(url.searchParams.get("eventTypeId"));
     const programId = parsePositiveInt(url.searchParams.get("programId"));
-    const visibilityLevelId = parsePositiveInt(url.searchParams.get("visibilityLevelId")) ?? 1;
+    const visibilityLevelId = parseVisibilityLevelId(url.searchParams.get("visibilityLevelId"));
     const defaultContactId = parsePositiveInt(url.searchParams.get("defaultContactId"));
     const notifyEmails = (url.searchParams.get("notifyEmails") || "")
       .split(",")

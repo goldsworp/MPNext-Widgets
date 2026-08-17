@@ -561,6 +561,7 @@ export const widgetCatalog: WidgetConfig[] = [
         defaultValue: "false",
       },
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4 (single) or 4,8 (a set)" },
+      { name: "congregationNoun", label: "Congregation Noun", type: "text", attribute: "congregation-noun", placeholder: "e.g. Parish (default), Campus, Site" },
       {
         name: "showDetailedInfo", label: "Show Detailed Info", type: "select", attribute: "show-detailed-info",
         options: [
@@ -579,14 +580,27 @@ export const widgetCatalog: WidgetConfig[] = [
       },
       { name: "eventTypeId", label: "Event Type ID", type: "number", attribute: "event-type-id", placeholder: "e.g. 11 (Meeting)" },
       { name: "programId", label: "Program ID", type: "number", attribute: "program-id", placeholder: "e.g. 10 (Facilities)" },
-      { name: "visibilityLevelId", label: "Visibility Level ID", type: "number", attribute: "visibility-level-id", placeholder: "e.g. 1 (Private, default)" },
+      {
+        name: "visibilityLevelId", label: "Visibility Level", type: "select", attribute: "visibility-level-id",
+        options: [
+          { label: "1 - Private (default)", value: "1" },
+          { label: "2 - Staff Only", value: "2" },
+          { label: "3 - Staff & Church", value: "3" },
+          { label: "4 - Public", value: "4" },
+          { label: "5 - Hidden: URL Required", value: "5" },
+        ],
+        defaultValue: "1",
+      },
       { name: "defaultContactId", label: "Default Contact ID", type: "number", attribute: "default-contact-id", placeholder: "Used when allow-requests is on and visitors aren't signed in" },
       { name: "notifyEmails", label: "Notify Emails", type: "text", attribute: "notify-emails", placeholder: "e.g. office@parish.org,facilities@parish.org" },
     ],
     implementationCode: `<next-space-availability event-type-id="11" program-id="10"></next-space-availability>
 
-<!-- Restrict to a single congregation -->
+<!-- Restrict to a single congregation — the congregation picker step is skipped -->
 <next-space-availability event-type-id="11" program-id="10" congregation-ids="4"></next-space-availability>
+
+<!-- Relabel "Congregation" for orgs where "Parish" isn't the right term (default is "Parish") -->
+<next-space-availability event-type-id="11" program-id="10" congregation-noun="Campus"></next-space-availability>
 
 <!-- Busy/free only — hide event names -->
 <next-space-availability event-type-id="11" program-id="10" show-detailed-info="false"></next-space-availability>

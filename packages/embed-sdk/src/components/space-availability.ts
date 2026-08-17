@@ -121,6 +121,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
   private programId: number | null = null;
   private visibilityLevelId = 1;
   private brandColor = "#004C97";
+  private congregationNoun = "Parish";
 
   // ── State ──
   private error: string | null = null;
@@ -137,6 +138,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
 
   private rooms: SpaceRoom[] = [];
   private roomSearch = "";
+  private minCapacity: number | null = null;
   private selectedRoomIds = new Set<number>();
   private loadingRooms = false;
 
@@ -153,6 +155,15 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
   private showRequestForm = false;
   private submitting = false;
   private requestResult: ReservationRequestResult | null = null;
+  // Backs the request form's inputs so a re-render (e.g. to show a
+  // validation/submit error) redraws with whatever the visitor already
+  // typed, instead of the form's original defaults — every render() call
+  // rebuilds the whole widget's innerHTML from scratch, so without this the
+  // form would silently blank itself out on every failed attempt.
+  private requestFormValues: {
+    roomId: string; date: string; start: string; end: string;
+    setup: string; cleanup: string; name: string; email: string; phone: string; notes: string;
+  } | null = null;
 
   static get observedAttributes() {
     return [
@@ -166,11 +177,28 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       "program-id",
       "visibility-level-id",
       "brand-color",
+      "congregation-noun",
     ];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
     this.readAttribute(name, next);
+
+    // Before connectedCallback runs, this just seeds initial config — the
+    // first load happens there. After that (e.g. a demo harness's "Apply"
+    // button re-setting attributes on the live element), config changes
+    // need to actually take effect rather than sit unused until some
+    // unrelated interaction happens to trigger a render.
+    if (!this.isConnected) return;
+
+    if (name === "congregation-ids") {
+      this.resetForNewCongregationScope();
+    } else if (name === "brand-color") {
+      this.injectStyles(this.getStyles());
+      this.render();
+    } else {
+      this.render();
+    }
   }
 
   private readAttribute(name: string, next: string | null): void {
@@ -206,12 +234,18 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
         break;
       }
       case "visibility-level-id": {
+        // MinistryPlatform's Visibility_Levels table is a fixed, seeded
+        // lookup with exactly 5 rows (1 Private – 5 Hidden: URL Required) —
+        // anything else isn't a real level, so fall back to the default.
         const parsed = next ? parseInt(next, 10) : NaN;
-        this.visibilityLevelId = !isNaN(parsed) && parsed > 0 ? parsed : 1;
+        this.visibilityLevelId = !isNaN(parsed) && parsed >= 1 && parsed <= 5 ? parsed : 1;
         break;
       }
       case "brand-color":
         this.brandColor = next || "#004C97";
+        break;
+      case "congregation-noun":
+        this.congregationNoun = next || "Parish";
         break;
     }
   }
@@ -223,7 +257,35 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
 
     this.injectStyles(this.getStyles());
     this.render();
+    await this.loadCongregationsAndMe();
+  }
 
+  /**
+   * Re-runs the congregation load and clears everything downstream of it
+   * (buildings/rooms/selection/results) — used when congregation-ids
+   * changes on an already-connected widget, since the previously loaded
+   * congregation may no longer be in scope.
+   */
+  private async resetForNewCongregationScope(): Promise<void> {
+    this.congregations = [];
+    this.selectedCongregationId = null;
+    this.congregationLocked = false;
+    this.buildings = [];
+    this.selectedBuildingId = null;
+    this.rooms = [];
+    this.roomSearch = "";
+    this.minCapacity = null;
+    this.selectedRoomIds.clear();
+    this.blocks = null;
+    this.showRequestForm = false;
+    this.requestResult = null;
+    this.error = null;
+    this.loading = true;
+    this.render();
+    await this.loadCongregationsAndMe();
+  }
+
+  private async loadCongregationsAndMe(): Promise<void> {
     try {
       const [congregations, me] = await Promise.all([this.fetchCongregations(), this.fetchMe()]);
       this.congregations = congregations;
@@ -323,8 +385,11 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       throw new Error("Sign-in required");
     }
     const data = await res.json().catch(() => null);
+    // A 400 from this route can be a plain request-level error ({ error })
+    // or the service's own result shape ({ result: "error", message }) —
+    // check both, or the caller only ever sees a bare "HTTP 400".
     if (!res.ok && res.status !== 409) {
-      throw new Error((data && data.error) || `HTTP ${res.status}`);
+      throw new Error((data && (data.error || data.message)) || `HTTP ${res.status}`);
     }
     return data as ReservationRequestResult;
   }
@@ -464,6 +529,24 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
     const notesInput = form.querySelector<HTMLTextAreaElement>("#sa-req-notes");
     if (!roomSelect || !dateInput || !startInput || !endInput || !setupInput || !cleanupInput || !nameInput || !emailInput) return;
 
+    // Capture what's currently in the form before any validation/submit
+    // outcome triggers a re-render — every render() rebuilds the whole
+    // widget's innerHTML, so without this a failed attempt would silently
+    // blank the form back to its defaults instead of leaving the visitor's
+    // entries in place to fix and resubmit.
+    this.requestFormValues = {
+      roomId: roomSelect.value,
+      date: dateInput.value,
+      start: startInput.value,
+      end: endInput.value,
+      setup: setupInput.value,
+      cleanup: cleanupInput.value,
+      name: nameInput.value,
+      email: emailInput.value,
+      phone: phoneInput?.value || "",
+      notes: notesInput?.value || "",
+    };
+
     const roomId = parseInt(roomSelect.value, 10);
     if (isNaN(roomId)) {
       this.showRequestFormError("Please choose a room.");
@@ -471,6 +554,10 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
     }
     if (!dateInput.value || !startInput.value || !endInput.value) {
       this.showRequestFormError("Please fill in the date and times.");
+      return;
+    }
+    if (endInput.value <= startInput.value) {
+      this.showRequestFormError("End time must be after start time.");
       return;
     }
     if (!nameInput.value.trim() || !emailInput.value.trim()) {
@@ -498,6 +585,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       this.requestResult = result;
       if (result.result === "ok") {
         this.showRequestForm = false;
+        this.requestFormValues = null;
         this.emit("reservationRequested", result);
         if (this.blocks !== null) {
           await this.handleSearch();
@@ -547,6 +635,13 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       this.renderRoomList();
     });
 
+    const capacityInput = this.root.querySelector<HTMLInputElement>("#sa-room-min-capacity");
+    capacityInput?.addEventListener("input", () => {
+      const parsed = parseInt(capacityInput.value, 10);
+      this.minCapacity = !isNaN(parsed) && parsed > 0 ? parsed : null;
+      this.renderRoomList();
+    });
+
     const quickRangeSelect = this.root.querySelector<HTMLSelectElement>("#sa-quick-range");
     quickRangeSelect?.addEventListener("change", () => {
       if (quickRangeSelect.value) this.applyQuickRange(quickRangeSelect.value);
@@ -567,6 +662,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
     this.root.querySelector("#sa-cancel-request-form")?.addEventListener("click", () => {
       this.showRequestForm = false;
       this.requestResult = null;
+      this.requestFormValues = null;
       this.render();
     });
     this.root.querySelector("#sa-submit-request")?.addEventListener("click", () => this.handleSubmitRequest());
@@ -575,23 +671,43 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
   }
 
   private renderRoomList(): void {
+    const actions = this.root.querySelector<HTMLElement>("#sa-room-actions");
     const container = this.root.querySelector<HTMLElement>("#sa-room-list");
     if (!container) return;
 
     const query = this.roomSearch.trim().toLowerCase();
-    const filtered = this.rooms.filter(
-      (r) => !query || r.Room_Name.toLowerCase().includes(query) || (r.Room_Number || "").toLowerCase().includes(query)
-    );
+    const isFiltered = query.length > 0 || this.minCapacity !== null;
+    const filtered = this.rooms.filter((r) => {
+      const matchesQuery = !query || r.Room_Name.toLowerCase().includes(query) || (r.Room_Number || "").toLowerCase().includes(query);
+      const matchesCapacity = this.minCapacity === null || (r.Maximum_Capacity !== null && r.Maximum_Capacity >= this.minCapacity);
+      return matchesQuery && matchesCapacity;
+    });
 
     if (this.rooms.length === 0) {
+      if (actions) actions.innerHTML = "";
       container.innerHTML = this.loadingRooms
         ? `<div class="sa-inline-spinner"></div>`
         : `<div class="sa-empty">No bookable rooms in this building.</div>`;
       return;
     }
     if (filtered.length === 0) {
-      container.innerHTML = `<div class="sa-empty">No rooms match your search.</div>`;
+      if (actions) actions.innerHTML = "";
+      container.innerHTML = `<div class="sa-empty">No rooms match your filters.</div>`;
       return;
+    }
+
+    if (actions) {
+      const allFilteredSelected = filtered.every((r) => this.selectedRoomIds.has(r.Room_ID));
+      actions.innerHTML = isFiltered
+        ? `<button type="button" class="sa-select-all-btn" id="sa-select-all-filtered">
+             ${allFilteredSelected ? `Deselect all (${filtered.length})` : `Select all (${filtered.length})`}
+           </button>`
+        : "";
+      actions.querySelector<HTMLButtonElement>("#sa-select-all-filtered")?.addEventListener("click", () => {
+        if (allFilteredSelected) filtered.forEach((r) => this.selectedRoomIds.delete(r.Room_ID));
+        else filtered.forEach((r) => this.selectedRoomIds.add(r.Room_ID));
+        this.renderRoomList();
+      });
     }
 
     container.innerHTML = filtered
@@ -652,9 +768,9 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
           !this.congregationLocked
             ? `
           <div class="sa-step">
-            <label class="sa-label" for="sa-congregation-select">Congregation</label>
+            <label class="sa-label" for="sa-congregation-select">${escapeHtml(this.congregationNoun)}</label>
             <select id="sa-congregation-select">
-              <option value="">Select a congregation…</option>
+              <option value="">Select a ${escapeHtml(this.congregationNoun.toLowerCase())}…</option>
               ${this.congregations
                 .map(
                   (c) =>
@@ -695,7 +811,11 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
             ? `
           <div class="sa-step">
             <label class="sa-label">Room(s)</label>
-            <input type="text" id="sa-room-search" placeholder="Filter rooms…" value="${escapeHtml(this.roomSearch)}">
+            <div class="sa-room-filters">
+              <input type="text" id="sa-room-search" placeholder="Filter by name…" value="${escapeHtml(this.roomSearch)}">
+              <input type="number" id="sa-room-min-capacity" placeholder="Min. capacity" min="0" value="${this.minCapacity ?? ""}">
+            </div>
+            <div class="sa-room-actions" id="sa-room-actions"></div>
             <div class="sa-room-list" id="sa-room-list"></div>
           </div>
 
@@ -783,10 +903,25 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
   private renderRequestFormHtml(): string {
     if (!this.showRequestForm) return "";
 
-    const prefillName = this.currentContact?.name || "";
-    const prefillEmail = this.currentContact?.email || "";
-    const prefillPhone = this.currentContact?.phone || "";
-    const roomOptions = this.rooms.map((r) => `<option value="${r.Room_ID}">${escapeHtml(r.Room_Name)}</option>`).join("");
+    // Fall back to signed-in-contact prefill / today's range only when the
+    // form hasn't captured anything yet (a fresh open) — once
+    // requestFormValues exists, it reflects the visitor's own last-entered
+    // values, including through a failed-submission re-render.
+    const v = this.requestFormValues ?? {
+      roomId: "",
+      date: this.rangeStart,
+      start: "",
+      end: "",
+      setup: "0",
+      cleanup: "0",
+      name: this.currentContact?.name || "",
+      email: this.currentContact?.email || "",
+      phone: this.currentContact?.phone || "",
+      notes: "",
+    };
+    const roomOptions = this.rooms
+      .map((r) => `<option value="${r.Room_ID}" ${String(r.Room_ID) === v.roomId ? "selected" : ""}>${escapeHtml(r.Room_Name)}</option>`)
+      .join("");
 
     return `
       <div class="sa-request-form" id="sa-request-form">
@@ -801,40 +936,40 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
           </div>
           <div class="sa-form-field">
             <label for="sa-req-date">Date</label>
-            <input type="date" id="sa-req-date" value="${this.rangeStart}">
+            <input type="date" id="sa-req-date" value="${escapeHtml(v.date)}">
           </div>
           <div class="sa-form-field">
             <label for="sa-req-start">Start Time</label>
-            <input type="time" id="sa-req-start">
+            <input type="time" id="sa-req-start" step="300" value="${escapeHtml(v.start)}">
           </div>
           <div class="sa-form-field">
             <label for="sa-req-end">End Time</label>
-            <input type="time" id="sa-req-end">
+            <input type="time" id="sa-req-end" step="300" value="${escapeHtml(v.end)}">
           </div>
           <div class="sa-form-field">
             <label for="sa-req-setup">Setup Minutes</label>
-            <input type="number" id="sa-req-setup" min="0" value="0">
+            <input type="number" id="sa-req-setup" min="0" value="${escapeHtml(v.setup)}">
           </div>
           <div class="sa-form-field">
             <label for="sa-req-cleanup">Cleanup Minutes</label>
-            <input type="number" id="sa-req-cleanup" min="0" value="0">
+            <input type="number" id="sa-req-cleanup" min="0" value="${escapeHtml(v.cleanup)}">
           </div>
           <div class="sa-form-field">
             <label for="sa-req-name">Your Name</label>
-            <input type="text" id="sa-req-name" value="${escapeHtml(prefillName)}">
+            <input type="text" id="sa-req-name" value="${escapeHtml(v.name)}">
           </div>
           <div class="sa-form-field">
             <label for="sa-req-email">Your Email</label>
-            <input type="email" id="sa-req-email" value="${escapeHtml(prefillEmail)}">
+            <input type="email" id="sa-req-email" value="${escapeHtml(v.email)}">
           </div>
           <div class="sa-form-field">
             <label for="sa-req-phone">Your Phone (optional)</label>
-            <input type="tel" id="sa-req-phone" value="${escapeHtml(prefillPhone)}">
+            <input type="tel" id="sa-req-phone" value="${escapeHtml(v.phone)}">
           </div>
         </div>
         <div class="sa-form-field sa-form-field-full">
           <label for="sa-req-notes">Notes about the event (optional)</label>
-          <textarea id="sa-req-notes" rows="3"></textarea>
+          <textarea id="sa-req-notes" rows="3">${escapeHtml(v.notes)}</textarea>
         </div>
         ${this.renderRequestResultHtml()}
         <div class="sa-form-actions">
@@ -893,7 +1028,15 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       .sa-step select, .sa-step input[type="text"], .sa-step input[type="date"] {
         width: 100%; padding: 9px 11px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95em; background: #fff; box-sizing: border-box;
       }
-      #sa-room-search { margin-bottom: 10px; }
+      .sa-room-filters { display: flex; gap: 10px; margin-bottom: 8px; }
+      .sa-room-filters input[type="text"] { flex: 2; }
+      .sa-room-filters input[type="number"] { flex: 1; min-width: 110px; }
+      .sa-room-actions { display: flex; justify-content: flex-end; margin-bottom: 6px; min-height: 1px; }
+      .sa-select-all-btn {
+        background: none; border: none; padding: 2px 0; color: ${this.brandColor};
+        font-size: 0.85em; font-weight: 600; cursor: pointer; text-decoration: underline;
+      }
+      .sa-select-all-btn:hover { color: #002855; }
 
       .sa-room-list { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; border: 1px solid #e3ebf3; border-radius: 8px; padding: 6px; }
       .sa-room-item { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 5px; cursor: pointer; }
@@ -947,6 +1090,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       @media (max-width: 640px) {
         .sa-card { padding: 16px; border-radius: 10px; }
         .sa-date-range { flex-direction: column; }
+        .sa-room-filters { flex-direction: column; }
       }
     `;
   }

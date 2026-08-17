@@ -328,7 +328,10 @@ export class SpaceAvailabilityService {
       return window !== null && rangesOverlap(requested.startMs, requested.endMs, window.startMs, window.endMs);
     });
     if (hasConflict) {
-      return { result: "conflict", message: "That room is no longer available for the requested time." };
+      return {
+        result: "conflict",
+        message: `Room ${room.Room_Name} not available at that time. Try another room, date, or time combination.`,
+      };
     }
 
     // ── 4. Create the Event ──

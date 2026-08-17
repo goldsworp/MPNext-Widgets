@@ -24,6 +24,7 @@ With no settings, visitors can browse every parish's rooms and check availabilit
 | Attribute | What it does | Example |
 |---|---|---|
 | `congregation-ids` | Which congregation(s) the widget can search. Leave it off to let visitors pick from every parish. One ID skips the congregation picker entirely (single-parish mode); several show a picker limited to that set. Find the numbers on the **Congregations** page. | `congregation-ids="4"` or `congregation-ids="4,8"` |
+| `congregation-noun` | The word used for "Congregation" in the picker's label — defaults to **Parish**. Use this if your organization calls them something else (Campus, Site, Location, etc.). | `congregation-noun="Campus"` |
 | `show-detailed-info` | Whether results show the actual event name, or just that the room is busy. Set to `false` for a plain busy/free view — useful if event titles shouldn't be visible to the public. | `show-detailed-info="false"` |
 | `require-sign-in` | The directory itself never required sign-in by default — set this to `true` if your parish prefers to keep it (like everything else on the site) behind a login wall. Needs [`<next-user-menu>`](user-menu.md) on the same page when turned on. | `require-sign-in="true"` |
 | `allow-requests` | Lets a visitor submit a room request instead of just viewing availability. Requires `event-type-id` and `program-id` below. | `allow-requests="true"` |
@@ -55,7 +56,7 @@ With no settings, visitors can browse every parish's rooms and check availabilit
 
 ## Notes
 
-- The room list has its own search box (it filters as you type) since a single building can have a lot of rooms — there's no separate setting for this.
+- The room list has its own search-by-name box and a minimum-capacity filter (both filter as you type) since a single building can have a lot of rooms — there's no separate setting for either. Once a filter narrows the list, a "Select all" link appears to check every matching room in one click.
 - If a reservation has setup or cleanup time entered in MinistryPlatform, the widget's displayed times already include it — a meeting from 9–10 AM with 15 minutes of setup shows as busy starting at 8:45 AM, so visitors never accidentally request a time that's technically "free" on paper but not really available.
 - A submitted request is re-checked against the room's current bookings on MinistryPlatform's side before it's created — if someone else claims the same slot in the moments between the visitor loading the page and submitting, they'll see a message that the room is no longer available, rather than accidentally double-booking it.
 - A request's notification email always comes from the requestor's own name and address (so replying goes straight to them), regardless of what `notify-emails` you've set.
