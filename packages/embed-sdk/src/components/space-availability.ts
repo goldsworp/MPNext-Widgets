@@ -88,6 +88,24 @@ function formatTimeLabel(h: number, mi: number): string {
   return `${hour12}:${String(mi).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
 }
 
+// Native <input type="time">'s own picker dropdown lists every minute
+// regardless of the `step` attribute (step only constrains the up/down
+// spinner and blur-time validity, not what the picker displays) — a plain
+// <select> is the only way to actually limit the visible options to
+// 5-minute increments.
+const TIME_SELECT_OPTIONS: { value: string; label: string }[] = (() => {
+  const options: { value: string; label: string }[] = [];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 5) {
+      options.push({
+        value: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+        label: formatTimeLabel(h, m),
+      });
+    }
+  }
+  return options;
+})();
+
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const DAY_NAMES_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -519,8 +537,8 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
 
     const roomSelect = form.querySelector<HTMLSelectElement>("#sa-req-room");
     const dateInput = form.querySelector<HTMLInputElement>("#sa-req-date");
-    const startInput = form.querySelector<HTMLInputElement>("#sa-req-start");
-    const endInput = form.querySelector<HTMLInputElement>("#sa-req-end");
+    const startInput = form.querySelector<HTMLSelectElement>("#sa-req-start");
+    const endInput = form.querySelector<HTMLSelectElement>("#sa-req-end");
     const setupInput = form.querySelector<HTMLInputElement>("#sa-req-setup");
     const cleanupInput = form.querySelector<HTMLInputElement>("#sa-req-cleanup");
     const nameInput = form.querySelector<HTMLInputElement>("#sa-req-name");
@@ -940,11 +958,17 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
           </div>
           <div class="sa-form-field">
             <label for="sa-req-start">Start Time</label>
-            <input type="time" id="sa-req-start" step="300" value="${escapeHtml(v.start)}">
+            <select id="sa-req-start">
+              <option value="">Select…</option>
+              ${TIME_SELECT_OPTIONS.map((o) => `<option value="${o.value}" ${o.value === v.start ? "selected" : ""}>${o.label}</option>`).join("")}
+            </select>
           </div>
           <div class="sa-form-field">
             <label for="sa-req-end">End Time</label>
-            <input type="time" id="sa-req-end" step="300" value="${escapeHtml(v.end)}">
+            <select id="sa-req-end">
+              <option value="">Select…</option>
+              ${TIME_SELECT_OPTIONS.map((o) => `<option value="${o.value}" ${o.value === v.end ? "selected" : ""}>${o.label}</option>`).join("")}
+            </select>
           </div>
           <div class="sa-form-field">
             <label for="sa-req-setup">Setup Minutes</label>

@@ -60,7 +60,12 @@ export async function POST(req: NextRequest) {
     let mpAccessToken = "";
 
     if (mpUserToken) {
-      // MP Widget Login flow: verify the MP OAuth token via OIDC userinfo
+      // MP Widget Login flow: verify the MP OAuth token via OIDC userinfo.
+      // This is the real sign-in path for actual site visitors (via
+      // next-user-menu's classic <mpp-user-login>) — there's normally no
+      // better-auth session to fall back to on a production embed, so this
+      // stays the primary path.
+      let verified = false;
       try {
         const mpBaseUrl = process.env.MINISTRY_PLATFORM_BASE_URL;
         if (!mpBaseUrl) {
@@ -79,15 +84,29 @@ export async function POST(req: NextRequest) {
         if (userinfo.sub) {
           sub = userinfo.sub;
           mpAccessToken = mpUserToken;
+          verified = true;
         } else {
           console.warn("MP userinfo response missing sub claim");
         }
       } catch (error) {
         console.error("Failed to verify mpUserToken:", error);
-        return NextResponse.json(
-          { error: "Invalid MP user token. Please sign in again." },
-          { status: 403, headers: corsHeaders },
-        );
+      }
+
+      // A present-but-invalid classic token (e.g. this origin isn't in MP's
+      // classic-widget Permitted URLs, as on our own /demo domain) shouldn't
+      // block a visitor who's separately signed in via our own session —
+      // only error out if neither identifies them.
+      if (!verified) {
+        const session = await auth.api.getSession({ headers: await headers() });
+        if (session?.user?.userGuid) {
+          sub = session.user.userGuid;
+          if (session.session?.accessToken) mpAccessToken = session.session.accessToken;
+        } else {
+          return NextResponse.json(
+            { error: "Invalid MP user token. Please sign in again." },
+            { status: 403, headers: corsHeaders },
+          );
+        }
       }
     } else {
       const session = await auth.api.getSession({
