@@ -180,16 +180,19 @@ export class MyInvoicesWidget extends MPNextWidget {
     if (this.checkoutPortalEl) return;
     this.view = "checkout";
     const invoiceId = this.selectedDetail.invoice.Invoice_ID;
+    const invoiceGuid = this.selectedDetail.invoice.Invoice_GUID;
     const url = new URL(window.location.href);
     // MP's classic <mpp-checkout> widget has no "invoiceid" attribute (its
     // observedAttributes are only paymentprocessortargeturl,
     // backtoeventtargeturl, receipttemplateid, customformpagetargeturl) — it
     // discovers which invoice to load exclusively from its OWN page's URL,
-    // reading `?id=` at connect time. Setting anything else here (or an
-    // "invoiceid" HTML attribute on the element) is silently ignored, which
-    // is why Pay Now previously did nothing but show "Unable to find
-    // invoice or it has been removed."
-    url.searchParams.set("id", String(invoiceId));
+    // reading `?id=` at connect time and storing it internally as
+    // `_invoiceGuid` — confirmed via the widget's own minified source that
+    // this must be the Invoice_GUID, not the numeric Invoice_ID. Passing the
+    // numeric ID (or an "invoiceid" HTML attribute) is silently rejected as
+    // an unknown invoice, which is why Pay Now previously showed "Unable to
+    // find invoice or it has been removed."
+    url.searchParams.set("id", invoiceGuid);
     history.replaceState(null, "", url.toString());
     this.render();
     this.attachListeners();
