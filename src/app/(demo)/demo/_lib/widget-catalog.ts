@@ -158,7 +158,20 @@ export const widgetCatalog: WidgetConfig[] = [
     needsMpWidgets: true,
     attributes: {},
     events: ["invoicesLoaded", "invoiceSelected", "invoiceError"],
-    implementationCode: `<next-my-invoices></next-my-invoices>`,
+    controls: [
+      { name: "paymentProcessorTargetUrl", label: "Payment Processor URL", type: "text", attribute: "payment-processor-target-url", placeholder: "e.g. https://onrealm.org/{tenant}/pay (MP eGiving)" },
+      { name: "backToInvoicesUrl", label: "Back to Invoices URL", type: "text", attribute: "back-to-invoices-url", placeholder: "e.g. /my-invoices (this page)" },
+      { name: "checkoutCustomCss", label: "Checkout Custom CSS", type: "text", attribute: "checkout-custom-css", placeholder: "e.g. https://your-mp.ministryplatform.net/css/form2.css" },
+    ],
+    implementationCode: `<next-my-invoices></next-my-invoices>
+
+<!-- Enable "Pay Now" — requires a Payment Processor URL from your MP eGiving
+     (or other supported vendor) configuration. Without it, Pay Now shows a
+     "payment not configured" message instead of the classic checkout widget. -->
+<next-my-invoices
+  payment-processor-target-url="https://onrealm.org/{your-tenant}/pay"
+  back-to-invoices-url="/my-invoices"
+></next-my-invoices>`,
   },
   {
     slug: "faith-formation",

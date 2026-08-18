@@ -40,8 +40,28 @@ export class MyInvoicesWidget extends MPNextWidget {
   private view: "list" | "detail" | "checkout" = "list";
   private checkoutPortalEl: HTMLDivElement | null = null;
   private checkoutPortalStyleEl: HTMLStyleElement | null = null;
+  private paymentProcessorTargetUrl: string | null = null;
+  private backToInvoicesUrl: string | null = null;
+  private checkoutCustomCss: string | null = null;
+
+  static get observedAttributes() {
+    return ["payment-processor-target-url", "back-to-invoices-url", "checkout-custom-css"];
+  }
+
+  attributeChangedCallback(name: string, _old: string | null, next: string | null) {
+    if (name === "payment-processor-target-url") {
+      this.paymentProcessorTargetUrl = next || null;
+    } else if (name === "back-to-invoices-url") {
+      this.backToInvoicesUrl = next || null;
+    } else if (name === "checkout-custom-css") {
+      this.checkoutCustomCss = next || null;
+    }
+  }
 
   connectedCallback() {
+    this.paymentProcessorTargetUrl = this.getAttribute("payment-processor-target-url");
+    this.backToInvoicesUrl = this.getAttribute("back-to-invoices-url");
+    this.checkoutCustomCss = this.getAttribute("checkout-custom-css");
     this.injectStyles(this.getStyles());
     this.render();
     this.loadInvoices();
@@ -155,7 +175,15 @@ export class MyInvoicesWidget extends MPNextWidget {
     this.view = "checkout";
     const invoiceId = this.selectedDetail.invoice.Invoice_ID;
     const url = new URL(window.location.href);
-    url.searchParams.set("invoiceId", String(invoiceId));
+    // MP's classic <mpp-checkout> widget has no "invoiceid" attribute (its
+    // observedAttributes are only paymentprocessortargeturl,
+    // backtoeventtargeturl, receipttemplateid, customformpagetargeturl) — it
+    // discovers which invoice to load exclusively from its OWN page's URL,
+    // reading `?id=` at connect time. Setting anything else here (or an
+    // "invoiceid" HTML attribute on the element) is silently ignored, which
+    // is why Pay Now previously did nothing but show "Unable to find
+    // invoice or it has been removed."
+    url.searchParams.set("id", String(invoiceId));
     history.replaceState(null, "", url.toString());
     this.render();
     this.attachListeners();
@@ -163,12 +191,29 @@ export class MyInvoicesWidget extends MPNextWidget {
     const portal = document.createElement("div");
     portal.id = "nw-invoice-checkout-portal";
     portal.className = "nw-invoice-checkout-overlay";
+
+    // paymentprocessortargeturl is required by MP's classic checkout widget —
+    // without it the payment handoff can't work. See
+    // payment-processor-target-url / back-to-invoices-url / checkout-custom-css
+    // attributes on <next-my-invoices>.
+    const checkoutHtml = this.paymentProcessorTargetUrl
+      ? `<mpp-checkout
+          paymentprocessortargeturl="${this.escapeHtml(this.paymentProcessorTargetUrl)}"
+          ${this.backToInvoicesUrl ? `backtoeventtargeturl="${this.escapeHtml(this.backToInvoicesUrl)}"` : ""}
+          ${this.checkoutCustomCss ? `customcss="${this.escapeHtml(this.checkoutCustomCss)}"` : ""}
+        ></mpp-checkout>`
+      : `<p class="nw-invoice-checkout-config-error">
+          This site hasn't configured online payment yet. Set the
+          <code>payment-processor-target-url</code> attribute on
+          &lt;next-my-invoices&gt; to enable Pay Now.
+        </p>`;
+
     portal.innerHTML = `
       <div class="nw-invoice-checkout-container">
         <button class="nw-invoice-checkout-back" id="nw-checkout-back-btn">
           &larr; Back to Invoice
         </button>
-        <mpp-checkout invoiceid="${invoiceId}"></mpp-checkout>
+        ${checkoutHtml}
       </div>
     `;
     document.body.appendChild(portal);
@@ -177,9 +222,13 @@ export class MyInvoicesWidget extends MPNextWidget {
     if (backBtn) {
       backBtn.addEventListener("click", () => {
         this.cleanupCheckoutPortal();
-        this.view = "detail";
-        this.render();
-        this.attachListeners();
+        // mpp-checkout has no completion event to listen for (MP's own
+        // server verifies payment success via a signed-token round trip
+        // with the payment processor, entirely inside its own UI) — so the
+        // only reliable way to reflect a payment here is to re-fetch the
+        // invoice from our own API when the visitor comes back, rather
+        // than re-showing whatever stale status we had before they paid.
+        this.loadInvoiceDetail(invoiceId);
       });
     }
   }
@@ -210,6 +259,20 @@ export class MyInvoicesWidget extends MPNextWidget {
       .nw-invoice-checkout-back:hover {
         color: #002855;
       }
+      .nw-invoice-checkout-config-error {
+        background: #fff3f3;
+        border: 1px solid #FF6D6A;
+        border-radius: 8px;
+        padding: 16px;
+        color: #2D2926;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-size: 14px;
+      }
+      .nw-invoice-checkout-config-error code {
+        background: rgba(0, 0, 0, 0.06);
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
     `;
     document.head.appendChild(style);
     this.checkoutPortalStyleEl = style;
@@ -217,8 +280,8 @@ export class MyInvoicesWidget extends MPNextWidget {
 
   private cleanupCheckoutPortal() {
     const url = new URL(window.location.href);
-    if (url.searchParams.has("invoiceId")) {
-      url.searchParams.delete("invoiceId");
+    if (url.searchParams.has("id")) {
+      url.searchParams.delete("id");
       history.replaceState(null, "", url.toString());
     }
     if (this.checkoutPortalEl) {
