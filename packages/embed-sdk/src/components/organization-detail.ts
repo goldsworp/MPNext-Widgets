@@ -114,10 +114,15 @@ export class OrganizationDetailWidget extends MPNextWidget {
       "show-description",
       "show-giving-link",
       "require-sign-in",
+      "customcss",
     ];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
+    if (name === "customcss") {
+      void this.applyCustomCss(next || null);
+      return;
+    }
     this.readAttribute(name, next);
     if (this.loading) return;
     if (name === "id-param" || name === "mass-event-type-id" || name === "require-sign-in") {
@@ -187,6 +192,7 @@ export class OrganizationDetailWidget extends MPNextWidget {
     }
 
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     await this.loadOrganization();
   }
@@ -430,19 +436,32 @@ export class OrganizationDetailWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: ui-sans-serif, system-ui, sans-serif; color: #2D2926; }
+      :host {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: var(--root-text-color);
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: ${this.brandColor};
+        --secondary: #002855;
+        --accent: ${this.accentColor};
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+      }
 
       .odd-state { text-align: center; padding: 32px 16px; color: #474747; }
       .odd-state-error { color: #d32f2f; }
       .odd-spinner {
         width: 28px; height: 28px; margin: 0 auto 12px;
-        border: 3px solid #e3ebf3; border-top-color: ${this.brandColor}; border-radius: 50%;
+        border: 3px solid #e3ebf3; border-top-color: var(--primary); border-radius: 50%;
         animation: odd-spin 0.8s linear infinite;
       }
       @keyframes odd-spin { to { transform: rotate(360deg); } }
 
       .odd-wrap {
-        background: #fff; border: 1px solid #e3ebf3; border-radius: 14px; overflow: hidden;
+        background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px; overflow: hidden;
         box-shadow: 0 2px 14px rgba(30,60,90,0.08);
       }
 
@@ -452,7 +471,7 @@ export class OrganizationDetailWidget extends MPNextWidget {
       .odd-login-sub { color: #667080; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
       .odd-back-link {
-        display: inline-block; margin: 16px 0 0 20px; color: ${this.brandColor}; text-decoration: none;
+        display: inline-block; margin: 16px 0 0 20px; color: var(--primary); text-decoration: none;
         font-size: 0.9em; font-weight: 600;
       }
       .odd-back-link:hover { text-decoration: underline; }
@@ -475,12 +494,12 @@ export class OrganizationDetailWidget extends MPNextWidget {
 
       .odd-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 20px; }
       .odd-section-title {
-        font-size: 0.85em; font-weight: 700; color: ${this.brandColor}; text-transform: uppercase;
-        letter-spacing: 0.04em; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 2px solid ${this.accentColor};
+        font-size: 0.85em; font-weight: 700; color: var(--primary); text-transform: uppercase;
+        letter-spacing: 0.04em; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent);
       }
       .odd-address, .odd-phone, .odd-pastor { margin: 0 0 6px; color: #444; font-size: 0.95em; }
       .odd-directions, .odd-giving {
-        display: inline-block; margin: 8px 12px 0 0; color: ${this.brandColor}; font-weight: 600; text-decoration: none; font-size: 0.9em;
+        display: inline-block; margin: 8px 12px 0 0; color: var(--primary); font-weight: 600; text-decoration: none; font-size: 0.9em;
       }
       .odd-directions:hover, .odd-giving:hover { text-decoration: underline; }
 

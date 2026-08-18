@@ -100,7 +100,15 @@ export class PerpetualAdorationWidget extends MPNextWidget {
   private registering = false;
 
   static get observedAttributes() {
-    return ["event-type-id", "congregation-ids", "success-title", "success-message", "fail-title", "fail-message"];
+    return [
+      "event-type-id",
+      "congregation-ids",
+      "success-title",
+      "success-message",
+      "fail-title",
+      "fail-message",
+      "customcss",
+    ];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -117,6 +125,8 @@ export class PerpetualAdorationWidget extends MPNextWidget {
       this.failTitle = next || DEFAULT_FAIL_TITLE;
     } else if (name === "fail-message") {
       this.failMessage = next || DEFAULT_FAIL_MESSAGE;
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     }
   }
 
@@ -134,11 +144,13 @@ export class PerpetualAdorationWidget extends MPNextWidget {
       this.error =
         "Missing required attribute: event-type-id. Find your Perpetual Adoration Event Type's ID on the Event Types page in MinistryPlatform.";
       this.injectStyles(this.getStyles());
+      void this.applyCustomCss(this.getAttribute("customcss"));
       this.render();
       return;
     }
 
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
 
     try {
@@ -848,7 +860,20 @@ export class PerpetualAdorationWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: ui-sans-serif, system-ui, sans-serif; color: #2D2926; }
+      :host {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: var(--root-text-color);
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+      }
 
       .pa-state { text-align: center; padding: 32px 16px; color: #474747; }
       .pa-state-error { color: #d32f2f; }
@@ -860,7 +885,7 @@ export class PerpetualAdorationWidget extends MPNextWidget {
       @keyframes pa-spin { to { transform: rotate(360deg); } }
 
       .pa-card {
-        background: #fff; border: 1px solid #e3ebf3; border-radius: 14px;
+        background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px;
         box-shadow: 0 2px 14px rgba(30,60,90,0.08); padding: 22px 24px 26px;
       }
 
@@ -964,8 +989,8 @@ export class PerpetualAdorationWidget extends MPNextWidget {
         align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;
       }
       .pa-modal-overlay.show { display: flex; }
-      .pa-modal { background: #fff; border-radius: 10px; padding: 22px; max-width: 460px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
-      .pa-modal-header { font-size: 1.2em; font-weight: 600; margin-bottom: 14px; color: #2D2926; }
+      .pa-modal { background: var(--card-bgcolor); border-radius: 10px; padding: 22px; max-width: 460px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+      .pa-modal-header { font-size: 1.2em; font-weight: 600; margin-bottom: 14px; color: var(--root-text-color); }
       .pa-modal-body { color: #555; margin-bottom: 18px; line-height: 1.55; }
       .pa-modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
 

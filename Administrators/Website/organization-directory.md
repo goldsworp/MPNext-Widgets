@@ -49,6 +49,7 @@ With no settings, it shows every organization marked Available Online, across ev
 | `show-phone` / `show-description` | Toggle these optional pieces of information on each result. | `show-phone="false"` |
 | `page-size` | How many results load at once before a "Show more" button appears. | `page-size="24"` |
 | `compact-threshold` | Above this many total organizations, results switch from photo cards to a denser list automatically. | `compact-threshold="60"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples
 

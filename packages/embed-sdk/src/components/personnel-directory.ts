@@ -71,10 +71,15 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
       "accent-color",
       "show-photos",
       "require-sign-in",
+      "customcss",
     ];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
+    if (name === "customcss") {
+      void this.applyCustomCss(next || null);
+      return;
+    }
     this.readAttribute(name, next);
     if (this.loading) return;
     if (
@@ -142,6 +147,7 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
     }
 
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     await this.loadPersonnel();
   }
@@ -347,19 +353,32 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: ui-sans-serif, system-ui, sans-serif; color: #2D2926; }
+      :host {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: ${this.brandColor};
+        --secondary: #002855;
+        --accent: ${this.accentColor};
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+        color: var(--root-text-color);
+      }
 
       .pd-state { text-align: center; padding: 32px 16px; color: #474747; }
       .pd-state-error { color: #d32f2f; }
       .pd-spinner {
         width: 28px; height: 28px; margin: 0 auto 12px;
-        border: 3px solid #e3ebf3; border-top-color: ${this.brandColor}; border-radius: 50%;
+        border: 3px solid #e3ebf3; border-top-color: var(--primary); border-radius: 50%;
         animation: pd-spin 0.8s linear infinite;
       }
       @keyframes pd-spin { to { transform: rotate(360deg); } }
 
       .pd-card-wrap {
-        background: #fff; border: 1px solid #e3ebf3; border-radius: 14px;
+        background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px;
         box-shadow: 0 2px 14px rgba(30,60,90,0.08); padding: 22px 24px 26px;
       }
 
@@ -369,7 +388,7 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
       .pd-login-sub { color: #667080; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
       .pd-header { margin-bottom: 16px; }
-      .pd-title { margin: 0 0 4px; font-size: 1.5em; color: ${this.brandColor}; }
+      .pd-title { margin: 0 0 4px; font-size: 1.5em; color: var(--primary); }
       .pd-intro { margin: 0; color: #667080; }
 
       .pd-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
@@ -381,25 +400,25 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
 
       .pd-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
       .pd-card {
-        display: flex; gap: 14px; padding: 14px; border: 1px solid #e3ebf3; border-radius: 10px; background: #fff;
+        display: flex; gap: 14px; padding: 14px; border: 1px solid #e3ebf3; border-radius: 10px; background: var(--card-bgcolor);
       }
       .pd-photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; background: #f4f8fb; }
       .pd-photo-monogram {
         display: flex; align-items: center; justify-content: center; font-size: 1.6em; font-weight: 700;
-        color: #fff; background: ${this.brandColor};
+        color: #fff; background: var(--primary);
       }
       .pd-card-body { flex: 1; min-width: 0; }
       .pd-name-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
       .pd-name { font-weight: 700; font-size: 1.02em; color: #2c3e50; }
       .pd-category-chip {
         font-size: 0.72em; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em;
-        color: ${this.brandColor}; background: #eef4fb; padding: 2px 8px; border-radius: 999px;
+        color: var(--primary); background: #eef4fb; padding: 2px 8px; border-radius: 999px;
       }
       .pd-primary { font-size: 0.9em; color: #444; margin-top: 2px; }
-      .pd-location-link { color: ${this.brandColor}; text-decoration: none; }
+      .pd-location-link { color: var(--primary); text-decoration: none; }
       .pd-location-link:hover { text-decoration: underline; }
       .pd-contact { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; font-size: 0.88em; }
-      .pd-contact-link { color: ${this.brandColor}; text-decoration: none; }
+      .pd-contact-link { color: var(--primary); text-decoration: none; }
       .pd-contact-link:hover { text-decoration: underline; }
       .pd-other-assignments {
         list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid #f0f3f6;

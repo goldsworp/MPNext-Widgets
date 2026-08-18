@@ -142,7 +142,7 @@ export class AddToCalendarWidget extends MPNextWidget {
   }
 
   static get observedAttributes() {
-    return ["event-id"];
+    return ["event-id", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -151,11 +151,14 @@ export class AddToCalendarWidget extends MPNextWidget {
       this.state = { loading: true, error: null, event: null, cdnLoaded: false };
       this.renderLoading();
       this.loadEvent();
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     }
   }
 
   async connectedCallback() {
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.renderLoading();
     await this.loadEvent();
   }
@@ -404,8 +407,17 @@ export class AddToCalendarWidget extends MPNextWidget {
       :host {
         display: block;
         font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        color: ${BRAND.black};
+        color: var(--root-text-color);
         box-sizing: border-box;
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
       }
 
       *, *::before, *::after {
@@ -430,7 +442,7 @@ export class AddToCalendarWidget extends MPNextWidget {
         width: 18px;
         height: 18px;
         border: 2px solid #e5e7eb;
-        border-top-color: ${BRAND.blue};
+        border-top-color: var(--primary);
         border-radius: 50%;
         animation: nw-spin 0.7s linear infinite;
         flex-shrink: 0;
@@ -446,8 +458,8 @@ export class AddToCalendarWidget extends MPNextWidget {
         align-items: center;
         gap: 8px;
         background: #fff1f1;
-        color: ${BRAND.red};
-        border: 1px solid ${BRAND.red};
+        color: var(--form-invalid);
+        border: 1px solid var(--form-invalid);
         border-radius: 8px;
         padding: 12px 16px;
         font-size: 14px;
@@ -465,7 +477,7 @@ export class AddToCalendarWidget extends MPNextWidget {
         padding: 16px 20px;
         border: 1px solid #e5e7eb;
         border-radius: 10px;
-        background: #fff;
+        background: var(--card-bgcolor);
         max-width: 480px;
       }
 
@@ -476,7 +488,7 @@ export class AddToCalendarWidget extends MPNextWidget {
       }
 
       .ics-icon {
-        color: ${BRAND.blue};
+        color: var(--primary);
         flex-shrink: 0;
         display: flex;
         align-items: center;
@@ -485,7 +497,7 @@ export class AddToCalendarWidget extends MPNextWidget {
       .ics-title {
         font-size: 16px;
         font-weight: 600;
-        color: ${BRAND.navy};
+        color: var(--secondary);
         line-height: 1.3;
       }
 
@@ -512,7 +524,7 @@ export class AddToCalendarWidget extends MPNextWidget {
         gap: 8px;
         margin-top: 4px;
         padding: 10px 18px;
-        background: ${BRAND.blue};
+        background: var(--primary);
         color: #fff;
         border: none;
         border-radius: 9999px;
@@ -525,7 +537,7 @@ export class AddToCalendarWidget extends MPNextWidget {
       }
 
       .ics-download-btn:hover {
-        background: ${BRAND.navy};
+        background: var(--secondary);
       }
 
       .ics-download-btn:focus-visible {
@@ -539,8 +551,8 @@ export class AddToCalendarWidget extends MPNextWidget {
 
       /* ── add-to-calendar-button overrides (light DOM, rendered in our Shadow) ── */
       add-to-calendar-button {
-        --btn-background: ${BRAND.blue};
-        --btn-hover-background: ${BRAND.navy};
+        --btn-background: var(--primary);
+        --btn-hover-background: var(--secondary);
         --btn-text: #ffffff;
         --btn-shadow: none;
         --btn-border: none;

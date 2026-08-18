@@ -31,6 +31,7 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 | `success-message` | Body text after a successful sign-up. `{count}` is replaced with how many hours were claimed. | `success-message="Thank you for saying yes to {count} hour(s) of adoration."` |
 | `fail-title` | Heading shown if something goes wrong. | `fail-title="Registration problem"` |
 | `fail-message` | Body text if something goes wrong. `{error}` is replaced with the specific reason. | `fail-message="We couldn't complete that. {error}"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples
 

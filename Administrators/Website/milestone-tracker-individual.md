@@ -30,6 +30,7 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 | `form-base-url` | The page on your site that hosts your online forms. The specific form's ID is appended automatically. | `form-base-url="/forms?id="` |
 | `event-details-page` | The page on your site that shows event details. The specific event's ID is appended automatically. | `event-details-page="/events?id="` |
 | `show-all-get-started-buttons` | `true` (default) — a button on every incomplete step that has one. `false` — only the very next incomplete step gets a button, so the parishioner focuses on one thing at a time. | `show-all-get-started-buttons="false"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples
 

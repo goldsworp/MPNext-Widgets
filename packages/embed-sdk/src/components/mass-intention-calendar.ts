@@ -49,7 +49,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
   private currentModalMass: MassEvent | null = null;
 
   static get observedAttributes() {
-    return ["event-type-id", "congregation-ids", "event-detail-url-template", "search-months-ahead"];
+    return ["event-type-id", "congregation-ids", "event-detail-url-template", "search-months-ahead", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -65,6 +65,8 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
     } else if (name === "search-months-ahead") {
       const parsed = next ? parseInt(next, 10) : NaN;
       this.searchMonthsAhead = !isNaN(parsed) && parsed > 0 ? parsed : 12;
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     }
   }
 
@@ -80,6 +82,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
     this.searchMonthsAhead = !isNaN(parsedMonths) && parsedMonths > 0 ? parsedMonths : 12;
 
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
 
     if (!this.eventTypeId) {
       this.error = "Missing required attribute: event-type-id. Find your Mass Event Type's ID on the Event Types page in MinistryPlatform.";
@@ -389,7 +392,20 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: ui-sans-serif, system-ui, sans-serif; color: #2D2926; }
+      :host {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: var(--root-text-color);
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+      }
 
       .nw-mic-state { text-align: center; padding: 32px 16px; color: #474747; }
       .nw-mic-state-error { color: #d32f2f; }
@@ -401,7 +417,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
       @keyframes nw-mic-spin { to { transform: rotate(360deg); } }
 
       .nw-mic-card {
-        background: #fff; border: 1px solid #e3ebf3; border-radius: 14px;
+        background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px;
         box-shadow: 0 2px 14px rgba(30,60,90,0.08); padding: 22px 24px 26px;
       }
       .nw-mic-header {
@@ -458,7 +474,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
         align-items: center; justify-content: center; padding: 16px; box-sizing: border-box;
       }
       .nw-mic-modal {
-        background: #fff; border-radius: 10px; box-shadow: 0 6px 28px rgba(0,0,0,0.3);
+        background: var(--card-bgcolor); border-radius: 10px; box-shadow: 0 6px 28px rgba(0,0,0,0.3);
         overflow: hidden; max-width: 480px; width: 100%; border-top: 5px solid #2e6da4;
       }
       .nw-mic-modal-available { border-top-color: ${COLOR_AVAILABLE}; }

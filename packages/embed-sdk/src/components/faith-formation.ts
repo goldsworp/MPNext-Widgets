@@ -70,7 +70,7 @@ export class FaithFormationWidget extends MPNextWidget {
   private pastMeetingsOpenByGroupId: Record<number, boolean> = {};
 
   static get observedAttributes() {
-    return ["ministry-id", "show-leader-email", "show-leader-mobile-phone"];
+    return ["ministry-id", "show-leader-email", "show-leader-mobile-phone", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -83,6 +83,8 @@ export class FaithFormationWidget extends MPNextWidget {
     } else if (name === "show-leader-mobile-phone") {
       this.showLeaderMobilePhone = next !== "false";
       if (this.isConnected) this.loadData();
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     }
   }
 
@@ -91,6 +93,7 @@ export class FaithFormationWidget extends MPNextWidget {
     this.showLeaderEmail = this.getAttribute("show-leader-email") !== "false";
     this.showLeaderMobilePhone = this.getAttribute("show-leader-mobile-phone") !== "false";
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     await this.loadData();
   }
@@ -383,21 +386,34 @@ export class FaithFormationWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: ui-sans-serif, system-ui, sans-serif; color: #2D2926; }
+      :host {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: var(--root-text-color);
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+      }
       .nw-ff-root { max-width: 720px; }
 
       .nw-ff-state { text-align: center; padding: 32px 16px; color: #474747; }
-      .nw-ff-state-error { color: #FF6D6A; }
+      .nw-ff-state-error { color: var(--form-invalid); }
       .nw-ff-spinner {
         width: 28px; height: 28px; margin: 0 auto 12px;
-        border: 3px solid #D6F0FC; border-top-color: #004C97; border-radius: 50%;
+        border: 3px solid #D6F0FC; border-top-color: var(--primary); border-radius: 50%;
         animation: nw-ff-spin 0.8s linear infinite;
       }
       @keyframes nw-ff-spin { to { transform: rotate(360deg); } }
 
       .nw-ff-btn {
         margin-top: 12px; padding: 8px 20px; border-radius: 999px;
-        border: 1.5px solid #004C97; background: white; color: #004C97;
+        border: 1.5px solid var(--primary); background: white; color: var(--primary);
         font-weight: 600; cursor: pointer;
       }
       .nw-ff-btn:hover { background: #D6F0FC; }
@@ -405,13 +421,13 @@ export class FaithFormationWidget extends MPNextWidget {
       .nw-ff-people { display: flex; flex-direction: column; gap: 12px; }
 
       .nw-ff-person {
-        border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; background: white;
+        border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; background: var(--card-bgcolor);
       }
       .nw-ff-person-header {
         width: 100%; display: flex; align-items: center; gap: 12px;
         padding: 14px 16px; background: none; border: none; cursor: pointer; text-align: left;
       }
-      .nw-ff-person-name { flex: 1; font-weight: 700; font-size: 1.05em; color: #002855; }
+      .nw-ff-person-name { flex: 1; font-weight: 700; font-size: 1.05em; color: var(--secondary); }
       .nw-ff-chevron { color: #474747; transition: transform 0.15s; display: flex; }
       .nw-ff-chevron-open { transform: rotate(180deg); }
 
@@ -420,27 +436,27 @@ export class FaithFormationWidget extends MPNextWidget {
       }
       .nw-ff-avatar-fallback {
         display: flex; align-items: center; justify-content: center;
-        background: #004C97; color: white; font-weight: 700; font-size: 0.85em;
+        background: var(--primary); color: white; font-weight: 700; font-size: 0.85em;
       }
 
       .nw-ff-person-body { padding: 0 16px 16px; border-top: 1px solid #f0f0f0; }
 
       .nw-ff-tabs { display: flex; gap: 4px; margin: 12px 0; }
       .nw-ff-tab {
-        padding: 6px 16px; border-radius: 999px; border: 1.5px solid #004C97;
-        background: white; color: #004C97; font-size: 0.85em; font-weight: 600; cursor: pointer;
+        padding: 6px 16px; border-radius: 999px; border: 1.5px solid var(--primary);
+        background: white; color: var(--primary); font-size: 0.85em; font-weight: 600; cursor: pointer;
       }
-      .nw-ff-tab-active { background: #004C97; color: white; }
+      .nw-ff-tab-active { background: var(--primary); color: white; }
 
       .nw-ff-no-groups { color: #474747; font-size: 0.9em; padding: 8px 0; }
 
       .nw-ff-group {
         background: #F7FAFC; border-radius: 10px; padding: 14px; margin-bottom: 10px;
       }
-      .nw-ff-group-name { font-weight: 700; color: #002855; margin-bottom: 4px; }
+      .nw-ff-group-name { font-weight: 700; color: var(--secondary); margin-bottom: 4px; }
       .nw-ff-group-dates { font-size: 0.85em; color: #474747; margin-bottom: 4px; }
       .nw-ff-attendance-summary {
-        font-size: 0.85em; font-weight: 600; color: #86AD3F; margin-bottom: 8px;
+        font-size: 0.85em; font-weight: 600; color: var(--form-valid); margin-bottom: 8px;
       }
 
       .nw-ff-leaders { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
@@ -472,7 +488,7 @@ export class FaithFormationWidget extends MPNextWidget {
       .nw-ff-badge-absent { background: #FFE5E4; color: #b3413e; }
 
       .nw-ff-meetings-toggle {
-        background: none; border: none; color: #004C97; font-size: 0.8em;
+        background: none; border: none; color: var(--primary); font-size: 0.8em;
         font-weight: 600; cursor: pointer; padding: 6px 0; text-align: left;
       }
       .nw-ff-meetings-toggle:hover { text-decoration: underline; }

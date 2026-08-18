@@ -15,6 +15,7 @@ A single button that lets a visitor save one specific event to their own calenda
 | Attribute | What it does | Example |
 |---|---|---|
 | `event-id` | **Required.** Which MinistryPlatform Event this button is for. Find it by opening the event in MinistryPlatform and reading the number in the address bar (or the Event's own detail page). | `event-id="1234"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Notes
 

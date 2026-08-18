@@ -17,6 +17,7 @@ Put it somewhere visible and consistent — a header or shared layout is the usu
 | Attribute | What it does | Example |
 |---|---|---|
 | `post-logout-redirect-uri` | Where a visitor lands after signing out. Leave it off to stay on the same page. | `post-logout-redirect-uri="https://yourchurch.org"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Deep-linking to a specific tab
 

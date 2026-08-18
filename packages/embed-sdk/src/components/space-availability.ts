@@ -196,6 +196,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       "visibility-level-id",
       "brand-color",
       "congregation-noun",
+      "customcss",
     ];
   }
 
@@ -214,6 +215,8 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
     } else if (name === "brand-color") {
       this.injectStyles(this.getStyles());
       this.render();
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     } else {
       this.render();
     }
@@ -274,6 +277,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
     }
 
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     await this.loadCongregationsAndMe();
   }
@@ -1018,23 +1022,36 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: ui-sans-serif, system-ui, sans-serif; color: #2D2926; }
+      :host {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: var(--root-text-color);
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: ${this.brandColor};
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+      }
 
       .sa-state { text-align: center; padding: 32px 16px; color: #474747; }
       .sa-state-error { color: #d32f2f; }
       .sa-spinner {
         width: 28px; height: 28px; margin: 0 auto 12px;
-        border: 3px solid #e3ebf3; border-top-color: ${this.brandColor}; border-radius: 50%;
+        border: 3px solid #e3ebf3; border-top-color: var(--primary); border-radius: 50%;
         animation: sa-spin 0.8s linear infinite;
       }
       .sa-inline-spinner {
-        width: 18px; height: 18px; border: 2px solid #e3ebf3; border-top-color: ${this.brandColor};
+        width: 18px; height: 18px; border: 2px solid #e3ebf3; border-top-color: var(--primary);
         border-radius: 50%; animation: sa-spin 0.8s linear infinite;
       }
       @keyframes sa-spin { to { transform: rotate(360deg); } }
 
       .sa-card {
-        background: #fff; border: 1px solid #e3ebf3; border-radius: 14px;
+        background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px;
         box-shadow: 0 2px 14px rgba(30,60,90,0.08); padding: 22px 24px 26px;
       }
 
@@ -1044,7 +1061,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       .sa-login-sub { color: #667080; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
       .sa-header { margin-bottom: 18px; }
-      .sa-title { margin: 0; font-size: 1.4em; color: ${this.brandColor}; }
+      .sa-title { margin: 0; font-size: 1.4em; color: var(--primary); }
 
       .sa-step { margin-bottom: 18px; }
       .sa-label { display: block; margin-bottom: 6px; font-weight: 600; color: #34495e; font-size: 0.92em; }
@@ -1057,16 +1074,16 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       .sa-room-filters input[type="number"] { flex: 1; min-width: 110px; }
       .sa-room-actions { display: flex; justify-content: flex-end; margin-bottom: 6px; min-height: 1px; }
       .sa-select-all-btn {
-        background: none; border: none; padding: 2px 0; color: ${this.brandColor};
+        background: none; border: none; padding: 2px 0; color: var(--primary);
         font-size: 0.85em; font-weight: 600; cursor: pointer; text-decoration: underline;
       }
-      .sa-select-all-btn:hover { color: #002855; }
+      .sa-select-all-btn:hover { color: var(--secondary); }
 
       .sa-room-list { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; border: 1px solid #e3ebf3; border-radius: 8px; padding: 6px; }
       .sa-room-item { display: flex; align-items: center; gap: 10px; padding: 7px 8px; border-radius: 5px; cursor: pointer; }
       .sa-room-item:hover { background: #f4f8fb; }
-      .sa-room-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: ${this.brandColor}; flex: 0 0 auto; }
-      .sa-room-name { flex: 1; font-size: 0.92em; color: #2D2926; }
+      .sa-room-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); flex: 0 0 auto; }
+      .sa-room-name { flex: 1; font-size: 0.92em; color: var(--root-text-color); }
       .sa-room-number { color: #6b7a88; font-weight: 400; }
       .sa-room-capacity { font-size: 0.8em; color: #6b7a88; white-space: nowrap; }
 
@@ -1074,9 +1091,9 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       .sa-date-range select, .sa-date-range input { flex: 1; min-width: 140px; padding: 9px 11px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95em; background: #fff; }
 
       .sa-btn { padding: 9px 18px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; font-size: 0.92em; }
-      .sa-btn-primary { background: ${this.brandColor}; color: #fff; }
-      .sa-btn-primary:hover { background: #002855; }
-      .sa-btn-secondary { background: #fff; color: ${this.brandColor}; border: 1px solid ${this.brandColor}; }
+      .sa-btn-primary { background: var(--primary); color: #fff; }
+      .sa-btn-primary:hover { background: var(--secondary); }
+      .sa-btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
       .sa-btn-clear { background: #e9ecef; color: #555; margin-right: 8px; }
       .sa-btn:disabled { opacity: 0.6; cursor: not-allowed; }
       .sa-search-btn { margin-top: 4px; }
@@ -1090,13 +1107,13 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
 
       .sa-results { margin-top: 20px; border-top: 1px solid #e3ebf3; padding-top: 16px; }
       .sa-room-results { margin-bottom: 16px; }
-      .sa-room-results-title { margin: 0 0 8px; font-size: 1em; color: ${this.brandColor}; }
+      .sa-room-results-title { margin: 0 0 8px; font-size: 1em; color: var(--primary); }
       .sa-blocks { display: flex; flex-direction: column; gap: 6px; }
       .sa-block {
         display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; padding: 8px 12px;
         background: #f4f8fb; border-radius: 6px; font-size: 0.9em;
       }
-      .sa-block-time { font-weight: 600; color: #2D2926; white-space: nowrap; }
+      .sa-block-time { font-weight: 600; color: var(--root-text-color); white-space: nowrap; }
       .sa-block-title { color: #6b7a88; }
       .sa-block-busy { font-style: italic; }
 

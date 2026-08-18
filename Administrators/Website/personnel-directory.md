@@ -40,6 +40,7 @@ With no settings, it shows every active person across every category. Everything
 | `page-title` | Heading shown above the directory. | `page-title="Diocesan Staff Directory"` |
 | `page-intro` | A line of text under the heading. | `page-intro="Reach any parish or chancery office directly."` |
 | `show-photos` | Show each person's attached photo. | `show-photos="false"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples
 

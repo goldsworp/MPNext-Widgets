@@ -62,6 +62,7 @@ export class FullCalendarWidget extends MPNextWidget {
       "show-toolbar",
       "campus-label",
       "event-detail-url-template",
+      "customcss",
     ];
   }
 
@@ -82,6 +83,7 @@ export class FullCalendarWidget extends MPNextWidget {
 
     // Inject styles and show loading state
     this.injectStyles(ALL_STYLES);
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
 
     try {
@@ -135,6 +137,8 @@ export class FullCalendarWidget extends MPNextWidget {
       this.rebuildCurrentView();
     } else if (name === "event-detail-url-template") {
       this.eventDetailUrlTemplate = next || undefined;
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     }
   }
 

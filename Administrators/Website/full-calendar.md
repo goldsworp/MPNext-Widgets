@@ -21,6 +21,7 @@ With no settings at all, it shows every approved event across every campus, star
 | `congregation-id` | Show only one campus/parish's events. Find the number on the Congregations page in MinistryPlatform. Leave it off to show all campuses. | `congregation-id="1"` |
 | `event-detail-url-template` | Send the "Register" button to a page on your own site instead of MinistryPlatform's, when an event has online registration open but no external URL of its own set. `{eventId}` is replaced automatically with the actual event's number. | `event-detail-url-template="/events?id={eventId}"` |
 | `campus-label` | Rename "Campus" in the filter dropdown — useful for a diocese where "Parish" is the right word instead. | `campus-label="Parish"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples
 

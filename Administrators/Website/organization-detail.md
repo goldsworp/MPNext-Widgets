@@ -32,6 +32,7 @@ That's the entire tag — no attributes are required. Make sure the [Organizatio
 | `map-style` | Visual style of the small "directions" map: `light`, `street`, or `terrain`. | `map-style="street"` |
 | `map-zoom` | Zoom level of that map. | `map-zoom="15"` |
 | `show-phone` / `show-description` / `show-giving-link` | Toggle these optional pieces of information. | `show-giving-link="false"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples
 

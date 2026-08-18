@@ -45,7 +45,7 @@ export class JourneyMilestonesIndividualWidget extends MPNextWidget {
   private showAllGetStartedButtons = true;
 
   static get observedAttributes() {
-    return ["journey-id", "group-id", "form-base-url", "event-details-page", "page-heading", "show-all-get-started-buttons"];
+    return ["journey-id", "group-id", "form-base-url", "event-details-page", "page-heading", "show-all-get-started-buttons", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -69,6 +69,8 @@ export class JourneyMilestonesIndividualWidget extends MPNextWidget {
     } else if (name === "show-all-get-started-buttons") {
       this.showAllGetStartedButtons = next !== "false";
       if (this.loaded) this.render();
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     }
   }
 
@@ -87,6 +89,7 @@ export class JourneyMilestonesIndividualWidget extends MPNextWidget {
     this.showAllGetStartedButtons = this.getAttribute("show-all-get-started-buttons") !== "false";
 
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     await this.loadMilestones();
   }
 
@@ -203,8 +206,19 @@ export class JourneyMilestonesIndividualWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #2c3e50; line-height: 1.5; }
-      .jm-card { max-width: 760px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 28px; }
+      :host {
+        display: block; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #2c3e50; line-height: 1.5;
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+      }
+      .jm-card { max-width: 760px; margin: 0 auto; background: var(--card-bgcolor); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 28px; }
       .jm-heading { font-size: 1.4em; font-weight: 700; color: #2c3e50; margin: 0 0 16px; }
       .jm-loading { text-align: center; color: #6b7a88; padding: 30px 0; }
       .jm-msg-error { background: #ffebee; color: #c62828; padding: 12px; border-radius: 6px; }

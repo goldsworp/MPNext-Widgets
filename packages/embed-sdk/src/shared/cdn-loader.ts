@@ -28,7 +28,7 @@ export function loadScript(url: string): Promise<void> {
 
 const cssTextCache = new Map<string, Promise<string>>();
 
-function fetchCSSText(url: string): Promise<string> {
+export function fetchCSSText(url: string): Promise<string> {
   if (cssTextCache.has(url)) return cssTextCache.get(url)!;
 
   const promise = fetch(url).then((res) => {

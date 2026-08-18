@@ -33,6 +33,7 @@ With no settings, visitors can browse every parish's rooms and check availabilit
 | `visibility-level-id` | The Visibility Level MinistryPlatform sets on new request Events — defaults to **1 (Private)**, since these are internal facility bookings, not public calendar entries. Find the numbers on the **Visibility Levels** page if you want something else. | `visibility-level-id="2"` |
 | `default-contact-id` | The Contact new requests are attributed to when the visitor isn't signed in (only relevant if `allow-requests` is on and `require-sign-in` is off). Signed-in visitors are always attributed to themselves regardless of this setting. Find the numbers on the **Contacts** page — a front-office or facilities-team contact works well. | `default-contact-id="123"` |
 | `notify-emails` | Who gets emailed when a new request comes in. Separate multiple addresses with commas. Leave it off and no one is notified (the request is still created in MinistryPlatform either way). | `notify-emails="facilities@parish.org"` |
+| `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples
 

@@ -45,7 +45,7 @@ export class MyInvoicesWidget extends MPNextWidget {
   private checkoutCustomCss: string | null = null;
 
   static get observedAttributes() {
-    return ["payment-processor-target-url", "back-to-invoices-url", "checkout-custom-css"];
+    return ["payment-processor-target-url", "back-to-invoices-url", "checkout-custom-css", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -55,6 +55,8 @@ export class MyInvoicesWidget extends MPNextWidget {
       this.backToInvoicesUrl = next || null;
     } else if (name === "checkout-custom-css") {
       this.checkoutCustomCss = next || null;
+    } else if (name === "customcss") {
+      void this.applyCustomCss(next || null);
     }
   }
 
@@ -63,6 +65,7 @@ export class MyInvoicesWidget extends MPNextWidget {
     this.backToInvoicesUrl = this.getAttribute("back-to-invoices-url");
     this.checkoutCustomCss = this.getAttribute("checkout-custom-css");
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     this.loadInvoices();
   }
@@ -555,26 +558,34 @@ export class MyInvoicesWidget extends MPNextWidget {
     </svg>`;
   }
 
-  // ALL STYLES - keep identical
   private getStyles(): string {
     return `
       :host {
         all: initial;
         display: block;
         font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
       }
 
       .nw-invoices {
         max-width: 800px;
         margin: 0 auto;
-        background: white;
+        background: var(--card-bgcolor);
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
 
       .header {
-        background: #002855;
+        background: var(--secondary);
         color: white;
         padding: 24px;
       }
@@ -625,7 +636,7 @@ export class MyInvoicesWidget extends MPNextWidget {
         transition: border-color 0.15s;
       }
       .search-bar input:focus {
-        border-color: #004C97;
+        border-color: var(--primary);
       }
 
       .empty-state {
@@ -658,7 +669,7 @@ export class MyInvoicesWidget extends MPNextWidget {
       }
       .table-row {
         font-size: 14px;
-        color: #2D2926;
+        color: var(--root-text-color);
         border-bottom: 1px solid #f3f4f6;
         cursor: pointer;
         transition: background 0.15s;
@@ -686,14 +697,14 @@ export class MyInvoicesWidget extends MPNextWidget {
         display: block;
         font-size: 12px;
         font-weight: 600;
-        color: #004C97;
+        color: var(--primary);
         margin-top: 2px;
       }
       .table-row--payable {
-        border-left: 3px solid #F1BE48;
+        border-left: 3px solid var(--accent);
       }
       .table-row--payable:hover .pay-link {
-        color: #002855;
+        color: var(--secondary);
       }
 
       .badge {
@@ -730,7 +741,7 @@ export class MyInvoicesWidget extends MPNextWidget {
       .back-btn {
         background: none;
         border: none;
-        color: #004C97;
+        color: var(--primary);
         font-size: 14px;
         font-weight: 600;
         cursor: pointer;
@@ -739,7 +750,7 @@ export class MyInvoicesWidget extends MPNextWidget {
         font-family: inherit;
       }
       .back-btn:hover {
-        color: #002855;
+        color: var(--secondary);
       }
 
       .detail-header {
@@ -764,7 +775,7 @@ export class MyInvoicesWidget extends MPNextWidget {
       }
       .detail-label {
         font-weight: 600;
-        color: #002855;
+        color: var(--secondary);
       }
       .detail-total {
         text-align: right;
@@ -777,13 +788,13 @@ export class MyInvoicesWidget extends MPNextWidget {
       .detail-total-amount {
         font-size: 28px;
         font-weight: 700;
-        color: #004C97;
+        color: var(--primary);
       }
 
       .section-label {
         font-size: 16px;
         font-weight: 700;
-        color: #002855;
+        color: var(--secondary);
         margin-bottom: 12px;
       }
 
@@ -813,7 +824,7 @@ export class MyInvoicesWidget extends MPNextWidget {
       }
       .li-row {
         font-size: 14px;
-        color: #2D2926;
+        color: var(--root-text-color);
         border-bottom: 1px solid #f3f4f6;
       }
       .li-row:last-child {
@@ -849,7 +860,7 @@ export class MyInvoicesWidget extends MPNextWidget {
         max-width: 320px;
         margin: 0 auto;
         padding: 14px 32px;
-        background: #004C97;
+        background: var(--primary);
         color: white;
         font-weight: bold;
         font-size: 14px;
@@ -860,7 +871,7 @@ export class MyInvoicesWidget extends MPNextWidget {
         transition: background 0.15s;
       }
       .pay-btn:hover {
-        background: #002855;
+        background: var(--secondary);
       }
 
       .retry-section {
@@ -870,7 +881,7 @@ export class MyInvoicesWidget extends MPNextWidget {
       .retry-btn {
         display: inline-block;
         padding: 10px 24px;
-        background: #004C97;
+        background: var(--primary);
         color: white;
         font-weight: 600;
         font-size: 14px;
@@ -881,7 +892,7 @@ export class MyInvoicesWidget extends MPNextWidget {
         transition: background 0.15s;
       }
       .retry-btn:hover {
-        background: #002855;
+        background: var(--secondary);
       }
 
       @media (max-width: 640px) {

@@ -50,6 +50,10 @@ Several widgets ask for a numeric ID — an Event ID, Congregation ID, Journey I
 
 The deployed application includes a **demo gallery** — visit `https://<your-app-address>/demo` and sign in. It lets you try each widget with different settings and see it render live, before you ever touch your actual website's page editor. This is worth doing first, especially the first time you configure a new widget.
 
+## Matching widget colors to your brand
+
+Every widget below accepts a `customcss` attribute — the same idea as the `customcss` setting on MinistryPlatform's own classic widgets — to override its colors without a developer. See [custom-styling.md](custom-styling.md).
+
 ## Every widget
 
 ### Authentication

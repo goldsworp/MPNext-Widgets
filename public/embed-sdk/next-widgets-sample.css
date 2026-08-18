@@ -1,0 +1,55 @@
+/*
+ * Starting point for the `customcss` attribute on next-gen MPNext widgets
+ * (<next-my-invoices>, <next-profile>, <next-space-availability>, etc).
+ *
+ * How to use this file:
+ *   1. Copy it somewhere you can host a plain text file with a public URL —
+ *      the same place you already host CSS for the classic MP widgets
+ *      (the customcss attribute works the same way on both).
+ *   2. Change the color values below to match your brand.
+ *   3. Set customcss="https://your-site.com/path/to/your-copy.css" on any
+ *      <next-*> widget tag. The same file can be reused across every widget
+ *      on your site for consistent branding — you don't need a separate
+ *      file per widget unless you want one.
+ *
+ * As shipped (unedited), every value below matches each widget's own
+ * built-in default — so pointing customcss at an unmodified copy of this
+ * file changes nothing. Only the values you actually edit take effect.
+ *
+ * Every rule below targets `:host`, which refers to the widget element
+ * itself (e.g. <next-my-invoices>) from inside its own Shadow DOM — this is
+ * standard CSS, not something specific to these widgets.
+ */
+:host {
+  /* Main brand color — buttons, links, section headers */
+  --primary: #004C97;
+
+  /* Darker accent — hover states, secondary headers */
+  --secondary: #002855;
+
+  /* Highlight color — borders, underlines, badges (used sparingly) */
+  --accent: #F1BE48;
+
+  /* Card / panel background */
+  --card-bgcolor: #ffffff;
+
+  /* Default body text color */
+  --root-text-color: #2D2926;
+
+  /* Success state (e.g. a paid invoice, a confirmed booking) */
+  --form-valid: #86AD3F;
+
+  /* Error / warning state (e.g. a form validation message) */
+  --form-invalid: #FF6D6A;
+}
+
+/*
+ * Want to go further than colors? Every widget's own documentation page
+ * (Administrators/Website/*.md) lists its internal CSS class names, which
+ * you can target here too — e.g.:
+ *
+ *   .pay-btn { border-radius: 999px; }
+ *
+ * Rules here are applied after the widget's own styles, so they win ties
+ * without needing !important.
+ */

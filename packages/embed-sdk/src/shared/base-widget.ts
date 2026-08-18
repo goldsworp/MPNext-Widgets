@@ -1,3 +1,9 @@
+import { fetchCSSText } from "./cdn-loader";
+
+function supportsConstructableStylesheets(): boolean {
+  return "adoptedStyleSheets" in Document.prototype && "replace" in CSSStyleSheet.prototype;
+}
+
 /**
  * Base class for MPNext embeddable widgets
  * Handles Shadow DOM, API communication, and token management
@@ -6,6 +12,11 @@ export abstract class MPNextWidget extends HTMLElement {
   protected root: ShadowRoot;
   protected apiHost: string;
   protected tokenProvider: () => Promise<string>;
+
+  private baseStyleSheet: CSSStyleSheet | null = null;
+  private customStyleSheet: CSSStyleSheet | null = null;
+  private customCssUrl: string | null = null;
+  private customCssStyleTagEl: HTMLStyleElement | null = null;
 
   constructor() {
     super();
@@ -112,26 +123,75 @@ export abstract class MPNextWidget extends HTMLElement {
    * Uses Constructable Stylesheets when available, fallback to <style> tag
    */
   protected injectStyles(css: string): void {
-    if (
-      "adoptedStyleSheets" in Document.prototype &&
-      "replace" in CSSStyleSheet.prototype
-    ) {
+    if (supportsConstructableStylesheets()) {
       try {
         const sheet = new CSSStyleSheet();
         sheet.replaceSync(css);
-        this.root.adoptedStyleSheets = [sheet];
+        this.baseStyleSheet = sheet;
+        this.applyAdoptedStyleSheets();
+        return;
       } catch {
-        this.injectStyleTag(css);
+        // fall through to <style> tag fallback below
       }
-    } else {
-      this.injectStyleTag(css);
     }
+    this.injectStyleTag(css);
   }
 
   private injectStyleTag(css: string): void {
     const style = document.createElement("style");
     style.textContent = css;
     this.root.appendChild(style);
+  }
+
+  private applyAdoptedStyleSheets(): void {
+    this.root.adoptedStyleSheets = [this.baseStyleSheet, this.customStyleSheet].filter(
+      (sheet): sheet is CSSStyleSheet => sheet !== null,
+    );
+  }
+
+  /**
+   * Load and apply an admin-supplied stylesheet — the `customcss` attribute
+   * every next-gen widget shares, matching the classic MinistryPlatform
+   * widgets' own attribute of the same name (same semantics: a URL to a CSS
+   * file, applied inside this widget's own Shadow DOM). Applied after the
+   * widget's own base styles, so equal-specificity rules in the supplied
+   * file win the cascade. Re-running this (e.g. on an attribute change)
+   * always replaces the same tracked stylesheet slot rather than stacking
+   * duplicates, and a stale in-flight fetch is discarded if superseded by a
+   * newer URL before it resolves.
+   */
+  protected async applyCustomCss(url: string | null): Promise<void> {
+    this.customCssUrl = url;
+
+    if (this.customCssStyleTagEl) {
+      this.customCssStyleTagEl.remove();
+      this.customCssStyleTagEl = null;
+    }
+
+    if (!url) {
+      this.customStyleSheet = null;
+      this.applyAdoptedStyleSheets();
+      return;
+    }
+
+    try {
+      const cssText = await fetchCSSText(url);
+      if (this.customCssUrl !== url) return; // superseded by a newer call
+
+      if (supportsConstructableStylesheets()) {
+        const sheet = new CSSStyleSheet();
+        sheet.replaceSync(cssText);
+        this.customStyleSheet = sheet;
+        this.applyAdoptedStyleSheets();
+      } else {
+        const style = document.createElement("style");
+        style.textContent = cssText;
+        this.root.appendChild(style);
+        this.customCssStyleTagEl = style;
+      }
+    } catch (err) {
+      console.warn(`[next-embed] Failed to load customcss from "${url}":`, err);
+    }
   }
 
   /**

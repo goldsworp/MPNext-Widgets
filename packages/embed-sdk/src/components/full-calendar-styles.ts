@@ -12,6 +12,15 @@ export const BASE_STYLES = `
   :host {
     display: block;
     font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    /* Overridable via the customcss attribute — see
+       Administrators/Website/custom-styling.md */
+    --primary: #004C97;
+    --secondary: #002855;
+    --accent: #F1BE48;
+    --card-bgcolor: #ffffff;
+    --root-text-color: #2D2926;
+    --form-valid: #86AD3F;
+    --form-invalid: #FF6D6A;
   }
 
   /* ── Layout ── */
@@ -43,7 +52,7 @@ export const BASE_STYLES = `
   }
 
   .nw-fc-error svg {
-    color: #FF6D6A;
+    color: var(--form-invalid);
   }
 
   .nw-fc-loading p {
@@ -55,7 +64,7 @@ export const BASE_STYLES = `
     width: 32px;
     height: 32px;
     border: 3px solid #E0E0E0;
-    border-top-color: #004C97;
+    border-top-color: var(--primary);
     border-radius: 50%;
     animation: nw-fc-spin 0.75s linear infinite;
   }
@@ -68,20 +77,20 @@ export const BASE_STYLES = `
   /* Must be on .fc (not :host) so they cascade into FC's cloned styles in Shadow DOM */
 
   .fc {
-    --fc-button-bg-color: #004C97;
-    --fc-button-border-color: #004C97;
-    --fc-button-hover-bg-color: #002855;
-    --fc-button-hover-border-color: #002855;
-    --fc-button-active-bg-color: #002855;
-    --fc-button-active-border-color: #002855;
-    --fc-event-bg-color: #004C97;
-    --fc-event-border-color: #004C97;
+    --fc-button-bg-color: var(--primary);
+    --fc-button-border-color: var(--primary);
+    --fc-button-hover-bg-color: var(--secondary);
+    --fc-button-hover-border-color: var(--secondary);
+    --fc-button-active-bg-color: var(--secondary);
+    --fc-button-active-border-color: var(--secondary);
+    --fc-event-bg-color: var(--primary);
+    --fc-event-border-color: var(--primary);
     --fc-event-selected-overlay-color: rgba(0, 40, 85, 0.25);
     --fc-bg-event-color: #D6F0FC;
     --fc-bg-event-opacity: 0.5;
     --fc-highlight-color: rgba(0, 76, 151, 0.1);
     --fc-today-bg-color: #D6F0FC;
-    --fc-now-indicator-color: #FF6D6A;
+    --fc-now-indicator-color: var(--form-invalid);
     --fc-non-business-color: rgba(0, 0, 0, 0.03);
     --fc-neutral-bg-color: #f9fafb;
     --fc-page-bg-color: white;
@@ -95,12 +104,12 @@ export const BASE_STYLES = `
   .fc .fc-toolbar-title {
     font-size: 1.2em;
     font-weight: 700;
-    color: #002855;
+    color: var(--secondary);
   }
 
   .fc .fc-button {
-    background-color: #004C97;
-    border-color: #004C97;
+    background-color: var(--primary);
+    border-color: var(--primary);
     font-size: 0.82em;
     font-weight: 600;
     padding: 5px 12px;
@@ -109,8 +118,8 @@ export const BASE_STYLES = `
   }
 
   .fc .fc-button:hover {
-    background-color: #002855;
-    border-color: #002855;
+    background-color: var(--secondary);
+    border-color: var(--secondary);
   }
 
   .fc .fc-button:disabled {
@@ -121,8 +130,8 @@ export const BASE_STYLES = `
 
   .fc .fc-button-primary:not(:disabled).fc-button-active,
   .fc .fc-button-primary:not(:disabled):active {
-    background-color: #002855;
-    border-color: #002855;
+    background-color: var(--secondary);
+    border-color: var(--secondary);
   }
 
   /* Today cell */
@@ -131,9 +140,9 @@ export const BASE_STYLES = `
   }
 
   .fc .fc-day-today .fc-daygrid-day-number {
-    color: #004C97;
+    color: var(--primary);
     font-weight: 700;
-    background-color: #004C97;
+    background-color: var(--primary);
     color: white;
     border-radius: 50%;
     width: 26px;
@@ -165,21 +174,21 @@ export const BASE_STYLES = `
   }
 
   .fc .fc-list-event-dot {
-    border-color: #004C97;
+    border-color: var(--primary);
   }
 
   .fc .fc-daygrid-event-dot {
-    border-color: #004C97 !important;
+    border-color: var(--primary) !important;
   }
 
   /* Now indicator */
   .fc .fc-timegrid-now-indicator-line {
-    border-color: #FF6D6A;
+    border-color: var(--form-invalid);
   }
 
   .fc .fc-timegrid-now-indicator-arrow {
-    border-top-color: #FF6D6A;
-    border-bottom-color: #FF6D6A;
+    border-top-color: var(--form-invalid);
+    border-bottom-color: var(--form-invalid);
   }
 
   /* Column/day headers */
@@ -199,7 +208,7 @@ export const BASE_STYLES = `
   }
 
   .fc .fc-popover-header {
-    background: #004C97;
+    background: var(--primary);
     color: white;
     border-radius: 8px 8px 0 0;
     font-weight: 600;
@@ -251,7 +260,7 @@ export const TOOLBAR_STYLES = `
   .nw-fc-toolbar-center {
     font-size: 1.2em;
     font-weight: 700;
-    color: #002855;
+    color: var(--secondary);
   }
 
   .nw-fc-toolbar-right {
@@ -278,13 +287,13 @@ export const TOOLBAR_STYLES = `
   }
 
   .nw-fc-toolbar-btn.active {
-    background: #004C97;
+    background: var(--primary);
     color: white;
-    border-color: #004C97;
+    border-color: var(--primary);
   }
 
   .nw-fc-toolbar-btn.active:hover {
-    background: #002855;
+    background: var(--secondary);
   }
 
   .nw-fc-toolbar-nav {
@@ -349,7 +358,7 @@ export const CARDS_STYLES = `
   /* ── Card ── */
 
   .nw-fc-card {
-    background: white;
+    background: var(--card-bgcolor);
     border-radius: 8px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 2px 12px rgba(0,0,0,0.04);
     overflow: hidden;
@@ -381,7 +390,7 @@ export const CARDS_STYLES = `
   .nw-fc-card-placeholder {
     width: 100%;
     height: 100%;
-    background: #004C97;
+    background: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -393,7 +402,7 @@ export const CARDS_STYLES = `
     position: absolute;
     bottom: 0;
     left: 0;
-    background: #002855;
+    background: var(--secondary);
     padding: 8px 14px;
     text-align: center;
     min-width: 64px;
@@ -463,7 +472,7 @@ export const CARDS_STYLES = `
   .nw-fc-card-title {
     font-size: 1.05em;
     font-weight: 600;
-    color: #004C97;
+    color: var(--primary);
     margin: 4px 0 2px;
     line-height: 1.3;
   }
@@ -474,7 +483,7 @@ export const CARDS_STYLES = `
     display: block;
     width: 100%;
     padding: 12px;
-    background: #002855;
+    background: var(--secondary);
     color: white;
     border: none;
     border-radius: 0;
@@ -489,7 +498,7 @@ export const CARDS_STYLES = `
   }
 
   .nw-fc-card-learn-more:hover {
-    background: #004C97;
+    background: var(--primary);
   }
 
   /* ── Show More ── */
@@ -499,8 +508,8 @@ export const CARDS_STYLES = `
     margin: 24px auto 0;
     padding: 10px 32px;
     background: white;
-    border: 2px solid #004C97;
-    color: #004C97;
+    border: 2px solid var(--primary);
+    color: var(--primary);
     border-radius: 8px;
     font-size: 0.9em;
     font-weight: 600;
@@ -509,7 +518,7 @@ export const CARDS_STYLES = `
   }
 
   .nw-fc-show-more:hover {
-    background: #004C97;
+    background: var(--primary);
     color: white;
   }
 
@@ -561,8 +570,8 @@ export const FILTER_STYLES = `
     font-size: 0.8em;
     font-weight: 600;
     cursor: pointer;
-    border: 1.5px solid #004C97;
-    color: #004C97;
+    border: 1.5px solid var(--primary);
+    color: var(--primary);
     background: white;
     transition: all 0.15s;
     user-select: none;
@@ -573,14 +582,14 @@ export const FILTER_STYLES = `
   }
 
   .nw-fc-filter-chip.active {
-    background: #004C97;
+    background: var(--primary);
     color: white;
-    border-color: #004C97;
+    border-color: var(--primary);
   }
 
   .nw-fc-filter-chip.active:hover {
-    background: #002855;
-    border-color: #002855;
+    background: var(--secondary);
+    border-color: var(--secondary);
   }
 
   .nw-fc-filter-chip .nw-fc-chip-check {
@@ -613,7 +622,7 @@ export const FILTER_STYLES = `
 
   .nw-fc-filter-search:focus {
     outline: none;
-    border-color: #004C97;
+    border-color: var(--primary);
   }
 
   .nw-fc-filter-chips {
@@ -669,7 +678,7 @@ export const MINI_CAL_STYLES = `
   /* ── Mini Calendar ── */
 
   .nw-fc-mini-cal {
-    background: white;
+    background: var(--card-bgcolor);
     border-radius: 12px;
     border: 1px solid #E0E0E0;
     padding: 16px;
@@ -685,7 +694,7 @@ export const MINI_CAL_STYLES = `
   .nw-fc-mini-cal-title {
     font-size: 0.95em;
     font-weight: 700;
-    color: #002855;
+    color: var(--secondary);
   }
 
   .nw-fc-mini-cal-nav {
@@ -738,7 +747,7 @@ export const MINI_CAL_STYLES = `
   }
 
   .nw-fc-mini-cal-day.today .nw-fc-mini-day-num {
-    background: #004C97;
+    background: var(--primary);
     color: white;
     border-radius: 50%;
     width: 24px;
@@ -772,7 +781,7 @@ export const MINI_CAL_STYLES = `
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #002855;
+    background: var(--secondary);
   }
 
   /* ── Today Link ── */
@@ -782,7 +791,7 @@ export const MINI_CAL_STYLES = `
     text-align: center;
     margin-top: 8px;
     font-size: 0.8em;
-    color: #004C97;
+    color: var(--primary);
     cursor: pointer;
     font-weight: 600;
   }
@@ -835,7 +844,7 @@ export const MODAL_STYLES = `
   }
 
   .nw-fc-modal {
-    background: white;
+    background: var(--card-bgcolor);
     border-radius: 12px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     width: 100%;
@@ -867,7 +876,7 @@ export const MODAL_STYLES = `
   .nw-fc-modal-title {
     font-size: 1.15em;
     font-weight: 700;
-    color: #2D2926;
+    color: var(--root-text-color);
     margin: 0;
     line-height: 1.3;
   }
@@ -893,7 +902,7 @@ export const MODAL_STYLES = `
   .nw-fc-modal-close:hover {
     background-color: #E0E0E0;
     border-color: #BBB;
-    color: #2D2926;
+    color: var(--root-text-color);
   }
 
   .nw-fc-modal-badges {
@@ -920,12 +929,12 @@ export const MODAL_STYLES = `
   }
 
   .nw-fc-badge-campus {
-    background-color: #002855;
+    background-color: var(--secondary);
   }
 
   .nw-fc-badge-featured {
-    background-color: #F1BE48;
-    color: #2D2926;
+    background-color: var(--accent);
+    color: var(--root-text-color);
   }
 
   .nw-fc-modal-body {
@@ -985,7 +994,7 @@ export const MODAL_STYLES = `
     align-items: center;
     justify-content: center;
     padding: 10px 24px;
-    background-color: #004C97;
+    background-color: var(--primary);
     color: white;
     font-size: 0.9em;
     font-weight: 600;
@@ -996,7 +1005,7 @@ export const MODAL_STYLES = `
   }
 
   .nw-fc-register-btn:hover {
-    background-color: #002855;
+    background-color: var(--secondary);
   }
 
   /* ── Modal Image ── */
@@ -1012,7 +1021,7 @@ export const MODAL_STYLES = `
   .nw-fc-modal-image-placeholder {
     width: 100%;
     aspect-ratio: 16 / 9;
-    background: #004C97;
+    background: var(--primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1067,7 +1076,7 @@ export const MODAL_STYLES = `
   }
 
   .nw-fc-admin-value a {
-    color: #004C97;
+    color: var(--primary);
     text-decoration: none;
   }
 
@@ -1081,7 +1090,7 @@ export const MODAL_STYLES = `
     gap: 6px;
     margin-top: 8px;
     padding: 8px 16px;
-    background: #002855;
+    background: var(--secondary);
     color: white;
     border-radius: 6px;
     font-size: 0.82em;
@@ -1091,7 +1100,7 @@ export const MODAL_STYLES = `
   }
 
   .nw-fc-mp-link:hover {
-    background: #004C97;
+    background: var(--primary);
   }
 
   /* ── Modal Responsive ── */
@@ -1157,12 +1166,12 @@ export const LIST_STYLES = `
   .nw-fc-agenda-date-label {
     font-size: 0.85em;
     font-weight: 700;
-    color: #002855;
+    color: var(--secondary);
     letter-spacing: 0.01em;
   }
 
   .nw-fc-agenda-today .nw-fc-agenda-date-label {
-    color: #004C97;
+    color: var(--primary);
   }
 
   .nw-fc-agenda-count {
@@ -1178,7 +1187,7 @@ export const LIST_STYLES = `
   .nw-fc-agenda-today .nw-fc-agenda-count {
     background: white;
     border-color: #9DD9F5;
-    color: #004C97;
+    color: var(--primary);
   }
 
   /* ── Event Row ── */
@@ -1255,7 +1264,7 @@ export const LIST_STYLES = `
   .nw-fc-agenda-title {
     font-size: 0.92em;
     font-weight: 700;
-    color: #2D2926;
+    color: var(--root-text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1279,7 +1288,7 @@ export const LIST_STYLES = `
 
   .nw-fc-agenda-campus {
     font-weight: 600;
-    color: #004C97;
+    color: var(--primary);
     text-transform: uppercase;
     letter-spacing: 0.03em;
     font-size: 0.95em;
@@ -1316,8 +1325,8 @@ export const LIST_STYLES = `
   }
 
   .nw-fc-agenda-badge-featured {
-    background: #F1BE48 !important;
-    color: #2D2926 !important;
+    background: var(--accent) !important;
+    color: var(--root-text-color) !important;
   }
 
   /* ── Chevron ── */

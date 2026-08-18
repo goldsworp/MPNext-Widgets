@@ -52,7 +52,7 @@ export class UserMenuWidget extends MPNextWidget {
   private hashChangeHandler = () => this.checkHashDeepLink();
 
   static get observedAttributes() {
-    return ["first-name", "last-name", "email", "image-url", "mp-base-url", "prevent-login-widget", "post-logout-redirect-uri"];
+    return ["first-name", "last-name", "email", "image-url", "mp-base-url", "prevent-login-widget", "post-logout-redirect-uri", "customcss"];
   }
 
   private get mpBaseUrl(): string {
@@ -231,6 +231,7 @@ export class UserMenuWidget extends MPNextWidget {
 
   connectedCallback() {
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     document.addEventListener("click", this.documentClickHandler, true);
     document.addEventListener("keydown", this.escapeHandler);
@@ -254,7 +255,11 @@ export class UserMenuWidget extends MPNextWidget {
     }
   }
 
-  attributeChangedCallback() {
+  attributeChangedCallback(name: string, _old: string | null, next: string | null) {
+    if (name === "customcss") {
+      void this.applyCustomCss(next || null);
+      return;
+    }
     if (this.root) {
       this.render();
     }
@@ -892,6 +897,15 @@ export class UserMenuWidget extends MPNextWidget {
         all: initial;
         display: inline-block;
         font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
       }
 
       .nw-user-menu {
@@ -907,7 +921,7 @@ export class UserMenuWidget extends MPNextWidget {
         border: none;
         padding: 0;
         cursor: pointer;
-        background: #004C97;
+        background: var(--primary);
         color: white;
         display: flex;
         align-items: center;
@@ -918,7 +932,7 @@ export class UserMenuWidget extends MPNextWidget {
       }
 
       .nw-avatar-btn:focus-visible {
-        box-shadow: 0 0 0 2px white, 0 0 0 4px #004C97;
+        box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary);
       }
 
       .nw-avatar-btn:hover {
@@ -945,7 +959,7 @@ export class UserMenuWidget extends MPNextWidget {
         top: calc(100% + 6px);
         right: 0;
         width: 224px;
-        background: white;
+        background: var(--card-bgcolor);
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         box-shadow: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);

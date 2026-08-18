@@ -66,8 +66,19 @@ export class ProfileWidget extends MPNextWidget {
   private photoUrl: string | null = null;
   private uploadingPhoto = false;
 
+  static get observedAttributes() {
+    return ["customcss"];
+  }
+
+  attributeChangedCallback(name: string, _old: string | null, next: string | null) {
+    if (name === "customcss") {
+      void this.applyCustomCss(next || null);
+    }
+  }
+
   connectedCallback() {
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     this.loadProfile();
   }
@@ -654,9 +665,18 @@ export class ProfileWidget extends MPNextWidget {
         all: initial;
         display: block;
         font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-        color: #2D2926;
+        color: var(--root-text-color);
         font-size: 14px;
         line-height: 1.5;
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: #004C97;
+        --secondary: #002855;
+        --accent: #F1BE48;
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
       }
 
       *, *::before, *::after { box-sizing: border-box; }
@@ -710,7 +730,7 @@ export class ProfileWidget extends MPNextWidget {
         height: 32px;
         border-radius: 50%;
         background: white;
-        border: 2px solid #004C97;
+        border: 2px solid var(--primary);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -725,7 +745,7 @@ export class ProfileWidget extends MPNextWidget {
       .nw-photo-greeting {
         font-size: 22px;
         font-weight: 800;
-        color: #2D2926;
+        color: var(--root-text-color);
         line-height: 1.3;
       }
       .nw-photo-subtext {
@@ -747,7 +767,7 @@ export class ProfileWidget extends MPNextWidget {
         width: 32px;
         height: 32px;
         border: 3px solid #E0E0E0;
-        border-top-color: #004C97;
+        border-top-color: var(--primary);
         border-radius: 50%;
         animation: nw-spin 0.8s linear infinite;
         margin-bottom: 12px;
@@ -784,12 +804,12 @@ export class ProfileWidget extends MPNextWidget {
       .nw-toast-success {
         background: #ecfdf5;
         color: #065f46;
-        border: 1px solid #86AD3F;
+        border: 1px solid var(--form-valid);
       }
       .nw-toast-error {
         background: #fef2f2;
         color: #991b1b;
-        border: 1px solid #FF6D6A;
+        border: 1px solid var(--form-invalid);
       }
 
       .nw-section {
@@ -840,20 +860,20 @@ export class ProfileWidget extends MPNextWidget {
         border-radius: 6px;
         font-size: 14px;
         font-family: inherit;
-        color: #2D2926;
+        color: var(--root-text-color);
         background: white;
         transition: border-color 0.15s;
       }
       .nw-field input:focus,
       .nw-field select:focus {
         outline: none;
-        border-color: #004C97;
+        border-color: var(--primary);
         box-shadow: 0 0 0 2px rgba(0, 76, 151, 0.15);
       }
       .nw-field-error {
         display: block;
         font-size: 12px;
-        color: #FF6D6A;
+        color: var(--form-invalid);
         margin-top: 3px;
       }
 
@@ -870,13 +890,13 @@ export class ProfileWidget extends MPNextWidget {
         gap: 8px;
         font-weight: 400 !important;
         font-size: 14px !important;
-        color: #2D2926 !important;
+        color: var(--root-text-color) !important;
         cursor: pointer;
       }
       .nw-checkbox-label input[type="checkbox"] {
         width: 16px;
         height: 16px;
-        accent-color: #004C97;
+        accent-color: var(--primary);
         flex-shrink: 0;
         margin-top: 2px;
       }
@@ -908,13 +928,13 @@ export class ProfileWidget extends MPNextWidget {
         border-radius: 6px;
         font-size: 14px;
         font-family: inherit;
-        color: #2D2926;
+        color: var(--root-text-color);
         background: white;
         transition: border-color 0.15s;
       }
       .nw-password-wrap input:focus {
         outline: none;
-        border-color: #004C97;
+        border-color: var(--primary);
         box-shadow: 0 0 0 2px rgba(0, 76, 151, 0.15);
       }
       .nw-eye-btn {
@@ -951,10 +971,10 @@ export class ProfileWidget extends MPNextWidget {
         cursor: not-allowed;
       }
       .nw-btn-primary {
-        background: #004C97;
+        background: var(--primary);
         color: white;
       }
-      .nw-btn-primary:hover:not(:disabled) { background: #002855; }
+      .nw-btn-primary:hover:not(:disabled) { background: var(--secondary); }
     `;
   }
 }

@@ -171,10 +171,15 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       "compact-threshold",
       "cluster-threshold",
       "require-sign-in",
+      "customcss",
     ];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
+    if (name === "customcss") {
+      void this.applyCustomCss(next || null);
+      return;
+    }
     this.readAttribute(name, next);
     if (this.loading) return;
     if (name === "location-category-ids" || name === "congregation-ids" || name === "require-sign-in") {
@@ -295,6 +300,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     this.visibleCount = this.pageSize;
 
     this.injectStyles(this.getStyles());
+    void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     await this.loadOrganizations();
   }
@@ -894,19 +900,32 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
 
   private getStyles(): string {
     return `
-      :host { display: block; font-family: ui-sans-serif, system-ui, sans-serif; color: #2D2926; }
+      :host {
+        display: block;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        color: var(--root-text-color);
+        /* Overridable via the customcss attribute — see
+           Administrators/Website/custom-styling.md */
+        --primary: ${this.brandColor};
+        --secondary: #002855;
+        --accent: ${this.accentColor};
+        --card-bgcolor: #ffffff;
+        --root-text-color: #2D2926;
+        --form-valid: #86AD3F;
+        --form-invalid: #FF6D6A;
+      }
 
       .od-state { text-align: center; padding: 32px 16px; color: #474747; }
       .od-state-error { color: #d32f2f; }
       .od-spinner {
         width: 28px; height: 28px; margin: 0 auto 12px;
-        border: 3px solid #e3ebf3; border-top-color: ${this.brandColor}; border-radius: 50%;
+        border: 3px solid #e3ebf3; border-top-color: var(--primary); border-radius: 50%;
         animation: od-spin 0.8s linear infinite;
       }
       @keyframes od-spin { to { transform: rotate(360deg); } }
 
       .od-card-wrap {
-        background: #fff; border: 1px solid #e3ebf3; border-radius: 14px;
+        background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px;
         box-shadow: 0 2px 14px rgba(30,60,90,0.08); padding: 22px 24px 26px;
       }
 
@@ -916,7 +935,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-login-sub { color: #667080; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
       .od-header { margin-bottom: 16px; }
-      .od-title { margin: 0 0 4px; font-size: 1.5em; color: ${this.brandColor}; }
+      .od-title { margin: 0 0 4px; font-size: 1.5em; color: var(--primary); }
       .od-intro { margin: 0; color: #667080; }
 
       .od-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
@@ -927,17 +946,17 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-zip-input { width: 120px; padding: 9px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95em; }
       .od-distance-search select { padding: 9px 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9em; }
       .od-btn {
-        padding: 9px 14px; border-radius: 8px; border: none; background: ${this.brandColor}; color: #fff;
+        padding: 9px 14px; border-radius: 8px; border: none; background: var(--primary); color: #fff;
         font-weight: 600; font-size: 0.9em; cursor: pointer; white-space: nowrap;
       }
       .od-btn-clear { background: #e9ecef; color: #555; }
-      .od-btn-secondary { background: #fff; color: ${this.brandColor}; border: 1px solid ${this.brandColor}; }
+      .od-btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--primary); }
 
       .od-toggle-group { display: flex; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
       .od-toggle {
         padding: 8px 14px; border: none; background: #fff; color: #555; cursor: pointer; font-size: 0.88em; font-weight: 600;
       }
-      .od-toggle.active { background: ${this.brandColor}; color: #fff; }
+      .od-toggle.active { background: var(--primary); color: #fff; }
 
       .od-error-msg { background: #ffebee; color: #c62828; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 0.9em; }
       .od-count { color: #6b7a88; font-size: 0.88em; margin-bottom: 14px; }
@@ -945,38 +964,38 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
 
       .od-group { margin-bottom: 22px; }
       .od-group-heading {
-        font-size: 0.85em; font-weight: 700; color: ${this.brandColor}; text-transform: uppercase;
-        letter-spacing: 0.04em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid ${this.accentColor};
+        font-size: 0.85em; font-weight: 700; color: var(--primary); text-transform: uppercase;
+        letter-spacing: 0.04em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--accent);
       }
 
       .od-cards { display: flex; flex-direction: column; gap: 12px; }
       .od-card {
         display: flex; gap: 14px; padding: 14px; border: 1px solid #e3ebf3; border-radius: 10px;
-        background: #fff; transition: box-shadow 0.15s, border-color 0.15s;
+        background: var(--card-bgcolor); transition: box-shadow 0.15s, border-color 0.15s;
       }
-      .od-card:hover { border-color: ${this.brandColor}; box-shadow: 0 4px 16px rgba(30,60,90,0.12); }
+      .od-card:hover { border-color: var(--primary); box-shadow: 0 4px 16px rgba(30,60,90,0.12); }
       .od-logo { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: #f4f8fb; flex: 0 0 auto; }
       .od-logo-monogram {
         display: flex; align-items: center; justify-content: center; font-size: 1.6em; font-weight: 700;
-        color: #fff; background: ${this.brandColor};
+        color: #fff; background: var(--primary);
       }
       .od-card-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
       .od-card-name {
-        font-weight: 700; font-size: 1.05em; color: ${this.brandColor}; text-decoration: none; align-self: flex-start;
+        font-weight: 700; font-size: 1.05em; color: var(--primary); text-decoration: none; align-self: flex-start;
       }
       .od-card-name:hover { text-decoration: underline; }
-      .od-card-category { font-size: 0.78em; color: ${this.brandColor}; font-weight: 600; text-transform: uppercase; }
+      .od-card-category { font-size: 0.78em; color: var(--primary); font-weight: 600; text-transform: uppercase; }
       .od-card-desc { font-size: 0.88em; color: #667080; line-height: 1.4; }
       .od-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 0.85em; color: #6b7a88; margin-top: 2px; }
-      .od-distance-chip { background: #eef4fb; color: ${this.brandColor}; padding: 3px 9px; border-radius: 999px; font-weight: 600; }
+      .od-distance-chip { background: #eef4fb; color: var(--primary); padding: 3px 9px; border-radius: 999px; font-weight: 600; }
       .od-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
       .od-action-btn {
         display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 6px; border: 1px solid #ddd;
         background: #fff; color: #444; font-size: 0.85em; font-weight: 600; text-decoration: none; cursor: pointer;
       }
-      .od-action-btn:hover { border-color: ${this.brandColor}; color: ${this.brandColor}; }
-      .od-action-btn-primary { background: ${this.brandColor}; color: #fff; border-color: ${this.brandColor}; }
-      .od-action-btn-primary:hover { background: #002855; border-color: #002855; color: #fff; }
+      .od-action-btn:hover { border-color: var(--primary); color: var(--primary); }
+      .od-action-btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+      .od-action-btn-primary:hover { background: var(--secondary); border-color: var(--secondary); color: #fff; }
 
       .od-rows { display: flex; flex-direction: column; gap: 2px; }
       .od-row {
@@ -988,11 +1007,11 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-row-info { flex: 1; min-width: 0; }
       .od-row-name { font-weight: 600; font-size: 0.92em; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .od-row-meta { font-size: 0.8em; color: #6b7a88; }
-      .od-row-distance { font-size: 0.8em; color: ${this.brandColor}; font-weight: 600; white-space: nowrap; }
+      .od-row-distance { font-size: 0.8em; color: var(--primary); font-weight: 600; white-space: nowrap; }
 
       .od-load-more {
-        display: block; margin: 18px auto 0; padding: 9px 18px; border-radius: 8px; border: 1px solid ${this.brandColor};
-        background: #fff; color: ${this.brandColor}; font-weight: 600; cursor: pointer;
+        display: block; margin: 18px auto 0; padding: 9px 18px; border-radius: 8px; border: 1px solid var(--primary);
+        background: #fff; color: var(--primary); font-weight: 600; cursor: pointer;
       }
 
       .od-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
@@ -1006,9 +1025,9 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-map-error { color: #c62828; background: #fef3f2; }
       .od-map-hint { margin: 10px 2px 0; font-size: 0.82em; color: #6b7a88; line-height: 1.4; }
 
-      .od-pin-popup strong { color: ${this.brandColor}; }
+      .od-pin-popup strong { color: var(--primary); }
       .od-pin-popup div { font-size: 0.85em; color: #444; margin-top: 2px; }
-      .od-pin-popup a { color: ${this.brandColor}; font-size: 0.85em; font-weight: 600; text-decoration: none; display: inline-block; margin-top: 4px; }
+      .od-pin-popup a { color: var(--primary); font-size: 0.85em; font-weight: 600; text-decoration: none; display: inline-block; margin-top: 4px; }
       .od-pin-popup a:hover { text-decoration: underline; }
 
       @media (max-width: 900px) {
