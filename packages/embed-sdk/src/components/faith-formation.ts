@@ -64,13 +64,14 @@ export class FaithFormationWidget extends MPNextWidget {
   private ministryId: string | null = null;
   private showLeaderEmail = true;
   private showLeaderMobilePhone = true;
+  private pageHeading = "Faith Formation";
 
   private expandedByContactId: Record<number, boolean> = {};
   private tabByContactId: Record<number, Tab> = {};
   private pastMeetingsOpenByGroupId: Record<number, boolean> = {};
 
   static get observedAttributes() {
-    return ["ministry-id", "show-leader-email", "show-leader-mobile-phone", "customcss"];
+    return ["ministry-id", "show-leader-email", "show-leader-mobile-phone", "page-heading", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -83,6 +84,9 @@ export class FaithFormationWidget extends MPNextWidget {
     } else if (name === "show-leader-mobile-phone") {
       this.showLeaderMobilePhone = next !== "false";
       if (this.isConnected) this.loadData();
+    } else if (name === "page-heading") {
+      this.pageHeading = next || "Faith Formation";
+      if (!this.loading) this.render();
     } else if (name === "customcss") {
       void this.applyCustomCss(next || null);
     }
@@ -92,6 +96,7 @@ export class FaithFormationWidget extends MPNextWidget {
     this.ministryId = this.getAttribute("ministry-id");
     this.showLeaderEmail = this.getAttribute("show-leader-email") !== "false";
     this.showLeaderMobilePhone = this.getAttribute("show-leader-mobile-phone") !== "false";
+    this.pageHeading = this.getAttribute("page-heading") || "Faith Formation";
     this.injectStyles(this.getStyles());
     void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
@@ -166,7 +171,7 @@ export class FaithFormationWidget extends MPNextWidget {
       html = `<div class="nw-ff-people">${this.people.map((p) => this.renderPerson(p)).join("")}</div>`;
     }
 
-    this.root.innerHTML = `<div class="nw-ff-root">${html}</div>`;
+    this.root.innerHTML = `<div class="nw-ff-root"><h1>${this.escapeHtml(this.pageHeading)}</h1>${html}</div>`;
     this.attachListeners();
   }
 
@@ -401,6 +406,12 @@ export class FaithFormationWidget extends MPNextWidget {
         --form-invalid: #FF6D6A;
       }
       .nw-ff-root { max-width: 720px; }
+      /* Bare tag selector, not scoped to a class — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { font-size: 1.4em; font-weight: 700; color: var(--secondary); margin: 0 0 16px; }
 
       .nw-ff-state { text-align: center; padding: 32px 16px; color: #474747; }
       .nw-ff-state-error { color: var(--form-invalid); }

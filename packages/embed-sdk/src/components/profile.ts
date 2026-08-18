@@ -66,17 +66,23 @@ export class ProfileWidget extends MPNextWidget {
   private photoUrl: string | null = null;
   private uploadingPhoto = false;
 
+  private pageHeading = "My Profile";
+
   static get observedAttributes() {
-    return ["customcss"];
+    return ["page-heading", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
-    if (name === "customcss") {
+    if (name === "page-heading") {
+      this.pageHeading = next || "My Profile";
+      if (!this.loading) this.render();
+    } else if (name === "customcss") {
       void this.applyCustomCss(next || null);
     }
   }
 
   connectedCallback() {
+    this.pageHeading = this.getAttribute("page-heading") || "My Profile";
     this.injectStyles(this.getStyles());
     void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
@@ -221,6 +227,7 @@ export class ProfileWidget extends MPNextWidget {
     }
 
     container.innerHTML = `
+      <h1>${this.esc(this.pageHeading)}</h1>
       <div class="nw-photo-section">
         <div class="nw-photo-wrap">
           <img class="nw-photo-img${this.photoUrl ? " nw-photo-loaded" : ""}" src="${this.photoUrl || ""}" alt="Profile photo" />
@@ -680,6 +687,13 @@ export class ProfileWidget extends MPNextWidget {
       }
 
       *, *::before, *::after { box-sizing: border-box; }
+
+      /* Bare tag selector, not scoped to a class — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { font-size: 1.4em; font-weight: 700; color: var(--secondary); margin: 0 0 16px; }
 
       .nw-profile {
         max-width: 640px;

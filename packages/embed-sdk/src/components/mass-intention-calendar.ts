@@ -43,13 +43,14 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
   private congregationIds: string | undefined;
   private eventDetailUrlTemplate: string | undefined;
   private searchMonthsAhead = 12;
+  private pageHeading = "Mass Intention Calendar";
 
   // "Find Next Available Mass" chain state
   private lastFound: MassEvent | null = null;
   private currentModalMass: MassEvent | null = null;
 
   static get observedAttributes() {
-    return ["event-type-id", "congregation-ids", "event-detail-url-template", "search-months-ahead", "customcss"];
+    return ["event-type-id", "congregation-ids", "event-detail-url-template", "search-months-ahead", "page-heading", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -65,6 +66,9 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
     } else if (name === "search-months-ahead") {
       const parsed = next ? parseInt(next, 10) : NaN;
       this.searchMonthsAhead = !isNaN(parsed) && parsed > 0 ? parsed : 12;
+    } else if (name === "page-heading") {
+      this.pageHeading = next || "Mass Intention Calendar";
+      if (this.fcLoaded) this.render();
     } else if (name === "customcss") {
       void this.applyCustomCss(next || null);
     }
@@ -80,6 +84,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
     const monthsAttr = this.getAttribute("search-months-ahead");
     const parsedMonths = monthsAttr ? parseInt(monthsAttr, 10) : NaN;
     this.searchMonthsAhead = !isNaN(parsedMonths) && parsedMonths > 0 ? parsedMonths : 12;
+    this.pageHeading = this.getAttribute("page-heading") || "Mass Intention Calendar";
 
     this.injectStyles(this.getStyles());
     void this.applyCustomCss(this.getAttribute("customcss"));
@@ -369,6 +374,7 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
 
     this.root.innerHTML = `
       <div class="nw-mic-card">
+        <h1>${escapeHtml(this.pageHeading)}</h1>
         <div class="nw-mic-header">
           <div class="nw-mic-legend">
             <span class="nw-mic-legend-label">Legend:</span>
@@ -415,6 +421,13 @@ export class MassIntentionCalendarWidget extends MPNextWidget {
         animation: nw-mic-spin 0.8s linear infinite;
       }
       @keyframes nw-mic-spin { to { transform: rotate(360deg); } }
+
+      /* Bare tag selector, not scoped to a class — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { font-size: 1.4em; font-weight: 700; color: var(--secondary); margin: 0 0 16px; }
 
       .nw-mic-card {
         background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px;

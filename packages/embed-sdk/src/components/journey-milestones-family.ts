@@ -55,13 +55,13 @@ export class JourneyMilestonesFamilyWidget extends MPNextWidget {
 
   private journeyId: number | null = null;
   private groupId: number | null = null;
-  private formBaseUrl = "";
-  private eventDetailsPage = "";
+  private formUrlTemplate = "";
+  private eventDetailsUrlTemplate = "";
   private pageHeading = "Our Journey";
   private showAllGetStartedButtons = true;
 
   static get observedAttributes() {
-    return ["journey-id", "group-id", "form-base-url", "event-details-page", "page-heading", "show-all-get-started-buttons", "customcss"];
+    return ["journey-id", "group-id", "form-url-template", "event-details-url-template", "page-heading", "show-all-get-started-buttons", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -73,11 +73,11 @@ export class JourneyMilestonesFamilyWidget extends MPNextWidget {
       const parsed = next ? parseInt(next, 10) : NaN;
       this.groupId = !isNaN(parsed) && parsed > 0 ? parsed : null;
       if (this.isConnected && this.loaded) this.loadMilestones();
-    } else if (name === "form-base-url") {
-      this.formBaseUrl = next || "";
+    } else if (name === "form-url-template") {
+      this.formUrlTemplate = next || "";
       if (this.loaded) this.render();
-    } else if (name === "event-details-page") {
-      this.eventDetailsPage = next || "";
+    } else if (name === "event-details-url-template") {
+      this.eventDetailsUrlTemplate = next || "";
       if (this.loaded) this.render();
     } else if (name === "page-heading") {
       this.pageHeading = next || "Our Journey";
@@ -99,8 +99,8 @@ export class JourneyMilestonesFamilyWidget extends MPNextWidget {
     const parsedGroup = groupIdAttr ? parseInt(groupIdAttr, 10) : NaN;
     this.groupId = !isNaN(parsedGroup) && parsedGroup > 0 ? parsedGroup : null;
 
-    this.formBaseUrl = this.getAttribute("form-base-url") || "";
-    this.eventDetailsPage = this.getAttribute("event-details-page") || "";
+    this.formUrlTemplate = this.getAttribute("form-url-template") || "";
+    this.eventDetailsUrlTemplate = this.getAttribute("event-details-url-template") || "";
     this.pageHeading = this.getAttribute("page-heading") || "Our Journey";
     this.showAllGetStartedButtons = this.getAttribute("show-all-get-started-buttons") !== "false";
 
@@ -155,10 +155,12 @@ export class JourneyMilestonesFamilyWidget extends MPNextWidget {
       meta = m.Date_Accomplished
         ? `<span class="jm-completed"><span class="jm-cd-label">Completed</span>${escapeHtml(formatDate(m.Date_Accomplished))}</span>`
         : `<span class="jm-completed">Completed</span>`;
-    } else if (showButton && m.Event_ID && this.eventDetailsPage) {
-      meta = `<a class="jm-btn" href="${escapeHtml(this.eventDetailsPage)}${encodeURIComponent(m.Event_ID)}">Get Started</a>`;
-    } else if (showButton && m.Form_GUID && this.formBaseUrl) {
-      meta = `<a class="jm-btn" href="${escapeHtml(this.formBaseUrl)}${encodeURIComponent(m.Form_GUID)}">Get Started</a>`;
+    } else if (showButton && m.Event_ID && this.eventDetailsUrlTemplate) {
+      const href = this.eventDetailsUrlTemplate.replace("{eventId}", encodeURIComponent(String(m.Event_ID)));
+      meta = `<a class="jm-btn" href="${escapeHtml(href)}">Get Started</a>`;
+    } else if (showButton && m.Form_GUID && this.formUrlTemplate) {
+      const href = this.formUrlTemplate.replace("{formId}", encodeURIComponent(String(m.Form_GUID)));
+      meta = `<a class="jm-btn" href="${escapeHtml(href)}">Get Started</a>`;
     } else {
       meta = "";
     }

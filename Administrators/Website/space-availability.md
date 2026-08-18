@@ -25,6 +25,7 @@ With no settings, visitors can browse every parish's rooms and check availabilit
 |---|---|---|
 | `congregation-ids` | Which congregation(s) the widget can search. Leave it off to let visitors pick from every parish. One ID skips the congregation picker entirely (single-parish mode); several show a picker limited to that set. Find the numbers on the **Congregations** page. | `congregation-ids="4"` or `congregation-ids="4,8"` |
 | `congregation-noun` | The word used for "Congregation" in the picker's label — defaults to **Parish**. Use this if your organization calls them something else (Campus, Site, Location, etc.). | `congregation-noun="Campus"` |
+| `page-heading` | The heading shown above the widget. Defaults to "Check Room Availability". | `page-heading="Book a Room"` |
 | `show-detailed-info` | Whether results show the actual event name, or just that the room is busy. Set to `false` for a plain busy/free view — useful if event titles shouldn't be visible to the public. | `show-detailed-info="false"` |
 | `require-sign-in` | The directory itself never required sign-in by default — set this to `true` if your parish prefers to keep it (like everything else on the site) behind a login wall. Needs [`<next-user-menu>`](user-menu.md) on the same page when turned on. | `require-sign-in="true"` |
 | `allow-requests` | Lets a visitor submit a room request instead of just viewing availability. Requires `event-type-id` and `program-id` below. | `allow-requests="true"` |

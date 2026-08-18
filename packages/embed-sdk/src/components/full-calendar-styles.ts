@@ -30,6 +30,18 @@ export const BASE_STYLES = `
     box-sizing: border-box;
   }
 
+  /* Bare tag selector, not scoped to a class — so a customcss file
+     shared with classic MP widgets (whose own customcss files use
+     plain h1 { ... } rules, since they have no built-in styles of
+     their own to compete with) overrides this consistently, the same
+     way it already overrides those classic widgets. */
+  h1 {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: var(--secondary);
+    margin: 0 0 16px;
+  }
+
   .nw-fc-mount {
     width: 100%;
   }

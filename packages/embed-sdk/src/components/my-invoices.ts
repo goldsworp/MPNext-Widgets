@@ -43,9 +43,10 @@ export class MyInvoicesWidget extends MPNextWidget {
   private paymentProcessorTargetUrl: string | null = null;
   private backToInvoicesUrl: string | null = null;
   private checkoutCustomCss: string | null = null;
+  private pageHeading = "My Invoices";
 
   static get observedAttributes() {
-    return ["payment-processor-target-url", "back-to-invoices-url", "checkout-custom-css", "customcss"];
+    return ["payment-processor-target-url", "back-to-invoices-url", "checkout-custom-css", "page-heading", "customcss"];
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -55,6 +56,9 @@ export class MyInvoicesWidget extends MPNextWidget {
       this.backToInvoicesUrl = next || null;
     } else if (name === "checkout-custom-css") {
       this.checkoutCustomCss = next || null;
+    } else if (name === "page-heading") {
+      this.pageHeading = next || "My Invoices";
+      if (!this.loading) this.render();
     } else if (name === "customcss") {
       void this.applyCustomCss(next || null);
     }
@@ -64,6 +68,7 @@ export class MyInvoicesWidget extends MPNextWidget {
     this.paymentProcessorTargetUrl = this.getAttribute("payment-processor-target-url");
     this.backToInvoicesUrl = this.getAttribute("back-to-invoices-url");
     this.checkoutCustomCss = this.getAttribute("checkout-custom-css");
+    this.pageHeading = this.getAttribute("page-heading") || "My Invoices";
     this.injectStyles(this.getStyles());
     void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
@@ -361,7 +366,7 @@ export class MyInvoicesWidget extends MPNextWidget {
     return `
       <div class="nw-invoices">
         <div class="header">
-          <h1 class="title">My Invoices</h1>
+          <h1 class="title">${this.escapeHtml(this.pageHeading)}</h1>
           <p class="subtitle">${this.invoices.length} invoice${this.invoices.length !== 1 ? "s" : ""}</p>
         </div>
         <div class="list-body">

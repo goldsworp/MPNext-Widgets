@@ -53,6 +53,7 @@ export class FullCalendarWidget extends MPNextWidget {
   private fcLoaded = false;
   private eventDetailUrlTemplate: string | undefined;
   private campusLabel: string = "Campus";
+  private pageHeading = "Upcoming Events";
 
   static get observedAttributes() {
     return [
@@ -62,6 +63,7 @@ export class FullCalendarWidget extends MPNextWidget {
       "show-toolbar",
       "campus-label",
       "event-detail-url-template",
+      "page-heading",
       "customcss",
     ];
   }
@@ -70,6 +72,7 @@ export class FullCalendarWidget extends MPNextWidget {
     this.congregationId = this.getAttribute("congregation-id") || "";
     this.eventDetailUrlTemplate = this.getAttribute("event-detail-url-template") || undefined;
     this.campusLabel = this.getAttribute("campus-label") || "Campus";
+    this.pageHeading = this.getAttribute("page-heading") || "Upcoming Events";
 
     // Read view/toolbar attributes
     const viewAttr = this.getAttribute("view") as ViewType | null;
@@ -137,6 +140,9 @@ export class FullCalendarWidget extends MPNextWidget {
       this.rebuildCurrentView();
     } else if (name === "event-detail-url-template") {
       this.eventDetailUrlTemplate = next || undefined;
+    } else if (name === "page-heading") {
+      this.pageHeading = next || "Upcoming Events";
+      this.render();
     } else if (name === "customcss") {
       void this.applyCustomCss(next || null);
     }
@@ -782,13 +788,14 @@ export class FullCalendarWidget extends MPNextWidget {
 
   render(): void {
     const container = this.root.querySelector<HTMLElement>(".nw-fc-container");
+    const html = `<h1>${this.escapeHtml(this.pageHeading)}</h1>${this.renderInner()}`;
 
     if (container) {
-      container.innerHTML = this.renderInner();
+      container.innerHTML = html;
     } else {
       const wrapper = document.createElement("div");
       wrapper.className = "nw-fc-container";
-      wrapper.innerHTML = this.renderInner();
+      wrapper.innerHTML = html;
       this.root.appendChild(wrapper);
     }
 

@@ -54,6 +54,9 @@ export const widgetCatalog: WidgetConfig[] = [
     needsMpWidgets: true,
     attributes: {},
     events: ["userLogout", "accountModalOpen", "accountModalClose"],
+    controls: [
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
+    ],
     implementationCode: `<next-user-menu mp-base-url="${mpHost}"></next-user-menu>
 
 <!-- With post-logout redirect -->
@@ -80,6 +83,7 @@ export const widgetCatalog: WidgetConfig[] = [
     events: ["calendarEventLoaded", "addToCalendarError"],
     controls: [
       { name: "eventId", label: "Event ID", type: "number", attribute: "event-id", placeholder: "e.g. 1234" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-add-to-calendar event-id="1234"></next-add-to-calendar>`,
   },
@@ -116,6 +120,8 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "congregationId", label: "Congregation ID", type: "number", attribute: "congregation-id", placeholder: "e.g. 1" },
       { name: "eventDetailUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /events?id={eventId}" },
       { name: "campusLabel", label: "Campus Filter Label", type: "text", attribute: "campus-label", placeholder: "e.g. Parish" },
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Upcoming Events" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-full-calendar></next-full-calendar>
 
@@ -146,6 +152,10 @@ export const widgetCatalog: WidgetConfig[] = [
     needsMpWidgets: true,
     attributes: {},
     events: ["profileLoaded", "profileSaved", "profileError", "passwordChanged", "passwordError"],
+    controls: [
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. My Profile" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
+    ],
     implementationCode: `<next-profile></next-profile>`,
   },
   {
@@ -159,9 +169,11 @@ export const widgetCatalog: WidgetConfig[] = [
     attributes: {},
     events: ["invoicesLoaded", "invoiceSelected", "invoiceError"],
     controls: [
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. My Invoices" },
       { name: "paymentProcessorTargetUrl", label: "Payment Processor URL", type: "text", attribute: "payment-processor-target-url", placeholder: "e.g. https://onrealm.org/{tenant}/pay (MP eGiving)" },
       { name: "backToInvoicesUrl", label: "Back to Invoices URL", type: "text", attribute: "back-to-invoices-url", placeholder: "e.g. /my-invoices (this page)" },
       { name: "checkoutCustomCss", label: "Checkout Custom CSS", type: "text", attribute: "checkout-custom-css", placeholder: "e.g. https://your-mp.ministryplatform.net/css/form2.css" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-my-invoices></next-my-invoices>
 
@@ -188,6 +200,7 @@ export const widgetCatalog: WidgetConfig[] = [
     events: ["faithFormationLoaded", "faithFormationError"],
     controls: [
       { name: "ministryId", label: "Ministry ID", type: "number", attribute: "ministry-id", placeholder: "e.g. 13" },
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Faith Formation" },
       {
         name: "showLeaderEmail", label: "Show Leader Email", type: "select", attribute: "show-leader-email",
         options: [
@@ -204,6 +217,7 @@ export const widgetCatalog: WidgetConfig[] = [
         ],
         defaultValue: "true",
       },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-faith-formation ministry-id="13"></next-faith-formation>
 
@@ -229,6 +243,8 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4,8" },
       { name: "eventDetailUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /masses?id={eventId}" },
       { name: "searchMonthsAhead", label: "Search Months Ahead", type: "number", attribute: "search-months-ahead", placeholder: "e.g. 12" },
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Mass Intention Calendar" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-mass-intention-calendar event-type-id="13"></next-mass-intention-calendar>
 
@@ -259,10 +275,12 @@ export const widgetCatalog: WidgetConfig[] = [
     controls: [
       { name: "eventTypeId", label: "Event Type ID", type: "number", attribute: "event-type-id", placeholder: "e.g. 14" },
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4,8" },
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Perpetual Adoration" },
       { name: "successTitle", label: "Success Title", type: "text", attribute: "success-title", placeholder: "e.g. You're signed up" },
       { name: "successMessage", label: "Success Message", type: "text", attribute: "success-message", placeholder: "Uses {count}" },
       { name: "failTitle", label: "Fail Title", type: "text", attribute: "fail-title", placeholder: "e.g. Registration problem" },
       { name: "failMessage", label: "Fail Message", type: "text", attribute: "fail-message", placeholder: "Uses {error}" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-perpetual-adoration event-type-id="14"></next-perpetual-adoration>
 
@@ -292,8 +310,8 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "journeyId", label: "Journey ID", type: "number", attribute: "journey-id", placeholder: "e.g. 18" },
       { name: "groupId", label: "Group ID", type: "number", attribute: "group-id", placeholder: "e.g. 136" },
       { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. My Journey" },
-      { name: "formBaseUrl", label: "Form Base URL", type: "text", attribute: "form-base-url", placeholder: "e.g. /forms?id=" },
-      { name: "eventDetailsPage", label: "Event Details URL", type: "text", attribute: "event-details-page", placeholder: "e.g. /events?id=" },
+      { name: "formUrlTemplate", label: "Form URL Template", type: "text", attribute: "form-url-template", placeholder: "e.g. /forms?id={formId}" },
+      { name: "eventDetailsUrlTemplate", label: "Event Details URL Template", type: "text", attribute: "event-details-url-template", placeholder: "e.g. /events?id={eventId}" },
       {
         name: "showAllGetStartedButtons", label: "Get Started Buttons", type: "select", attribute: "show-all-get-started-buttons",
         options: [
@@ -302,6 +320,7 @@ export const widgetCatalog: WidgetConfig[] = [
         ],
         defaultValue: "true",
       },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-journey-milestones-individual
   journey-id="18"
@@ -312,8 +331,8 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-journey-milestones-individual
   journey-id="18"
   group-id="136"
-  form-base-url="/forms?id="
-  event-details-page="/events?id="
+  form-url-template="/forms?id={formId}"
+  event-details-url-template="/events?id={eventId}"
 ></next-journey-milestones-individual>
 
 <!-- Custom page heading -->
@@ -344,8 +363,8 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "journeyId", label: "Journey ID", type: "number", attribute: "journey-id", placeholder: "e.g. 18" },
       { name: "groupId", label: "Group ID", type: "number", attribute: "group-id", placeholder: "e.g. 136" },
       { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Our Journey" },
-      { name: "formBaseUrl", label: "Form Base URL", type: "text", attribute: "form-base-url", placeholder: "e.g. /forms?id=" },
-      { name: "eventDetailsPage", label: "Event Details URL", type: "text", attribute: "event-details-page", placeholder: "e.g. /events?id=" },
+      { name: "formUrlTemplate", label: "Form URL Template", type: "text", attribute: "form-url-template", placeholder: "e.g. /forms?id={formId}" },
+      { name: "eventDetailsUrlTemplate", label: "Event Details URL Template", type: "text", attribute: "event-details-url-template", placeholder: "e.g. /events?id={eventId}" },
       {
         name: "showAllGetStartedButtons", label: "Get Started Buttons", type: "select", attribute: "show-all-get-started-buttons",
         options: [
@@ -354,6 +373,7 @@ export const widgetCatalog: WidgetConfig[] = [
         ],
         defaultValue: "true",
       },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-journey-milestones-family
   journey-id="18"
@@ -364,8 +384,8 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-journey-milestones-family
   journey-id="18"
   group-id="136"
-  form-base-url="/forms?id="
-  event-details-page="/events?id="
+  form-url-template="/forms?id={formId}"
+  event-details-url-template="/events?id={eventId}"
 ></next-journey-milestones-family>
 
 <!-- Custom page heading -->
@@ -433,6 +453,7 @@ export const widgetCatalog: WidgetConfig[] = [
         ],
         defaultValue: "mi",
       },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-organization-directory></next-organization-directory>
 
@@ -481,6 +502,7 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "backLabel", label: "Back Link Label", type: "text", attribute: "back-label", placeholder: "e.g. ← All Parishes" },
       { name: "idParam", label: "URL ID Parameter", type: "text", attribute: "id-param", placeholder: "id" },
       { name: "massEventTypeId", label: "Mass Event Type ID", type: "number", attribute: "mass-event-type-id", placeholder: "e.g. 13 (optional)" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<!-- Reads the organization's ID from ?id= in this page's own URL -->
 <next-organization-detail></next-organization-detail>
@@ -533,6 +555,7 @@ export const widgetCatalog: WidgetConfig[] = [
       },
       { name: "organizationDetailUrlTemplate", label: "Organization Detail URL Template", type: "text", attribute: "organization-detail-url-template", placeholder: "/organization-detail?id={congregationId}" },
       { name: "pageTitle", label: "Page Title", type: "text", attribute: "page-title", placeholder: "e.g. Diocesan Staff Directory" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-personnel-directory></next-personnel-directory>
 
@@ -575,6 +598,7 @@ export const widgetCatalog: WidgetConfig[] = [
       },
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4 (single) or 4,8 (a set)" },
       { name: "congregationNoun", label: "Congregation Noun", type: "text", attribute: "congregation-noun", placeholder: "e.g. Parish (default), Campus, Site" },
+      { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Check Room Availability" },
       {
         name: "showDetailedInfo", label: "Show Detailed Info", type: "select", attribute: "show-detailed-info",
         options: [
@@ -606,6 +630,7 @@ export const widgetCatalog: WidgetConfig[] = [
       },
       { name: "defaultContactId", label: "Default Contact ID", type: "number", attribute: "default-contact-id", placeholder: "Used when allow-requests is on and visitors aren't signed in" },
       { name: "notifyEmails", label: "Notify Emails", type: "text", attribute: "notify-emails", placeholder: "e.g. office@parish.org,facilities@parish.org" },
+      { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-space-availability event-type-id="11" program-id="10"></next-space-availability>
 

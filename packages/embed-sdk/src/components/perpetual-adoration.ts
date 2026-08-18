@@ -99,6 +99,8 @@ export class PerpetualAdorationWidget extends MPNextWidget {
   private searching = false;
   private registering = false;
 
+  private pageHeading = "Perpetual Adoration";
+
   static get observedAttributes() {
     return [
       "event-type-id",
@@ -107,6 +109,7 @@ export class PerpetualAdorationWidget extends MPNextWidget {
       "success-message",
       "fail-title",
       "fail-message",
+      "page-heading",
       "customcss",
     ];
   }
@@ -125,6 +128,9 @@ export class PerpetualAdorationWidget extends MPNextWidget {
       this.failTitle = next || DEFAULT_FAIL_TITLE;
     } else if (name === "fail-message") {
       this.failMessage = next || DEFAULT_FAIL_MESSAGE;
+    } else if (name === "page-heading") {
+      this.pageHeading = next || "Perpetual Adoration";
+      if (this.fcLoaded) this.render();
     } else if (name === "customcss") {
       void this.applyCustomCss(next || null);
     }
@@ -139,6 +145,7 @@ export class PerpetualAdorationWidget extends MPNextWidget {
     this.successMessage = this.getAttribute("success-message") || DEFAULT_SUCCESS_MESSAGE;
     this.failTitle = this.getAttribute("fail-title") || DEFAULT_FAIL_TITLE;
     this.failMessage = this.getAttribute("fail-message") || DEFAULT_FAIL_MESSAGE;
+    this.pageHeading = this.getAttribute("page-heading") || "Perpetual Adoration";
 
     if (this.eventTypeId === null) {
       this.error =
@@ -767,6 +774,7 @@ export class PerpetualAdorationWidget extends MPNextWidget {
 
     this.root.innerHTML = `
       <div class="pa-card">
+        <h1>${escapeHtml(this.pageHeading)}</h1>
         <div class="pa-filter-section">
           <div class="pa-section-title">Preferred Time Windows</div>
           <div class="pa-time-windows" id="pa-time-windows"></div>
@@ -883,6 +891,13 @@ export class PerpetualAdorationWidget extends MPNextWidget {
         animation: pa-spin 0.8s linear infinite;
       }
       @keyframes pa-spin { to { transform: rotate(360deg); } }
+
+      /* Bare tag selector, not scoped to a class — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { font-size: 1.4em; font-weight: 700; color: var(--secondary); margin: 0 0 16px; }
 
       .pa-card {
         background: var(--card-bgcolor); border: 1px solid #e3ebf3; border-radius: 14px;

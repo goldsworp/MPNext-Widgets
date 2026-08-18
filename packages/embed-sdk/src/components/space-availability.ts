@@ -140,6 +140,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
   private visibilityLevelId = 1;
   private brandColor = "#004C97";
   private congregationNoun = "Parish";
+  private pageHeading = "Check Room Availability";
 
   // ── State ──
   private error: string | null = null;
@@ -196,6 +197,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       "visibility-level-id",
       "brand-color",
       "congregation-noun",
+      "page-heading",
       "customcss",
     ];
   }
@@ -267,6 +269,9 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
         break;
       case "congregation-noun":
         this.congregationNoun = next || "Parish";
+        break;
+      case "page-heading":
+        this.pageHeading = next || "Check Room Availability";
         break;
     }
   }
@@ -783,7 +788,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
     this.root.innerHTML = `
       <div class="sa-card">
         <div class="sa-header">
-          <h1 class="sa-title">Check Room Availability</h1>
+          <h1 class="sa-title">${escapeHtml(this.pageHeading)}</h1>
         </div>
 
         ${

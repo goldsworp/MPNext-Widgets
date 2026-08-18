@@ -24,6 +24,7 @@ Find the numeric **Event Type** MinistryPlatform uses for Mass — go to the Eve
 | `congregation-ids` | Show only specific parishes' Masses. Find the numbers on the **Congregations** page in MinistryPlatform; separate multiple with commas. Leave it off to show all parishes. | `congregation-ids="4,8"` |
 | `event-detail-url-template` | Where the "request an intention" action links to. `{eventId}` is replaced automatically with the actual Mass's event number. | `event-detail-url-template="/masses?id={eventId}"` |
 | `search-months-ahead` | How many months ahead "Find Next Available Mass" is willing to search. Defaults to 12. | `search-months-ahead="6"` |
+| `page-heading` | The heading shown above the calendar. Defaults to "Mass Intention Calendar". | `page-heading="Mass Schedule"` |
 | `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
 ## Examples

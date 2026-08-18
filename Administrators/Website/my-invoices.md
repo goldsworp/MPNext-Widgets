@@ -17,6 +17,7 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 
 | Attribute | What it does | Example |
 |---|---|---|
+| `page-heading` | The heading shown above the invoice list. Defaults to "My Invoices". | `page-heading="Tuition & Fees"` |
 | `payment-processor-target-url` | Enables the **Pay Now** button. This is your MP eGiving (or other supported vendor) payment URL — find it in MinistryPlatform's own payment vendor configuration. Without this, Pay Now shows a "payment not configured" message instead of the checkout form. | `payment-processor-target-url="https://onrealm.org/YourTenant/pay"` |
 | `back-to-invoices-url` | Where the classic checkout widget's own "back" link returns to — normally just this same page. | `back-to-invoices-url="/my-invoices"` |
 | `checkout-custom-css` | A stylesheet URL applied inside the classic checkout widget, to better match your site's look. | `checkout-custom-css="https://your-mp.ministryplatform.net/css/form2.css"` |

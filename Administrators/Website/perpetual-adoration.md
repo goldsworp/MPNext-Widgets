@@ -27,6 +27,7 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 |---|---|---|
 | `event-type-id` | **Required.** The Event Type that identifies a Perpetual Adoration hour on your MinistryPlatform instance — find it on the **Event Types** page. Getting this wrong shows the wrong events (whatever that ID means on your instance), not an error, so verify it rather than guessing. | `event-type-id="14"` |
 | `congregation-ids` | Show only specific parishes' adoration hours. Find the numbers on the **Congregations** page in MinistryPlatform; separate multiple with commas. Leave it off to show all parishes. | `congregation-ids="4,8"` |
+| `page-heading` | The heading shown above the widget. Defaults to "Perpetual Adoration". | `page-heading="Adoration Sign-Up"` |
 | `success-title` | Heading shown after a successful sign-up. | `success-title="You're signed up"` |
 | `success-message` | Body text after a successful sign-up. `{count}` is replaced with how many hours were claimed. | `success-message="Thank you for saying yes to {count} hour(s) of adoration."` |
 | `fail-title` | Heading shown if something goes wrong. | `fail-title="Registration problem"` |

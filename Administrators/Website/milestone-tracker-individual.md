@@ -27,8 +27,8 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 | `journey-id` | **Required.** Which Journey to show. Find the number on the **Journeys** page in MinistryPlatform. | `journey-id="18"` |
 | `group-id` | **Required.** The Group whose current participants are on this Journey — its parish (Congregation) is used to pick the right form/event links. Find the number on the **Groups** page. | `group-id="136"` |
 | `page-heading` | The heading shown above the list. Defaults to "My Journey." | `page-heading="My Confirmation Journey"` |
-| `form-base-url` | The page on your site that hosts your online forms. The specific form's ID is appended automatically. | `form-base-url="/forms?id="` |
-| `event-details-page` | The page on your site that shows event details. The specific event's ID is appended automatically. | `event-details-page="/events?id="` |
+| `form-url-template` | The page on your site that hosts your online forms. `{formId}` is replaced automatically with the specific form's ID. | `form-url-template="/forms?id={formId}"` |
+| `event-details-url-template` | The page on your site that shows event details. `{eventId}` is replaced automatically with the specific event's ID. | `event-details-url-template="/events?id={eventId}"` |
 | `show-all-get-started-buttons` | `true` (default) — a button on every incomplete step that has one. `false` — only the very next incomplete step gets a button, so the parishioner focuses on one thing at a time. | `show-all-get-started-buttons="false"` |
 | `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 
@@ -39,8 +39,8 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 <next-journey-milestones-individual
   journey-id="18"
   group-id="136"
-  form-base-url="/forms?id="
-  event-details-page="/events?id="
+  form-url-template="/forms?id={formId}"
+  event-details-url-template="/events?id={eventId}"
 ></next-journey-milestones-individual>
 ```
 

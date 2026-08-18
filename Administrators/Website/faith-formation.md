@@ -18,6 +18,7 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 | Attribute | What it does | Example |
 |---|---|---|
 | `ministry-id` | **Required.** Which Ministry's groups to show — find the number on the **Ministries** page in MinistryPlatform (Faith Formation is usually its own Ministry). | `ministry-id="13"` |
+| `page-heading` | The heading shown above the list. Defaults to "Faith Formation". | `page-heading="Our Faith Formation Journey"` |
 | `show-leader-email` | `true` (default) or `false` — show the group leader's email address. | `show-leader-email="false"` |
 | `show-leader-mobile-phone` | `true` (default) or `false` — show the group leader's mobile number. | `show-leader-mobile-phone="false"` |
 | `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
