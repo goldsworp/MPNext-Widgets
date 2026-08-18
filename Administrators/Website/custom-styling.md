@@ -61,15 +61,16 @@ Either way, once you're happy with the colors, save the plain text as a `.css` f
 
 ## Going further than colors
 
-Every rule in your customcss file applies after the widget's own styles, so it wins ties without needing `!important`. If you want to change more than the 7 colors above — spacing, borders, hiding an element — each widget's own page on this list documents its internal class names (search that page for "customcss" or "class names"). A rule like this in your file would round a button's corners on the My Invoices widget, for example:
+Every rule in your customcss file applies after the widget's own styles. If you want to change more than the 7 colors above — spacing, borders, hiding an element — each widget's own page on this list documents its internal class names (search that page for "customcss" or "class names"). A rule like this in your file would round a button's corners on the My Invoices widget, for example:
 
 ```css
 .pay-btn { border-radius: 999px; }
 ```
 
+**Use that exact class name, not a generic tag selector.** A rule like `h1 { color: red; }` will usually lose to the widget's own more specific `.some-heading-class { color: ...; }` rule, even though your file loads after it — in CSS, a class selector always beats a plain tag selector regardless of load order. Match the class name shown in the widget's own doc page (or add `!important` as a shortcut, though matching the class is the more durable fix).
+
 ## Notes
 
 - `customcss` only affects the next-gen widget's own visual area. If a widget embeds a classic MinistryPlatform element inside it (for example, My Invoices' Pay Now checkout), that piece keeps using whatever customcss/style setup you already have for classic widgets — it's a separate, unrelated setting.
-- The file needs to be reachable by every visitor's browser without signing in — the same requirement as any other image or CSS file on your site.
-- If you host the file on a different domain than your website (a separate CDN, for instance), that host needs to allow cross-origin requests (CORS) or the browser will silently ignore it. Hosting it on your own site's domain avoids this entirely.
+- The file needs to be reachable by every visitor's browser without signing in — the same requirement as any other image or CSS file on your site. It can be hosted anywhere, including a domain different from your website (your MinistryPlatform host, for instance, if you're reusing a file you already made for the classic widgets) — no special cross-origin setup is needed on your end.
 - Changing the file's contents takes effect the next time a visitor's browser loads it — if you don't see a change right away, it's likely your browser (or a CDN in front of your site) showing a cached copy of the old file.

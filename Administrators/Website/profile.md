@@ -9,7 +9,7 @@ Lets a signed-in parishioner view and update their own name, email, phone, addre
 Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout), since this widget only ever shows the signed-in visitor's own information:
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-profile></next-profile>
 ```
 

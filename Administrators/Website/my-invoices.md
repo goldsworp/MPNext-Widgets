@@ -9,7 +9,7 @@ Lets a signed-in parishioner view their own invoices and line-item details — f
 Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout):
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-my-invoices></next-my-invoices>
 ```
 

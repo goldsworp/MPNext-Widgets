@@ -51,7 +51,7 @@ With no settings, visitors can browse every parish's rooms and check availabilit
 ></next-space-availability>
 
 <!-- Require sign-in to view availability at all -->
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-space-availability require-sign-in="true"></next-space-availability>
 ```
 

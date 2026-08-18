@@ -13,7 +13,7 @@ This widget reads a mapping table that tells it which form or event completes ea
 Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout):
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-journey-milestones-individual
   journey-id="18"
   group-id="136"
@@ -43,6 +43,10 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
   event-details-page="/events?id="
 ></next-journey-milestones-individual>
 ```
+
+## Class names for customcss
+
+Beyond the 7 colors described in [Customizing Widget Colors](custom-styling.md), the outer card is `.jm-card` and the main heading (the `page-heading` text) is `.jm-heading` — target those exact class names in your customcss file, not a plain `h1` selector, which loses to this widget's own `.jm-heading` rule regardless of load order.
 
 ## Notes
 

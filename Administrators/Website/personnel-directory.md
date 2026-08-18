@@ -55,7 +55,7 @@ With no settings, it shows every active person across every category. Everything
 <next-personnel-directory organization-detail-url-template="/find-a-parish/{congregationId}"></next-personnel-directory>
 
 <!-- Require sign-in to view staff contact details -->
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-personnel-directory require-sign-in="true"></next-personnel-directory>
 ```
 

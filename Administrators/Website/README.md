@@ -21,7 +21,7 @@ Replace `<your-app-address>` with the Vercel address from the root setup guide. 
 A few widgets — anything marked **requires sign-in** below — only work for a parishioner who's signed in to MinistryPlatform through your site. Those need MinistryPlatform's own login element on the same page (or a shared page layout), in addition to the widget itself:
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 ```
 
 See [user-menu.md](user-menu.md) for what this looks like and what it does. Add it once per page that hosts a sign-in-required widget — the demo pages for those widgets on this list all show it alongside the widget for exactly this reason.

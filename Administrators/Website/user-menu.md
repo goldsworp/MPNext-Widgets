@@ -9,13 +9,14 @@ Shows a sign-in link for visitors who aren't signed in, and an avatar with a dro
 Put it somewhere visible and consistent — a header or shared layout is the usual choice, so it appears on every page a parishioner might need to sign in from:
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 ```
 
 ## Settings
 
 | Attribute | What it does | Example |
 |---|---|---|
+| `mp-base-url` | **Required for sign-in to actually work.** Your MinistryPlatform host — used to check who's signed in, sign them out, and load the classic widgets shown inside the account menu (giving, pledges, household). Without it, this widget still renders, but sign-in is effectively disabled (a warning appears in the browser console). | `mp-base-url="https://yourchurch.ministryplatform.net"` |
 | `post-logout-redirect-uri` | Where a visitor lands after signing out. Leave it off to stay on the same page. | `post-logout-redirect-uri="https://yourchurch.org"` |
 | `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
 

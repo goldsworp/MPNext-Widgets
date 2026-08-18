@@ -9,7 +9,7 @@ Shows a signed-in parishioner every household member enrolled in a Faith Formati
 Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout):
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-faith-formation ministry-id="13"></next-faith-formation>
 ```
 

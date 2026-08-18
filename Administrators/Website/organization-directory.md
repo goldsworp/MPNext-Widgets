@@ -69,7 +69,7 @@ With no settings, it shows every organization marked Available Online, across ev
 ></next-organization-directory>
 
 <!-- Require sign-in to view the directory at all -->
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-organization-directory require-sign-in="true"></next-organization-directory>
 ```
 

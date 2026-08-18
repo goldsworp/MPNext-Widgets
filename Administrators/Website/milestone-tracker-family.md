@@ -13,7 +13,7 @@ Same as the individual version — this widget also reads the form/event mapping
 Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout):
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-journey-milestones-family
   journey-id="18"
   group-id="136"
@@ -23,6 +23,10 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 ## Settings
 
 Identical to the [Individual Milestone Tracker](milestone-tracker-individual.md#settings) — `journey-id`, `group-id`, `page-heading` (defaults to "Our Journey" here), `form-base-url`, `event-details-page`, `show-all-get-started-buttons`, and `customcss`.
+
+## Class names for customcss
+
+Same as the [Individual Milestone Tracker](milestone-tracker-individual.md#class-names-for-customcss) — `.jm-card` for the outer card, `.jm-heading` for the main heading.
 
 ## Notes
 

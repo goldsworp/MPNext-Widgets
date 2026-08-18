@@ -159,6 +159,15 @@ export abstract class MPNextWidget extends HTMLElement {
    * always replaces the same tracked stylesheet slot rather than stacking
    * duplicates, and a stale in-flight fetch is discarded if superseded by a
    * newer URL before it resolves.
+   *
+   * Fetched through our own /api/embed/customcss proxy rather than
+   * directly: the CSS text has to be read into JS (to build a Constructable
+   * Stylesheet), which needs CORS permission from the file's host — and an
+   * admin's existing customcss file for the classic widgets typically lives
+   * on their MinistryPlatform domain, which doesn't send CORS headers for
+   * cross-origin fetches (only for the plain `<link>` tags the classic
+   * widgets use, which don't need them). A server-to-server fetch has no
+   * such restriction.
    */
   protected async applyCustomCss(url: string | null): Promise<void> {
     this.customCssUrl = url;
@@ -175,7 +184,8 @@ export abstract class MPNextWidget extends HTMLElement {
     }
 
     try {
-      const cssText = await fetchCSSText(url);
+      const proxyUrl = `${this.apiHost}/api/embed/customcss?url=${encodeURIComponent(url)}`;
+      const cssText = await fetchCSSText(proxyUrl);
       if (this.customCssUrl !== url) return; // superseded by a newer call
 
       if (supportsConstructableStylesheets()) {

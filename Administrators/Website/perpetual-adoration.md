@@ -15,7 +15,7 @@ Also find the numeric **Event Type** MinistryPlatform uses for Perpetual Adorati
 Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout), since claiming an hour requires knowing who's signed in:
 
 ```html
-<next-user-menu></next-user-menu>
+<next-user-menu mp-base-url="https://yourchurch.ministryplatform.net"></next-user-menu>
 <next-perpetual-adoration event-type-id="14"></next-perpetual-adoration>
 ```
 
