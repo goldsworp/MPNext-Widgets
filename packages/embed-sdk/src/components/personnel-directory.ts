@@ -388,7 +388,12 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
       .pd-login-sub { color: #667080; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
       .pd-header { margin-bottom: 16px; }
-      .pd-title { margin: 0 0 4px; font-size: 1.5em; color: var(--primary); }
+      /* Bare tag selector, not scoped to .pd-title — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { margin: 0 0 4px; font-size: 1.5em; color: var(--primary); }
       .pd-intro { margin: 0; color: #667080; }
 
       .pd-controls { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }

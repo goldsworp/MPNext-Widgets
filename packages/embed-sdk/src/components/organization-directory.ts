@@ -935,7 +935,12 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-login-sub { color: #667080; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
       .od-header { margin-bottom: 16px; }
-      .od-title { margin: 0 0 4px; font-size: 1.5em; color: var(--primary); }
+      /* Bare tag selector, not scoped to .od-title — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { margin: 0 0 4px; font-size: 1.5em; color: var(--primary); }
       .od-intro { margin: 0; color: #667080; }
 
       .od-controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }

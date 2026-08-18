@@ -61,13 +61,23 @@ Either way, once you're happy with the colors, save the plain text as a `.css` f
 
 ## Going further than colors
 
-Every rule in your customcss file applies after the widget's own styles. If you want to change more than the 7 colors above — spacing, borders, hiding an element — each widget's own page on this list documents its internal class names (search that page for "customcss" or "class names"). A rule like this in your file would round a button's corners on the My Invoices widget, for example:
+**The main heading on every next-gen widget is a plain `h1` in its CSS**, deliberately — not scoped to an internal class name — specifically so that a plain rule like this works the same way it already does on the classic MinistryPlatform widgets:
+
+```css
+h1 {
+  /* applies consistently across every next-gen widget's heading,
+     and every classic widget's heading too, if you're reusing the
+     same customcss file for both — no special selector needed */
+}
+```
+
+If you're already using one customcss file for both the classic widgets and these next-gen ones, this is exactly why: neither widget system defines a more specific rule of its own for the heading, so whichever `h1 { ... }` rule is in your file simply wins, consistently, everywhere.
+
+For anything more specific than the main heading — a particular button, a specific row — you do need the widget's own class name, which each widget's own page on this list documents (search that page for "customcss" or "class names"). Unlike the heading, these ARE scoped to a class internally, since (unlike the one main heading) a widget can have several buttons/rows that shouldn't all change together. A rule like this rounds a button's corners on the My Invoices widget specifically:
 
 ```css
 .pay-btn { border-radius: 999px; }
 ```
-
-**Use that exact class name, not a generic tag selector.** A rule like `h1 { color: red; }` will usually lose to the widget's own more specific `.some-heading-class { color: ...; }` rule, even though your file loads after it — in CSS, a class selector always beats a plain tag selector regardless of load order. Match the class name shown in the widget's own doc page (or add `!important` as a shortcut, though matching the class is the more durable fix).
 
 ## Notes
 

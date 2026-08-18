@@ -46,7 +46,7 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 
 ## Class names for customcss
 
-Beyond the 7 colors described in [Customizing Widget Colors](custom-styling.md), the outer card is `.jm-card` and the main heading (the `page-heading` text) is `.jm-heading` — target those exact class names in your customcss file, not a plain `h1` selector, which loses to this widget's own `.jm-heading` rule regardless of load order.
+Beyond the 7 colors described in [Customizing Widget Colors](custom-styling.md), the main heading (the `page-heading` text) is a plain `<h1>` — target it with a bare `h1 { ... }` rule in your customcss file, which applies consistently whether that file is used only here or shared with classic MinistryPlatform widgets too. The outer card is `.jm-card`, for anything specific to just this widget.
 
 ## Notes
 

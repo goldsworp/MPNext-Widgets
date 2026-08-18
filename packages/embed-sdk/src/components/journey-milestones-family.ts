@@ -251,7 +251,12 @@ export class JourneyMilestonesFamilyWidget extends MPNextWidget {
         --form-invalid: #FF6D6A;
       }
       .jm-card { max-width: 760px; margin: 0 auto; background: var(--card-bgcolor); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 28px; }
-      .jm-heading { font-size: 1.4em; font-weight: 700; color: #2c3e50; margin: 0 0 20px; }
+      /* Bare tag selector, not scoped to .jm-heading — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { font-size: 1.4em; font-weight: 700; color: #2c3e50; margin: 0 0 20px; }
       .jm-loading { text-align: center; color: #6b7a88; padding: 30px 0; }
       .jm-msg-error { background: #ffebee; color: #c62828; padding: 12px; border-radius: 6px; }
 

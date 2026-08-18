@@ -589,7 +589,12 @@ export class MyInvoicesWidget extends MPNextWidget {
         color: white;
         padding: 24px;
       }
-      .title {
+      /* Bare tag selector, not scoped to .title — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 {
         font-size: 24px;
         font-weight: bold;
         text-align: center;

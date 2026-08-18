@@ -1061,7 +1061,12 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       .sa-login-sub { color: #667080; max-width: 480px; margin: 0 auto; line-height: 1.5; }
 
       .sa-header { margin-bottom: 18px; }
-      .sa-title { margin: 0; font-size: 1.4em; color: var(--primary); }
+      /* Bare tag selector, not scoped to .sa-title — so a customcss file
+         shared with classic MP widgets (whose own customcss files use
+         plain h1 { ... } rules, since they have no built-in styles of
+         their own to compete with) overrides this consistently, the same
+         way it already overrides those classic widgets. */
+      h1 { margin: 0; font-size: 1.4em; color: var(--primary); }
 
       .sa-step { margin-bottom: 18px; }
       .sa-label { display: block; margin-bottom: 6px; font-weight: 600; color: #34495e; font-size: 0.92em; }
