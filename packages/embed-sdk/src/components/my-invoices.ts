@@ -172,6 +172,12 @@ export class MyInvoicesWidget extends MPNextWidget {
 
   private showCheckout() {
     if (!this.selectedDetail) return;
+    // Guard against stacking duplicate portals: the widget's own detail
+    // view stays mounted underneath (see renderDetail()'s pay-section
+    // check), so a repeat click on Pay Now before the modal is visually
+    // registered would otherwise append another <mpp-checkout> onto
+    // document.body every time.
+    if (this.checkoutPortalEl) return;
     this.view = "checkout";
     const invoiceId = this.selectedDetail.invoice.Invoice_ID;
     const url = new URL(window.location.href);
@@ -239,11 +245,21 @@ export class MyInvoicesWidget extends MPNextWidget {
     style.id = "nw-invoice-checkout-portal-styles";
     style.textContent = `
       .nw-invoice-checkout-overlay {
-        padding: 20px;
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        background: rgba(0, 0, 0, 0.5);
+        overflow-y: auto;
+        padding: 40px 20px;
+        box-sizing: border-box;
       }
       .nw-invoice-checkout-container {
         max-width: 800px;
         margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-sizing: border-box;
       }
       .nw-invoice-checkout-back {
         background: none;
@@ -461,7 +477,7 @@ export class MyInvoicesWidget extends MPNextWidget {
                 <div class="notes-content">${this.escapeHtml(inv.Notes)}</div>
               </div>`
             : ""}
-          ${!isPaid
+          ${!isPaid && this.view !== "checkout"
             ? `<div class="pay-section">
                 <button class="pay-btn" data-action="pay">Pay Now</button>
               </div>`

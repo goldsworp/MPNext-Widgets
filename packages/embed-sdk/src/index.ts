@@ -101,7 +101,7 @@ function detectApiHost(): string {
  * Built-in token provider that calls /api/embed/session.
  */
 function createTokenProvider(apiHost: string) {
-  async function fetchToken(wid?: string): Promise<string> {
+  async function attemptFetchToken(wid?: string): Promise<string> {
     // Determine widget ID from the first next-* element on the page
     const resolvedWid =
       wid || detectFirstWidgetId() || "unknown";
@@ -126,6 +126,21 @@ function createTokenProvider(apiHost: string) {
 
     const data = await res.json();
     return data.token;
+  }
+
+  async function fetchToken(wid?: string): Promise<string> {
+    try {
+      return await attemptFetchToken(wid);
+    } catch (err) {
+      // On first page load right after the classic mpp-user-login widget's
+      // OAuth redirect, MPWidgets.js can still be mid-flight writing
+      // mpp-widgets_AuthToken to localStorage when this runs — a brief
+      // load-order race (confirmed reproducible: a manual page refresh
+      // always succeeds), not a real auth failure. One short retry clears
+      // it instead of surfacing a spurious "Please sign in again" error.
+      await new Promise((r) => setTimeout(r, 700));
+      return attemptFetchToken(wid);
+    }
   }
 
   return {
