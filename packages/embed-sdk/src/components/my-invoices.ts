@@ -334,7 +334,7 @@ export class MyInvoicesWidget extends MPNextWidget {
       this.root.innerHTML = `
         <div class="nw-invoices">
           <div class="header">
-            <div class="title">Unable to Load</div>
+            <h1 class="title">Unable to Load</h1>
             <p class="subtitle">${this.escapeHtml(this.error)}</p>
           </div>
           <div class="retry-section">
@@ -361,7 +361,7 @@ export class MyInvoicesWidget extends MPNextWidget {
     return `
       <div class="nw-invoices">
         <div class="header">
-          <div class="title">My Invoices</div>
+          <h1 class="title">My Invoices</h1>
           <p class="subtitle">${this.invoices.length} invoice${this.invoices.length !== 1 ? "s" : ""}</p>
         </div>
         <div class="list-body">
@@ -425,7 +425,7 @@ export class MyInvoicesWidget extends MPNextWidget {
       return `
         <div class="nw-invoices">
           <div class="header">
-            <div class="title">Unable to Load</div>
+            <h1 class="title">Unable to Load</h1>
             <p class="subtitle">${this.escapeHtml(this.error || "Invoice not found")}</p>
           </div>
           <div class="detail-body">
@@ -442,7 +442,7 @@ export class MyInvoicesWidget extends MPNextWidget {
     return `
       <div class="nw-invoices">
         <div class="header">
-          <div class="title">Invoice Details</div>
+          <h1 class="title">Invoice Details</h1>
         </div>
         <div class="detail-body">
           <button class="back-btn" data-action="back">&larr; Back to Invoices</button>
@@ -593,7 +593,7 @@ export class MyInvoicesWidget extends MPNextWidget {
         font-size: 24px;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 4px;
+        margin: 0 0 4px;
       }
       .subtitle {
         text-align: center;

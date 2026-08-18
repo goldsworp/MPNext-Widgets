@@ -783,7 +783,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
     this.root.innerHTML = `
       <div class="sa-card">
         <div class="sa-header">
-          <h2 class="sa-title">Check Room Availability</h2>
+          <h1 class="sa-title">Check Room Availability</h1>
         </div>
 
         ${

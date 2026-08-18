@@ -599,7 +599,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     this.root.innerHTML = `
       <div class="od-card-wrap">
         <div class="od-header">
-          <h2 class="od-title">${escapeHtml(this.pageTitle)}</h2>
+          <h1 class="od-title">${escapeHtml(this.pageTitle)}</h1>
           ${this.pageIntro ? `<p class="od-intro">${escapeHtml(this.pageIntro)}</p>` : ""}
         </div>
 

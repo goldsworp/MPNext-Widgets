@@ -198,7 +198,7 @@ export class JourneyMilestonesIndividualWidget extends MPNextWidget {
 
     this.root.innerHTML = `
       <div class="jm-card">
-        <h2 class="jm-heading">${escapeHtml(this.pageHeading)}</h2>
+        <h1 class="jm-heading">${escapeHtml(this.pageHeading)}</h1>
         ${this.milestones ? this.renderList(this.milestones) : ""}
       </div>
     `;

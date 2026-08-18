@@ -301,7 +301,7 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
     this.root.innerHTML = `
       <div class="pd-card-wrap">
         <div class="pd-header">
-          <h2 class="pd-title">${escapeHtml(this.pageTitle)}</h2>
+          <h1 class="pd-title">${escapeHtml(this.pageTitle)}</h1>
           ${this.pageIntro ? `<p class="pd-intro">${escapeHtml(this.pageIntro)}</p>` : ""}
         </div>
 

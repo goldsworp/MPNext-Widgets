@@ -4,8 +4,36 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import type { WidgetConfig } from "../_lib/widget-catalog";
 import { EventLog, useEventLog } from "./event-log";
 import { ImplementationCode } from "./implementation-code";
+import { GeneratedCode } from "./generated-code";
 
 const MP_AUTH_TOKEN_KEY = "mpp-widgets_AuthToken";
+
+// "api-host" only exists to point the demo's SDK at this Next.js app itself —
+// a real site never sets it (base-widget.ts auto-detects it from the SDK's
+// own <script> tag origin), so it's stripped from copy-paste code.
+function elementToHtml(el: Element): string {
+  const attrs = Array.from(el.attributes).filter((a) => a.name !== "api-host");
+  const tag = el.tagName.toLowerCase();
+  if (attrs.length === 0) return `<${tag}></${tag}>`;
+  if (attrs.length === 1) {
+    return `<${tag} ${attrs[0].name}="${attrs[0].value}"></${tag}>`;
+  }
+  const lines = attrs.map((a) => `  ${a.name}="${a.value}"`).join("\n");
+  return `<${tag}\n${lines}\n></${tag}>`;
+}
+
+function buildGeneratedCode(container: HTMLElement, widget: WidgetConfig): string {
+  const widgetEl = container.querySelector(widget.tag);
+  if (!widgetEl) return "";
+
+  const parts: string[] = [];
+  if (widget.needsUserMenu) {
+    const userMenuEl = container.querySelector("next-user-menu");
+    if (userMenuEl) parts.push(elementToHtml(userMenuEl));
+  }
+  parts.push(elementToHtml(widgetEl));
+  return parts.join("\n\n");
+}
 
 interface WidgetDemoProps {
   widget: WidgetConfig;
@@ -22,6 +50,7 @@ export function WidgetDemo({
   const initialized = useRef(false);
   const { entries, log, clear } = useEventLog();
   const [activeTab, setActiveTab] = useState(0);
+  const [generatedCode, setGeneratedCode] = useState("");
   const [controlValues, setControlValues] = useState<Record<string, string>>(() => {
     const defaults: Record<string, string> = {};
     widget.controls?.forEach((c) => {
@@ -113,6 +142,7 @@ export function WidgetDemo({
         }
       }
       log("widget", `Mounted <${widget.tag}>`);
+      setGeneratedCode(buildGeneratedCode(container, widget));
 
       // 5. For auth widgets: poll localStorage and re-init token when user signs in
       if (widget.needsUserMenu) {
@@ -146,6 +176,7 @@ export function WidgetDemo({
       widgetEl.setAttribute(k, v);
     }
     log("demo", `Switched to "${tab.label}" config`);
+    setGeneratedCode(buildGeneratedCode(demoRef.current, widget));
   }, [widget, log]);
 
   // Apply controls
@@ -171,6 +202,7 @@ export function WidgetDemo({
       }
     }
     log("controls", controlValues);
+    setGeneratedCode(buildGeneratedCode(demoRef.current, widget));
   }
 
   const showControls = widget.controls && widget.controls.length > 0 && !widget.tabs;
@@ -238,6 +270,9 @@ export function WidgetDemo({
           </button>
         </div>
       )}
+
+      {/* Your code — reflects whatever is currently applied above */}
+      <GeneratedCode code={generatedCode} />
 
       {/* Demo container — widgets render here imperatively, like the Vite demos */}
       <div
