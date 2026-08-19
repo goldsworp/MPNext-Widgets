@@ -117,9 +117,9 @@ export const widgetCatalog: WidgetConfig[] = [
         ],
         defaultValue: "true",
       },
-      { name: "congregationId", label: "Congregation ID", type: "number", attribute: "congregation-id", placeholder: "e.g. 1" },
+      { name: "congregationId", label: "Congregation ID", type: "number", attribute: "congregation-ids", placeholder: "e.g. 1" },
       { name: "eventDetailUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /events?id={eventId}" },
-      { name: "campusLabel", label: "Campus Filter Label", type: "text", attribute: "campus-label", placeholder: "e.g. Parish" },
+      { name: "campusLabel", label: "Campus Filter Label", type: "text", attribute: "congregation-label", placeholder: "e.g. Parish" },
       { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Upcoming Events" },
       { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
@@ -129,7 +129,7 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-full-calendar view="list" show-toolbar="false"></next-full-calendar>
 
 <!-- Filtered by congregation -->
-<next-full-calendar congregation-id="1" view="month"></next-full-calendar>
+<next-full-calendar congregation-ids="1" view="month"></next-full-calendar>
 
 <!-- Register button links to your own site's event page when MP has -->
 <!-- online registration open but no external registration URL set -->
@@ -138,7 +138,7 @@ export const widgetCatalog: WidgetConfig[] = [
 <!-- Relabel the campus filter for orgs where "Campus" isn't the right term -->
 <!-- (e.g. a diocese with Parishes). Lists over 8 options automatically get -->
 <!-- a search box and a scrollable chip list instead of showing every chip. -->
-<next-full-calendar campus-label="Parish"></next-full-calendar>`,
+<next-full-calendar congregation-label="Parish"></next-full-calendar>`,
   },
 
   // ─── Authenticated Widgets ─────────────────────────────────────────
@@ -311,7 +311,7 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "groupId", label: "Group ID", type: "number", attribute: "group-id", placeholder: "e.g. 136" },
       { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. My Journey" },
       { name: "formUrlTemplate", label: "Form URL Template", type: "text", attribute: "form-url-template", placeholder: "e.g. /forms?id={formId}" },
-      { name: "eventDetailsUrlTemplate", label: "Event Details URL Template", type: "text", attribute: "event-details-url-template", placeholder: "e.g. /events?id={eventId}" },
+      { name: "eventDetailsUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /events?id={eventId}" },
       {
         name: "showAllGetStartedButtons", label: "Get Started Buttons", type: "select", attribute: "show-all-get-started-buttons",
         options: [
@@ -332,7 +332,7 @@ export const widgetCatalog: WidgetConfig[] = [
   journey-id="18"
   group-id="136"
   form-url-template="/forms?id={formId}"
-  event-details-url-template="/events?id={eventId}"
+  event-detail-url-template="/events?id={eventId}"
 ></next-journey-milestones-individual>
 
 <!-- Custom page heading -->
@@ -364,7 +364,7 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "groupId", label: "Group ID", type: "number", attribute: "group-id", placeholder: "e.g. 136" },
       { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Our Journey" },
       { name: "formUrlTemplate", label: "Form URL Template", type: "text", attribute: "form-url-template", placeholder: "e.g. /forms?id={formId}" },
-      { name: "eventDetailsUrlTemplate", label: "Event Details URL Template", type: "text", attribute: "event-details-url-template", placeholder: "e.g. /events?id={eventId}" },
+      { name: "eventDetailsUrlTemplate", label: "Event Detail URL Template", type: "text", attribute: "event-detail-url-template", placeholder: "e.g. /events?id={eventId}" },
       {
         name: "showAllGetStartedButtons", label: "Get Started Buttons", type: "select", attribute: "show-all-get-started-buttons",
         options: [
@@ -385,7 +385,7 @@ export const widgetCatalog: WidgetConfig[] = [
   journey-id="18"
   group-id="136"
   form-url-template="/forms?id={formId}"
-  event-details-url-template="/events?id={eventId}"
+  event-detail-url-template="/events?id={eventId}"
 ></next-journey-milestones-family>
 
 <!-- Custom page heading -->
@@ -416,7 +416,7 @@ export const widgetCatalog: WidgetConfig[] = [
     // Points "Details" links (and each result's own name link) at this demo
     // gallery's own Organization Detail page rather than the widget's
     // generic /organization-detail default, which isn't a real page here.
-    attributes: { "detail-page-url-template": "/demo/organization-detail?id={congregationId}" },
+    attributes: { "organization-detail-url-template": "/demo/organization-detail?id={congregationId}" },
     events: ["organizationDirectoryError"],
     controls: [
       {
@@ -431,10 +431,10 @@ export const widgetCatalog: WidgetConfig[] = [
       { name: "pinnedCategoryIds", label: "Pinned Category IDs", type: "text", attribute: "pinned-category-ids", placeholder: "e.g. 4 (exempt from distance filter)" },
       { name: "browseGroupTypeId", label: "Browse Group Type ID", type: "number", attribute: "browse-group-type-id", placeholder: "e.g. 1 (Deanery)" },
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 1,2,4" },
-      { name: "pageTitle", label: "Page Title", type: "text", attribute: "page-title", placeholder: "e.g. Find a Parish" },
+      { name: "pageTitle", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Find a Parish" },
       { name: "nounSingular", label: "Noun (Singular)", type: "text", attribute: "noun-singular", placeholder: "e.g. Parish" },
       { name: "nounPlural", label: "Noun (Plural)", type: "text", attribute: "noun-plural", placeholder: "e.g. Parishes" },
-      { name: "detailPageUrlTemplate", label: "Detail Page URL Template", type: "text", attribute: "detail-page-url-template", placeholder: "/demo/organization-detail?id={congregationId}" },
+      { name: "detailPageUrlTemplate", label: "Organization Detail URL Template", type: "text", attribute: "organization-detail-url-template", placeholder: "/demo/organization-detail?id={congregationId}" },
       {
         name: "mapStyle", label: "Map Style", type: "select", attribute: "map-style",
         options: [
@@ -464,11 +464,11 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-organization-directory browse-group-type-id="1" group-noun-plural="Deaneries"></next-organization-directory>
 
 <!-- Point results at your own site's detail page -->
-<next-organization-directory detail-page-url-template="/find-a-parish/{congregationId}"></next-organization-directory>
+<next-organization-directory organization-detail-url-template="/find-a-parish/{congregationId}"></next-organization-directory>
 
 <!-- Relabel for a non-parish directory -->
 <next-organization-directory
-  page-title="Find a School"
+  page-heading="Find a School"
   noun-singular="School"
   noun-plural="Schools"
   location-category-ids="9"
@@ -554,7 +554,7 @@ export const widgetCatalog: WidgetConfig[] = [
         defaultValue: "1",
       },
       { name: "organizationDetailUrlTemplate", label: "Organization Detail URL Template", type: "text", attribute: "organization-detail-url-template", placeholder: "/organization-detail?id={congregationId}" },
-      { name: "pageTitle", label: "Page Title", type: "text", attribute: "page-title", placeholder: "e.g. Diocesan Staff Directory" },
+      { name: "pageTitle", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Diocesan Staff Directory" },
       { name: "customcss", label: "Custom CSS URL", type: "text", attribute: "customcss", placeholder: "e.g. https://your-site.com/brand.css" },
     ],
     implementationCode: `<next-personnel-directory></next-personnel-directory>
@@ -597,7 +597,7 @@ export const widgetCatalog: WidgetConfig[] = [
         defaultValue: "false",
       },
       { name: "congregationIds", label: "Congregation IDs", type: "text", attribute: "congregation-ids", placeholder: "e.g. 4 (single) or 4,8 (a set)" },
-      { name: "congregationNoun", label: "Congregation Noun", type: "text", attribute: "congregation-noun", placeholder: "e.g. Parish (default), Campus, Site" },
+      { name: "congregationNoun", label: "Congregation Label", type: "text", attribute: "congregation-label", placeholder: "e.g. Parish (default), Campus, Site" },
       { name: "pageHeading", label: "Page Heading", type: "text", attribute: "page-heading", placeholder: "e.g. Check Room Availability" },
       {
         name: "showDetailedInfo", label: "Show Detailed Info", type: "select", attribute: "show-detailed-info",
@@ -638,7 +638,7 @@ export const widgetCatalog: WidgetConfig[] = [
 <next-space-availability event-type-id="11" program-id="10" congregation-ids="4"></next-space-availability>
 
 <!-- Relabel "Congregation" for orgs where "Parish" isn't the right term (default is "Parish") -->
-<next-space-availability event-type-id="11" program-id="10" congregation-noun="Campus"></next-space-availability>
+<next-space-availability event-type-id="11" program-id="10" congregation-label="Campus"></next-space-availability>
 
 <!-- Busy/free only — hide event names -->
 <next-space-availability event-type-id="11" program-id="10" show-detailed-info="false"></next-space-availability>

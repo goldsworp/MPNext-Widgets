@@ -147,12 +147,12 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       "pinned-category-ids",
       "browse-group-type-id",
       "congregation-ids",
-      "page-title",
+      "page-heading",
       "page-intro",
       "noun-singular",
       "noun-plural",
       "group-noun-plural",
-      "detail-page-url-template",
+      "organization-detail-url-template",
       "brand-color",
       "accent-color",
       "map-style",
@@ -210,7 +210,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       case "congregation-ids":
         this.congregationIds = next || undefined;
         break;
-      case "page-title":
+      case "page-heading":
         this.pageTitle = next || "Organization Directory";
         break;
       case "page-intro":
@@ -225,7 +225,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       case "group-noun-plural":
         this.groupNounPlural = next || "Groups";
         break;
-      case "detail-page-url-template":
+      case "organization-detail-url-template":
         this.detailPageUrlTemplate = next || "/organization-detail?id={congregationId}";
         break;
       case "brand-color":

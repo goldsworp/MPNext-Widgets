@@ -58,10 +58,10 @@ export class FullCalendarWidget extends MPNextWidget {
   static get observedAttributes() {
     return [
       "api-host",
-      "congregation-id",
+      "congregation-ids",
       "view",
       "show-toolbar",
-      "campus-label",
+      "congregation-label",
       "event-detail-url-template",
       "page-heading",
       "customcss",
@@ -69,9 +69,9 @@ export class FullCalendarWidget extends MPNextWidget {
   }
 
   async connectedCallback() {
-    this.congregationId = this.getAttribute("congregation-id") || "";
+    this.congregationId = this.getAttribute("congregation-ids") || "";
     this.eventDetailUrlTemplate = this.getAttribute("event-detail-url-template") || undefined;
-    this.campusLabel = this.getAttribute("campus-label") || "Campus";
+    this.campusLabel = this.getAttribute("congregation-label") || "Campus";
     this.pageHeading = this.getAttribute("page-heading") || "Upcoming Events";
 
     // Read view/toolbar attributes
@@ -118,7 +118,7 @@ export class FullCalendarWidget extends MPNextWidget {
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
-    if (name === "congregation-id") {
+    if (name === "congregation-ids") {
       this.congregationId = next || "";
       if (this.calendarInstance) {
         this.calendarInstance.refetchEvents();
@@ -135,7 +135,7 @@ export class FullCalendarWidget extends MPNextWidget {
       this.showToolbar = next !== "false";
       this.render();
       this.rebuildCurrentView();
-    } else if (name === "campus-label") {
+    } else if (name === "congregation-label") {
       this.campusLabel = next || "Campus";
       this.rebuildCurrentView();
     } else if (name === "event-detail-url-template") {

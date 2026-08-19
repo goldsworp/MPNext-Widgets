@@ -65,7 +65,7 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
       "phone-strict-source",
       "alternate-email-type-id",
       "organization-detail-url-template",
-      "page-title",
+      "page-heading",
       "page-intro",
       "brand-color",
       "accent-color",
@@ -120,7 +120,7 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
       case "organization-detail-url-template":
         this.organizationDetailUrlTemplate = next || undefined;
         break;
-      case "page-title":
+      case "page-heading":
         this.pageTitle = next || "Personnel Directory";
         break;
       case "page-intro":

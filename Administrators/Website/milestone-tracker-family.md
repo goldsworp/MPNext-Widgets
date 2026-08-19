@@ -22,7 +22,7 @@ Needs [`<next-user-menu>`](user-menu.md) on the same page (or its shared layout)
 
 ## Settings
 
-Identical to the [Individual Milestone Tracker](milestone-tracker-individual.md#settings) — `journey-id`, `group-id`, `page-heading` (defaults to "Our Journey" here), `form-url-template`, `event-details-url-template`, `show-all-get-started-buttons`, and `customcss`.
+Identical to the [Individual Milestone Tracker](milestone-tracker-individual.md#settings) — `journey-id`, `group-id`, `page-heading` (defaults to "Our Journey" here), `form-url-template`, `event-detail-url-template`, `show-all-get-started-buttons`, and `customcss`.
 
 ## Class names for customcss
 

@@ -31,10 +31,10 @@ See [user-menu.md](user-menu.md) for what this looks like and what it does. Add 
 Every widget is a single HTML tag, and its **attributes** are its settings — there's no separate configuration screen. For example:
 
 ```html
-<next-full-calendar congregation-id="4" view="month"></next-full-calendar>
+<next-full-calendar congregation-ids="4" view="month"></next-full-calendar>
 ```
 
-`congregation-id` and `view` here are attributes — this one shows only Congregation 4's events, in month view. Each widget's page below lists its own attributes, what they do, and where in MinistryPlatform to find any ID number they need.
+`congregation-ids` and `view` here are attributes — this one shows only Congregation 4's events, in month view. Each widget's page below lists its own attributes, what they do, and where in MinistryPlatform to find any ID number they need.
 
 A few things that are true for every widget:
 

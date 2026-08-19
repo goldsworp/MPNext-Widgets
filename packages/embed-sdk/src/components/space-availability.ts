@@ -196,7 +196,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       "program-id",
       "visibility-level-id",
       "brand-color",
-      "congregation-noun",
+      "congregation-label",
       "page-heading",
       "customcss",
     ];
@@ -267,7 +267,7 @@ export class SpaceAvailabilityWidget extends MPNextWidget {
       case "brand-color":
         this.brandColor = next || "#004C97";
         break;
-      case "congregation-noun":
+      case "congregation-label":
         this.congregationNoun = next || "Parish";
         break;
       case "page-heading":

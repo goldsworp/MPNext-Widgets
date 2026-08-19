@@ -32,10 +32,10 @@ With no settings, it shows every organization marked Available Online, across ev
 | `congregation-ids` | Restrict the whole directory to a specific set of organizations, rather than everything Available Online. | `congregation-ids="1,2,4"` |
 | `browse-group-type-id` | Adds a "Browse by [group]" toggle alongside the default A–Z list, grouping results by Location Group (e.g. deanery). Find the ID on the **Location Group Types** page. Leave it off to show only the A–Z view. | `browse-group-type-id="1"` |
 | `group-noun-plural` | What to call the groups in that toggle. | `group-noun-plural="Deaneries"` |
-| `page-title` | Heading shown above the directory. | `page-title="Find a Parish"` |
+| `page-heading` | Heading shown above the directory. | `page-heading="Find a Parish"` |
 | `page-intro` | A line of text under the heading. | `page-intro="Serving the Diocese of San Demo since 1889."` |
 | `noun-singular` / `noun-plural` | What to call one organization / more than one, throughout the widget's text. | `noun-singular="Parish"` `noun-plural="Parishes"` |
-| `detail-page-url-template` | Where each result links to. `{congregationId}` is replaced automatically with the organization's actual ID. Defaults to `/organization-detail?id={congregationId}` — matching [organization-detail.md](organization-detail.md)'s default. | `detail-page-url-template="/find-a-parish/{congregationId}"` |
+| `organization-detail-url-template` | Where each result links to. `{congregationId}` is replaced automatically with the organization's actual ID. Defaults to `/organization-detail?id={congregationId}` — matching [organization-detail.md](organization-detail.md)'s default. | `organization-detail-url-template="/find-a-parish/{congregationId}"` |
 | `map-style` | Visual style of the map: `light`, `street`, or `terrain`. | `map-style="street"` |
 | `map-center` | Where the map centers before any results or search have loaded, as `latitude,longitude`. | `map-center="33.45,-112.07"` |
 | `map-zoom` | Initial map zoom level. | `map-zoom="10"` |
@@ -62,7 +62,7 @@ With no settings, it shows every organization marked Available Online, across ev
 
 <!-- A school-only directory with relabeled text -->
 <next-organization-directory
-  page-title="Find a School"
+  page-heading="Find a School"
   noun-singular="School"
   noun-plural="Schools"
   location-category-ids="9"

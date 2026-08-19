@@ -194,7 +194,7 @@ export function WidgetDemo({
         // Leaving a control blank restores the widget's catalog-provided
         // default rather than erasing the attribute outright — otherwise
         // clicking Apply for an unrelated control would silently wipe out
-        // any baked-in default (e.g. detail-page-url-template) the moment
+        // any baked-in default (e.g. organization-detail-url-template) the moment
         // the admin hadn't also typed something into this field.
         widgetEl.setAttribute(control.attribute, catalogDefault);
       } else {

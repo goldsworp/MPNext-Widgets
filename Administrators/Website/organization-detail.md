@@ -16,7 +16,7 @@ If you want the weekly Mass schedule section to show real Mass times, find your 
 <next-organization-detail></next-organization-detail>
 ```
 
-That's the entire tag — no attributes are required. Make sure the [Organization Directory](organization-directory.md) widget's `detail-page-url-template` points at whatever web address this tag lives on (it defaults to `/organization-detail?id={congregationId}`, which matches this widget's own default `id` expectation with no changes needed on either side).
+That's the entire tag — no attributes are required. Make sure the [Organization Directory](organization-directory.md) widget's `organization-detail-url-template` points at whatever web address this tag lives on (it defaults to `/organization-detail?id={congregationId}`, which matches this widget's own default `id` expectation with no changes needed on either side).
 
 ## Settings
 

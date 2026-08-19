@@ -262,7 +262,7 @@
       <div class="demo-box">
         <div id="status"></div>
         <next-organization-directory
-          detail-page-url-template="/demo-organization-detail.html?id={congregationId}"
+          organization-detail-url-template="/demo-organization-detail.html?id={congregationId}"
           api-host="__API_HOST__"
         ></next-organization-directory>
       </div>
@@ -362,7 +362,7 @@
       }
       newWidget.setAttribute("map-style", mapStyleInput.value);
       newWidget.setAttribute("require-sign-in", requireSignInInput.value);
-      newWidget.setAttribute("detail-page-url-template", "/demo-organization-detail.html?id={congregationId}");
+      newWidget.setAttribute("organization-detail-url-template", "/demo-organization-detail.html?id={congregationId}");
       newWidget.setAttribute("api-host", "__API_HOST__");
       demoBox.appendChild(newWidget);
       attachWidgetListeners(newWidget);

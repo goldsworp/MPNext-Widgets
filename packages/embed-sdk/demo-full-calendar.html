@@ -379,9 +379,9 @@
       mainCalendar.setAttribute("show-toolbar", toolbar);
 
       if (congId) {
-        mainCalendar.setAttribute("congregation-id", congId);
+        mainCalendar.setAttribute("congregation-ids", congId);
       } else {
-        mainCalendar.removeAttribute("congregation-id");
+        mainCalendar.removeAttribute("congregation-ids");
       }
 
       logEvent("controls", { view, showToolbar: toolbar, congregationId: congId || "all" });

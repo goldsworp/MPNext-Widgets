@@ -37,7 +37,7 @@ With no settings, it shows every active person across every category. Everything
 | `phone-strict-source` | When true, shows only the exact source chosen above — no number at all if it's blank, rather than trying another field. | `phone-strict-source="true"` |
 | `alternate-email-type-id` | Prefer an Alternate Email of this type (e.g. a diocesan-issued address) over the person's own Contact email, when one exists. Find the ID on the **Alternate Email Types** page. Falls back to the Contact email if no alternate is on file. | `alternate-email-type-id="1"` |
 | `organization-detail-url-template` | Makes each person's location a link to your [Organization Detail](organization-detail.md) page. `{congregationId}` is replaced automatically. | `organization-detail-url-template="/find-a-parish/{congregationId}"` |
-| `page-title` | Heading shown above the directory. | `page-title="Diocesan Staff Directory"` |
+| `page-heading` | Heading shown above the directory. | `page-heading="Diocesan Staff Directory"` |
 | `page-intro` | A line of text under the heading. | `page-intro="Reach any parish or chancery office directly."` |
 | `show-photos` | Show each person's attached photo. | `show-photos="false"` |
 | `customcss` | Override this widget's colors to match your brand — see [Customizing Widget Colors](custom-styling.md). | `customcss="https://your-site.com/brand.css"` |
