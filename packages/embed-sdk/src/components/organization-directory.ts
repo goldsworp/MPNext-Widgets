@@ -657,7 +657,11 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       this.searchTerm = searchInput.value;
       this.visibleCount = this.pageSize;
       this.render();
-      this.root.querySelector<HTMLInputElement>("#od-search")?.focus();
+      const newInput = this.root.querySelector<HTMLInputElement>("#od-search");
+      if (newInput) {
+        newInput.focus();
+        newInput.selectionStart = newInput.selectionEnd = newInput.value.length;
+      }
     });
 
     this.root.querySelectorAll<HTMLButtonElement>("[data-browse]").forEach((btn) => {

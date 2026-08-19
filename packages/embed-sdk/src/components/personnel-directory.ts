@@ -339,7 +339,11 @@ export class PersonnelDirectoryWidget extends MPNextWidget {
     searchInput?.addEventListener("input", () => {
       this.searchTerm = searchInput.value;
       this.render();
-      this.root.querySelector<HTMLInputElement>("#pd-search")?.focus();
+      const newInput = this.root.querySelector<HTMLInputElement>("#pd-search");
+      if (newInput) {
+        newInput.focus();
+        newInput.selectionStart = newInput.selectionEnd = newInput.value.length;
+      }
     });
 
     const categorySelect = this.root.querySelector<HTMLSelectElement>("#pd-category-select");
