@@ -21,6 +21,12 @@ export const BASE_STYLES = `
     --root-text-color: #2D2926;
     --form-valid: #86AD3F;
     --form-invalid: #FF6D6A;
+    /* How far from the top of the viewport the mini-calendar sidebar
+       sticks in the "calendar" view. If your site has its own sticky/fixed
+       header, override this via customcss to that header's height (plus
+       a little breathing room) so the sidebar doesn't scroll partly
+       underneath it. See Administrators/Website/full-calendar.md. */
+    --mini-cal-sticky-top: 0px;
   }
 
   /* ── Layout ── */
@@ -667,7 +673,7 @@ export const MINI_CAL_STYLES = `
     width: 280px;
     flex-shrink: 0;
     position: sticky;
-    top: 0;
+    top: var(--mini-cal-sticky-top);
     align-self: flex-start;
   }
 

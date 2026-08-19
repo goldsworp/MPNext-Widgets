@@ -44,3 +44,4 @@ With no settings at all, it shows every approved event across every campus, star
 
 - No sign-in required.
 - If you have more than eight campuses/parishes, the filter automatically becomes a searchable list instead of showing every option as a button — nothing you need to configure.
+- In the **Calendar** view, the mini-calendar sidebar stays in view (sticks 0px below the top of the browser window) while you scroll a long events list. If your site has its own sticky/fixed header, the sidebar can end up scrolling partly underneath it — set `--mini-cal-sticky-top` to that header's height (plus a little breathing room) via [`customcss`](custom-styling.md), e.g. `:host { --mini-cal-sticky-top: 110px; }`.

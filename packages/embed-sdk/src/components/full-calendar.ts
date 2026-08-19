@@ -54,6 +54,18 @@ export class FullCalendarWidget extends MPNextWidget {
   private eventDetailUrlTemplate: string | undefined;
   private campusLabel: string = "Campus";
   private pageHeading = "Upcoming Events";
+  // Some host page layouts (e.g. Duda's `.dmLayoutWrapper`) put an
+  // `overflow: hidden` ancestor between the widget and the viewport, which
+  // silently breaks CSS `position: sticky` (its containing block becomes
+  // that ancestor instead of the viewport, and the ancestor doesn't
+  // actually scroll). These fields drive a `position: fixed` fallback via
+  // scroll/resize instead, computed in viewport coordinates — unaffected
+  // by an ancestor's overflow, only by transform/filter/will-change, which
+  // is far rarer on a structural wrapper. See stickyMiniCalTick().
+  private miniCalPanelEl: HTMLElement | null = null;
+  private miniCalSpacerEl: HTMLElement | null = null;
+  private miniCalPanelNaturalWidth = 0;
+  private stickyMiniCalRafId: number | null = null;
 
   static get observedAttributes() {
     return [
@@ -111,10 +123,19 @@ export class FullCalendarWidget extends MPNextWidget {
         raw: err instanceof Error ? err.message : String(err),
       });
     }
+
+    window.addEventListener("scroll", this.scheduleStickyMiniCalTick, { passive: true });
+    window.addEventListener("resize", this.scheduleStickyMiniCalTick);
   }
 
   disconnectedCallback() {
     this.destroyCalendar();
+    window.removeEventListener("scroll", this.scheduleStickyMiniCalTick);
+    window.removeEventListener("resize", this.scheduleStickyMiniCalTick);
+    if (this.stickyMiniCalRafId !== null) {
+      cancelAnimationFrame(this.stickyMiniCalRafId);
+      this.stickyMiniCalRafId = null;
+    }
   }
 
   attributeChangedCallback(name: string, _old: string | null, next: string | null) {
@@ -763,7 +784,106 @@ export class FullCalendarWidget extends MPNextWidget {
     }
 
     container.appendChild(area);
+
+    // The split-layout branch above just replaced the mini-cal panel with a
+    // fresh DOM node (or removed it entirely, for a non-"calendar" view) —
+    // resync its position immediately rather than waiting for the next
+    // scroll, since this runs on every filter/date/month change too.
+    this.miniCalPanelEl = null;
+    this.stickyMiniCalTick();
   }
+
+  private getMiniCalStickyTopPx(): number {
+    const raw = getComputedStyle(this).getPropertyValue("--mini-cal-sticky-top").trim();
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // CSS `position: sticky` (set in full-calendar-styles.ts) is the default,
+  // but it silently does nothing if any ancestor between this widget and
+  // the viewport has `overflow` other than `visible` — common in
+  // page-builder wrapper divs (e.g. Duda's `.dmLayoutWrapper`), since that
+  // ancestor becomes sticky's containing block instead of the viewport,
+  // and it doesn't itself scroll. This drives an equivalent
+  // `position: fixed` fallback in viewport coordinates, which isn't
+  // affected by an ancestor's overflow (only by transform/filter/
+  // will-change on one, which is much rarer on a structural wrapper).
+  private scheduleStickyMiniCalTick = (): void => {
+    if (this.stickyMiniCalRafId !== null) return;
+    this.stickyMiniCalRafId = requestAnimationFrame(() => {
+      this.stickyMiniCalRafId = null;
+      this.stickyMiniCalTick();
+    });
+  };
+
+  private stickyMiniCalTick = (): void => {
+    const layout = this.root.querySelector<HTMLElement>(".nw-fc-split-layout");
+    const panel = this.root.querySelector<HTMLElement>(".nw-fc-mini-cal-panel");
+    if (!layout || !panel) return;
+
+    if (panel !== this.miniCalPanelEl) {
+      // A brand-new node from the latest renderCardsOrCalendarView() — no
+      // inline override yet, so its rect still reflects the normal
+      // flex-flow width. Unlike organization-directory's map (a CSS grid
+      // column with an explicit track size that stays reserved
+      // regardless), this panel is a flex item — pulling it out of flow
+      // via position: fixed would let the sibling cards panel (flex: 1)
+      // expand to fill the freed space. A same-width spacer sibling holds
+      // that space open whenever the real panel is fixed.
+      this.miniCalPanelEl = panel;
+      this.miniCalPanelNaturalWidth = panel.getBoundingClientRect().width;
+      // display: none (not just width: 0) so it never contributes to the
+      // flex row's `gap` when inactive — a zero-width but still-in-flow
+      // spacer would otherwise add one extra gap between it and the panel.
+      const spacer = document.createElement("div");
+      spacer.style.flexShrink = "0";
+      spacer.style.display = "none";
+      layout.insertBefore(spacer, panel);
+      this.miniCalSpacerEl = spacer;
+    }
+
+    // Matches the single-column breakpoint in full-calendar-styles.ts — the
+    // panel isn't sticky at all on narrow screens, so clear any override.
+    if (window.innerWidth <= 768) {
+      panel.style.position = "";
+      panel.style.top = "";
+      panel.style.left = "";
+      panel.style.width = "";
+      if (this.miniCalSpacerEl) this.miniCalSpacerEl.style.display = "none";
+      return;
+    }
+
+    const stickyTop = this.getMiniCalStickyTopPx();
+    const layoutRect = layout.getBoundingClientRect();
+    const panelHeight = panel.offsetHeight;
+    const width = this.miniCalPanelNaturalWidth;
+    // The mini-cal panel is the split-layout's first (left) child — unlike
+    // organization-directory's map, which is the second (right) column.
+    const left = layoutRect.left;
+
+    if (layoutRect.top > stickyTop) {
+      // Above the sticky range — natural position, same as CSS sticky's
+      // own "hasn't engaged yet" state.
+      panel.style.position = "";
+      panel.style.top = "";
+      panel.style.left = "";
+      panel.style.width = "";
+      if (this.miniCalSpacerEl) this.miniCalSpacerEl.style.display = "none";
+    } else {
+      // Pinned — but stop before it would overflow past the bottom of the
+      // cards panel (same as CSS sticky's own end-of-container behavior),
+      // in case the panel is taller than what's left to scroll through.
+      const top = Math.min(stickyTop, layoutRect.bottom - panelHeight);
+      panel.style.position = "fixed";
+      panel.style.top = `${top}px`;
+      panel.style.left = `${left}px`;
+      panel.style.width = `${width}px`;
+      if (this.miniCalSpacerEl) {
+        this.miniCalSpacerEl.style.display = "block";
+        this.miniCalSpacerEl.style.width = `${width}px`;
+      }
+    }
+  };
 
   private rebuildCurrentView(): void {
     if (this.needsFullCalendar()) {
