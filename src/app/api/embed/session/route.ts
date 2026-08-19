@@ -92,20 +92,19 @@ export async function POST(req: NextRequest) {
         console.error("Failed to verify mpUserToken:", error);
       }
 
-      // A present-but-invalid classic token (e.g. this origin isn't in MP's
-      // classic-widget Permitted URLs, as on our own /demo domain) shouldn't
-      // block a visitor who's separately signed in via our own session —
-      // only error out if neither identifies them.
+      // A present-but-invalid classic token (e.g. a stale mpp-widgets_AuthToken
+      // left in localStorage, or this origin isn't in MP's classic-widget
+      // Permitted URLs) shouldn't block issuing a session at all — most
+      // widgets on the page (including this one, quite possibly) don't
+      // require sign-in, so an unverifiable token falls back to "public"
+      // identity instead of failing the whole request. Any widget that
+      // does require sign-in enforces that itself downstream by checking
+      // claims.sub === "public" (see e.g. organization-directory's route).
       if (!verified) {
         const session = await auth.api.getSession({ headers: await headers() });
         if (session?.user?.userGuid) {
           sub = session.user.userGuid;
           if (session.session?.accessToken) mpAccessToken = session.session.accessToken;
-        } else {
-          return NextResponse.json(
-            { error: "Invalid MP user token. Please sign in again." },
-            { status: 403, headers: corsHeaders },
-          );
         }
       }
     } else {

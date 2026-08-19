@@ -1042,6 +1042,13 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         --root-text-color: #2D2926;
         --form-valid: #86AD3F;
         --form-invalid: #FF6D6A;
+        /* How far from the top of the viewport the map sticks while
+           scrolling the results list. The default clears nothing else —
+           if your site has its own sticky/fixed header, override this via
+           customcss to that header's height (plus a little breathing room)
+           so the map doesn't scroll partly underneath it. See
+           Administrators/Website/organization-directory.md. */
+        --map-sticky-top: 20px;
       }
 
       .od-state { text-align: center; padding: 32px 16px; color: #474747; }
@@ -1158,7 +1165,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       }
 
       .od-layout { display: grid; grid-template-columns: 1fr 380px; gap: 20px; align-items: start; }
-      .od-map-panel { position: sticky; top: 20px; }
+      .od-map-panel { position: sticky; top: var(--map-sticky-top); }
       .od-map-wrap { position: relative; }
       .od-map { height: 560px; border-radius: 10px; overflow: hidden; z-index: 0; }
       .od-map-loading {
