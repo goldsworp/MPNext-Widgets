@@ -22,7 +22,7 @@ Instead of a stored procedure you write and a script you paste onto every page, 
 1. It hosts a small script your website loads once, which then lets you drop in any of the widgets — `<next-full-calendar></next-full-calendar>`, for example — as plain HTML tags, no stored procedure required for most of them.
 2. It talks to MinistryPlatform on your website's behalf, over a secure connection, so a visitor's browser never talks to MinistryPlatform directly.
 
-A few widgets — the Milestone Tracker and Perpetual Adoration, so far — do need a short one-time database script, because they read from or write to a custom table that doesn't exist in MinistryPlatform out of the box, or because they let a signed-in parishioner create a record (like claiming an adoration hour). Those scripts, and the notes on when to run them, live in **[Database/](Database/)**.
+A few widgets — the Milestone Tracker, Perpetual Adoration, and Space Availability, so far — do need a short one-time database script, because they read from or write to a custom table that doesn't exist in MinistryPlatform out of the box, or because they let a signed-in parishioner create a record (like claiming an adoration hour or requesting a room). Those scripts, and the notes on when to run them, live in **[Database/](Database/)**.
 
 ## What you need before starting
 

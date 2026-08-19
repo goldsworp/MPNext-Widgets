@@ -38,7 +38,7 @@ Embeddable Web Component widgets for [Ministry Platform](https://www.ministrypla
 
 ## Features
 
-- **Five embeddable widgets**: `next-user-menu`, `next-add-to-calendar`, `next-full-calendar`, `next-profile`, `next-my-invoices` — each a framework-agnostic Web Component rendered in Shadow DOM
+- **14 embeddable widgets**: `next-user-menu`, `next-add-to-calendar`, `next-full-calendar`, `next-profile`, `next-my-invoices`, `next-faith-formation`, `next-mass-intention-calendar`, `next-perpetual-adoration`, `next-journey-milestones-individual`, `next-journey-milestones-family`, `next-organization-directory`, `next-organization-detail`, `next-personnel-directory`, `next-space-availability` — each a framework-agnostic Web Component rendered in Shadow DOM
 - **Framework-agnostic SDK**: Single `<script type="module">` tag loads `next-embed.es.js`; no React, jQuery, or build tooling required on the host site
 - **JWT widget auth**: Short-lived (5-min) widget JWTs (HS256) gated by a CORS origin allowlist, with automatic token refresh on 401
 - **Authentication**: Better Auth with Ministry Platform OAuth (via `genericOAuth` plugin) and OIDC RP-initiated logout
@@ -373,21 +373,33 @@ When deploying to production:
 MPNext-Widgets/
 ├── src/                                  # Next.js 16 host app (App Router)
 │   ├── app/
-│   │   ├── (demo)/demo/                  # Demo gallery (auth-gated)
+│   │   ├── (demo)/demo/                  # Demo catalog (auth-gated, live API)
 │   │   │   ├── page.tsx                  # Widget catalog
 │   │   │   └── [slug]/page.tsx           # Per-widget demo page
+│   │   ├── gallery/                      # Public widget showcase (/gallery, no auth)
+│   │   │   ├── _components/              # gallery-card, lightbox-provider, lightbox-thumbnail
+│   │   │   └── _lib/gallery-images.ts    # Screenshot metadata
 │   │   ├── api/
 │   │   │   ├── auth/
 │   │   │   │   ├── [...all]/             # Better Auth catch-all routes
 │   │   │   │   ├── logout/               # OIDC RP-initiated logout
 │   │   │   │   └── session-tokens/       # Surfaces OAuth tokens to the app
-│   │   │   └── embed/                    # Widget API endpoints
+│   │   │   └── embed/                    # Widget API endpoints (14 widgets)
 │   │   │       ├── session/              # Mint short-lived widget JWTs
+│   │   │       ├── customcss/            # Proxies external brand CSS (avoids CORS)
 │   │   │       ├── add-to-calendar/      # Subscribe to event reminders
-│   │   │       ├── full-calendar/        # List + detail event endpoints
-│   │   │       ├── invoices/             # List + invoice detail endpoints
+│   │   │       ├── full-calendar/        # List + [eventId] detail endpoints
+│   │   │       ├── invoices/             # List + [invoiceId] detail endpoints
 │   │   │       ├── profile/              # Profile read/update + photo + password
-│   │   │       └── subscriptions/        # Manage user subscriptions
+│   │   │       ├── subscriptions/        # Manage user subscriptions
+│   │   │       ├── faith-formation/
+│   │   │       ├── mass-intention-calendar/
+│   │   │       ├── perpetual-adoration/  # + register/
+│   │   │       ├── journey-milestones-individual/
+│   │   │       ├── journey-milestones-family/
+│   │   │       ├── organization-directory/  # + [congregationId]/ (also serves organization-detail)
+│   │   │       ├── personnel-directory/
+│   │   │       └── space-availability/   # + request/
 │   │   ├── signin/                       # Sign-in page
 │   │   ├── layout.tsx                    # Root layout
 │   │   └── providers.tsx                 # App providers
@@ -399,7 +411,7 @@ MPNext-Widgets/
 │   │   ├── auth-client.ts                # Better Auth client (React hooks)
 │   │   ├── embed/                        # Widget auth (separate from app auth)
 │   │   │   ├── auth.ts                   # requireWidgetAuth()
-│   │   │   ├── config.ts                 # Tenant configs + allowed origins
+│   │   │   ├── config.ts                 # Allowed origins + MP host resolution
 │   │   │   ├── jwt.ts                    # Widget JWT issue/verify
 │   │   │   ├── recaptcha.ts              # Optional server-side reCAPTCHA
 │   │   │   └── types.ts
@@ -413,13 +425,21 @@ MPNext-Widgets/
 │   │           ├── helper.ts             # Public API (MPHelper)
 │   │           └── index.ts              # Barrel export
 │   │
-│   ├── services/                         # Singleton services per widget
+│   ├── services/                         # Singleton services per widget (14 + domainTimezone)
 │   │   ├── addToCalendarService.ts
 │   │   ├── fullCalendarService.ts
 │   │   ├── invoiceService.ts
 │   │   ├── profileService.ts
 │   │   ├── subscriptionService.ts
-│   │   └── userService.ts
+│   │   ├── userService.ts
+│   │   ├── faithFormationService.ts
+│   │   ├── massIntentionCalendarService.ts
+│   │   ├── perpetualAdorationService.ts
+│   │   ├── journeyMilestonesService.ts
+│   │   ├── organizationDirectoryService.ts
+│   │   ├── personnelDirectoryService.ts
+│   │   ├── spaceAvailabilityService.ts
+│   │   └── domainTimezoneService.ts
 │   │
 │   ├── types/                            # Shared app-level types
 │   └── proxy.ts                          # Next.js 16 proxy (route protection)
@@ -427,26 +447,40 @@ MPNext-Widgets/
 ├── packages/
 │   ├── embed-sdk/                        # @mpnext/embed-sdk (Vite library)
 │   │   ├── src/
-│   │   │   ├── components/               # Web Components
+│   │   │   ├── components/               # 14 Web Components
 │   │   │   │   ├── user-menu.ts
 │   │   │   │   ├── add-to-calendar.ts
 │   │   │   │   ├── full-calendar*.ts     # Main + cards/list/mini-cal/modal/styles
 │   │   │   │   ├── profile.ts
-│   │   │   │   └── my-invoices.ts
+│   │   │   │   ├── my-invoices.ts
+│   │   │   │   ├── faith-formation.ts
+│   │   │   │   ├── mass-intention-calendar.ts
+│   │   │   │   ├── perpetual-adoration.ts
+│   │   │   │   ├── journey-milestones-individual.ts
+│   │   │   │   ├── journey-milestones-family.ts
+│   │   │   │   ├── organization-directory.ts
+│   │   │   │   ├── organization-detail.ts
+│   │   │   │   ├── personnel-directory.ts
+│   │   │   │   └── space-availability.ts
 │   │   │   ├── shared/                   # base-widget, api-client, cdn-loader
 │   │   │   └── index.ts                  # SDK entry — auto-registers widgets
-│   │   ├── demo-*.html                   # Per-widget Vite demo pages
+│   │   ├── demo-*.html                   # Per-widget Vite demo pages (one per widget)
 │   │   └── vite.config.ts                # Library mode (ES + UMD)
 │   │
 │   └── types/                            # @mpnext/types — shared Zod + TS types
-│       └── src/                          # add-to-calendar, full-calendar, invoices, profile, subscription
+│       └── src/                          # one module per widget domain (add-to-calendar, full-calendar, invoices, profile, subscription, faith-formation, mass-intention-calendar, perpetual-adoration, journey-milestones, organization-directory, personnel-directory, space-availability)
 │
 ├── public/embed-sdk/                     # Deployed widget bundles (hashed) + brand CSS
+├── public/gallery/                       # Widget screenshots shown on /gallery
+├── Administrators/                       # Non-developer setup/reference docs (not code)
+│   ├── Database/                         # Per-widget SQL scripts (milestone-tracker, perpetual-adoration, space-availability)
+│   └── Website/                          # Per-widget HTML/attribute reference for site editors
 ├── scripts/
 │   ├── setup-bootstrap.mjs               # Zero-dep entry for `pnpm setup` (ensures pnpm + deps, then runs setup.ts)
 │   ├── setup.ts                          # Interactive setup CLI
 │   ├── hash-sdk.js                       # Hash + rewrite SDK bundle filenames
 │   └── copy-sdk.js                       # Copy build output into public/
+├── e2e/                                  # Playwright E2E tests + gallery screenshot capture script
 ├── .claude/commands/                     # Custom Claude Code commands
 ├── playwright.config.ts                  # Playwright E2E configuration
 ├── CLAUDE.md                             # Development guide
@@ -456,17 +490,26 @@ MPNext-Widgets/
 
 ## Widgets
 
-Five framework-agnostic Web Components, each registered as a custom element by the embed SDK and rendered in Shadow DOM.
+14 framework-agnostic Web Components, each registered as a custom element by the embed SDK and rendered in Shadow DOM.
 
 | Element | Purpose | Service | API route |
 |---|---|---|---|
 | `<next-user-menu>` | User profile dropdown with sign-in/out | `userService` | `/api/embed/session` |
 | `<next-add-to-calendar>` | Subscribe to event reminders via email/SMS | `addToCalendarService` | `/api/embed/add-to-calendar` |
-| `<next-full-calendar>` | Public events calendar (cards, list, mini-cal, modal) | `fullCalendarService` | `/api/embed/full-calendar` |
-| `<next-profile>` | View and edit signed-in user profile | `profileService` | `/api/embed/profile` |
-| `<next-my-invoices>` | List and view user invoices | `invoiceService` | `/api/embed/invoices` |
+| `<next-full-calendar>` | Public events calendar (cards, list, mini-cal, modal) | `fullCalendarService` | `/api/embed/full-calendar`, `/api/embed/full-calendar/[eventId]` |
+| `<next-profile>` | View and edit signed-in user profile | `profileService` | `/api/embed/profile`, `/change-password`, `/photo` |
+| `<next-my-invoices>` | List and view user invoices | `invoiceService` | `/api/embed/invoices`, `/api/embed/invoices/[invoiceId]` |
+| `<next-faith-formation>` | Family faith formation program lookup | `faithFormationService` | `/api/embed/faith-formation` |
+| `<next-mass-intention-calendar>` | Request and view Mass intentions | `massIntentionCalendarService` | `/api/embed/mass-intention-calendar` |
+| `<next-perpetual-adoration>` | Claim/view perpetual adoration hours | `perpetualAdorationService` | `/api/embed/perpetual-adoration`, `/register` |
+| `<next-journey-milestones-individual>` | An individual's sacramental/formation milestones | `journeyMilestonesService` | `/api/embed/journey-milestones-individual` |
+| `<next-journey-milestones-family>` | A household's sacramental/formation milestones | `journeyMilestonesService` | `/api/embed/journey-milestones-family` |
+| `<next-organization-directory>` | Searchable map/list of parishes or campuses | `organizationDirectoryService` | `/api/embed/organization-directory`, `/[congregationId]` |
+| `<next-organization-detail>` | Detail page for a single organization | `organizationDirectoryService` | `/api/embed/organization-directory/[congregationId]` |
+| `<next-personnel-directory>` | Staff/clergy directory | `personnelDirectoryService` | `/api/embed/personnel-directory` |
+| `<next-space-availability>` | Check and request space/room bookings | `spaceAvailabilityService` | `/api/embed/space-availability`, `/request` |
 
-All five widgets share a base class (`packages/embed-sdk/src/shared/base-widget.ts`) that handles token fetching, automatic 401 refresh, and Shadow DOM lifecycle.
+All 14 widgets share a base class (`packages/embed-sdk/src/shared/base-widget.ts`) that handles token fetching, automatic 401 refresh, and Shadow DOM lifecycle.
 
 ## Ministry Platform Integration
 
@@ -558,6 +601,13 @@ Application services live in `src/services/` and provide widget-scoped business 
 | **profileService** | `profileService.ts` | `<next-profile>` |
 | **invoiceService** | `invoiceService.ts` | `<next-my-invoices>` |
 | **subscriptionService** | `subscriptionService.ts` | profile + subscription management |
+| **faithFormationService** | `faithFormationService.ts` | `<next-faith-formation>` |
+| **massIntentionCalendarService** | `massIntentionCalendarService.ts` | `<next-mass-intention-calendar>` |
+| **perpetualAdorationService** | `perpetualAdorationService.ts` | `<next-perpetual-adoration>` |
+| **journeyMilestonesService** | `journeyMilestonesService.ts` | `<next-journey-milestones-individual>`, `<next-journey-milestones-family>` |
+| **organizationDirectoryService** | `organizationDirectoryService.ts` | `<next-organization-directory>`, `<next-organization-detail>` |
+| **personnelDirectoryService** | `personnelDirectoryService.ts` | `<next-personnel-directory>` |
+| **spaceAvailabilityService** | `spaceAvailabilityService.ts` | `<next-space-availability>` |
 | **domainTimezoneService** | `domainTimezoneService.ts` | MP domain time-zone conversion (used by all services) |
 
 ```typescript
