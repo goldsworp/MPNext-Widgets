@@ -16,6 +16,8 @@ const validSummary: OrganizationSummary = {
   Location_Category: 'Parish',
   Location_Group_ID: 1,
   Location_Group: 'North Deanery',
+  Address_Line_1: '3140 N 51st Ave',
+  Address_Line_2: null,
   City: 'Phoenix',
   State: 'AZ',
   Postal_Code: '85031',
@@ -96,8 +98,6 @@ describe('MassScheduleEntrySchema', () => {
 describe('OrganizationDetailSchema', () => {
   const validDetail: OrganizationDetail = {
     ...validSummary,
-    Address_Line_1: '3140 N 51st Ave',
-    Address_Line_2: null,
     Pastor_Name: 'Winckles, Fr. Benn',
     Mass_Schedule: [
       { Day_Of_Week: 'Sunday', Day_Of_Week_Number: 0, Time_Label: '9:00 AM', Event_Title: 'Sunday 9AM Mass' },

@@ -8,6 +8,8 @@ export const OrganizationSummarySchema = z.object({
   Location_Category: z.string().nullable(),
   Location_Group_ID: z.number().nullable(),
   Location_Group: z.string().nullable(),
+  Address_Line_1: z.string().nullable(),
+  Address_Line_2: z.string().nullable(),
   City: z.string().nullable(),
   State: z.string().nullable(),
   Postal_Code: z.string().nullable(),
@@ -33,8 +35,6 @@ export const MassScheduleEntrySchema = z.object({
 export type MassScheduleEntry = z.infer<typeof MassScheduleEntrySchema>;
 
 export const OrganizationDetailSchema = OrganizationSummarySchema.extend({
-  Address_Line_1: z.string().nullable(),
-  Address_Line_2: z.string().nullable(),
   Pastor_Name: z.string().nullable(),
   Mass_Schedule: z.array(MassScheduleEntrySchema),
 });

@@ -13,6 +13,8 @@ interface OrganizationRow {
   Location_Group_ID: number | null;
   Location_Group: string | null;
   Phone: string | null;
+  Address_Line_1: string | null;
+  Address_Line_2: string | null;
   City: string | null;
   State: string | null;
   Postal_Code: string | null;
@@ -22,8 +24,6 @@ interface OrganizationRow {
 }
 
 interface OrganizationDetailRow extends OrganizationRow {
-  Address_Line_1: string | null;
-  Address_Line_2: string | null;
   Pastor_Name: string | null;
 }
 
@@ -45,6 +45,8 @@ const ORGANIZATION_SELECT = [
   "Location_ID_TABLE.Location_Group_ID",
   "Location_ID_TABLE_Location_Group_ID_TABLE.Location_Group",
   "Location_ID_TABLE.Phone",
+  "Location_ID_TABLE_Address_ID_TABLE.Address_Line_1",
+  "Location_ID_TABLE_Address_ID_TABLE.Address_Line_2",
   "Location_ID_TABLE_Address_ID_TABLE.City",
   "Location_ID_TABLE_Address_ID_TABLE.[State/Region] AS State",
   "Location_ID_TABLE_Address_ID_TABLE.Postal_Code",
@@ -77,6 +79,8 @@ function mapOrganizationRow(row: OrganizationRow, logoUrl: string | null): Organ
     Location_Category: row.Location_Category,
     Location_Group_ID: row.Location_Group_ID,
     Location_Group: row.Location_Group,
+    Address_Line_1: row.Address_Line_1,
+    Address_Line_2: row.Address_Line_2,
     City: row.City,
     State: row.State,
     Postal_Code: row.Postal_Code,
@@ -171,12 +175,7 @@ export class OrganizationDirectoryService {
   ): Promise<OrganizationDetail> {
     const rows = await this.mp!.getTableRecords<OrganizationDetailRow>({
       table: "Congregations",
-      select: [
-        ...ORGANIZATION_SELECT,
-        "Location_ID_TABLE_Address_ID_TABLE.Address_Line_1",
-        "Location_ID_TABLE_Address_ID_TABLE.Address_Line_2",
-        "Pastor_TABLE_Contact_ID_TABLE.Display_Name AS Pastor_Name",
-      ].join(", "),
+      select: [...ORGANIZATION_SELECT, "Pastor_TABLE_Contact_ID_TABLE.Display_Name AS Pastor_Name"].join(", "),
       filter: `${VISIBILITY_FILTER} AND Congregations.Congregation_ID = ${congregationId}`,
       top: 1,
     });
@@ -193,8 +192,6 @@ export class OrganizationDirectoryService {
 
     return {
       ...mapOrganizationRow(row, logoByCongregationId.get(row.Congregation_ID) ?? null),
-      Address_Line_1: row.Address_Line_1,
-      Address_Line_2: row.Address_Line_2,
       Pastor_Name: row.Pastor_Name,
       Mass_Schedule: massSchedule,
     };

@@ -11,6 +11,8 @@ interface OrganizationSummary {
   Location_Category: string | null;
   Location_Group_ID: number | null;
   Location_Group: string | null;
+  Address_Line_1: string | null;
+  Address_Line_2: string | null;
   City: string | null;
   State: string | null;
   Postal_Code: string | null;
@@ -113,6 +115,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   private geocodeCountry = "us";
   private showLogos = true;
   private logoFit: "cover" | "contain" = "cover";
+  private showAddress = true;
   private showPhone = true;
   private showDescription = true;
   private pageSize = 24;
@@ -123,7 +126,8 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   // ── State ──
   private allOrganizations: OrganizationSummary[] = [];
   private searchTerm = "";
-  private browseMode: "alphabetical" | "group" = "alphabetical";
+  private browseMode: "alphabetical" | "city" | "group" | "nearest" = "alphabetical";
+  private selectedCity: string | null = null;
   private visibleCount = 0;
   private originPoint: { lat: number; lng: number } | null = null;
   private radiusMiles: number | null = null;
@@ -165,6 +169,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       "geocode-country",
       "show-logos",
       "logo-fit",
+      "show-address",
       "show-phone",
       "show-description",
       "page-size",
@@ -270,6 +275,9 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         break;
       case "logo-fit":
         this.logoFit = next === "contain" ? "contain" : "cover";
+        break;
+      case "show-address":
+        this.showAddress = next !== "false";
         break;
       case "show-phone":
         this.showPhone = next !== "false";
@@ -414,6 +422,14 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     return org.Name.toLowerCase().includes(term) || (org.City || "").toLowerCase().includes(term);
   }
 
+  private cities(): string[] {
+    const cities = new Set<string>();
+    for (const o of this.allOrganizations) {
+      if (o.City) cities.add(o.City);
+    }
+    return [...cities].sort((a, b) => a.localeCompare(b));
+  }
+
   private distanceFor(org: OrganizationSummary): number | null {
     if (!this.originPoint || org.Latitude === null || org.Longitude === null) return null;
     return haversineMiles(this.originPoint.lat, this.originPoint.lng, org.Latitude, org.Longitude);
@@ -424,7 +440,9 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   }
 
   private filteredOrganizations(): OrganizationSummary[] {
-    let orgs = this.allOrganizations.filter((o) => this.matchesSearch(o));
+    let orgs = this.allOrganizations.filter(
+      (o) => this.matchesSearch(o) && (this.selectedCity === null || o.City === this.selectedCity)
+    );
 
     if (this.originPoint && this.radiusMiles !== null) {
       orgs = orgs.filter((o) => {
@@ -459,9 +477,14 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     return `https://www.google.com/maps/dir/?api=1&destination=${org.Latitude},${org.Longitude}`;
   }
 
+  private streetAddressFor(org: OrganizationSummary): string {
+    return [org.Address_Line_1, org.Address_Line_2].filter(Boolean).join(", ");
+  }
+
   private orgCardHtml(org: OrganizationSummary, compact: boolean): string {
     const distance = this.distanceFor(org);
     const href = fillTemplate(this.detailPageUrlTemplate, { congregationId: org.Congregation_ID });
+    const streetAddress = this.showAddress ? this.streetAddressFor(org) : "";
     const cityState = [org.City, org.State].filter(Boolean).join(", ");
     const logo =
       this.showLogos && org.Logo_URL
@@ -474,7 +497,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
           ${logo}
           <div class="od-row-info">
             <div class="od-row-name">${escapeHtml(org.Name)}</div>
-            <div class="od-row-meta">${escapeHtml(cityState)}${org.Location_Category ? " · " + escapeHtml(org.Location_Category) : ""}</div>
+            <div class="od-row-meta">${escapeHtml([streetAddress, cityState].filter(Boolean).join(", "))}${org.Location_Category ? " · " + escapeHtml(org.Location_Category) : ""}</div>
           </div>
           ${distance !== null ? `<div class="od-row-distance">${this.formatDistance(distance)}</div>` : ""}
         </a>
@@ -491,6 +514,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
           <a class="od-card-name" href="${escapeHtml(href)}">${escapeHtml(org.Name)}</a>
           ${org.Location_Category ? `<div class="od-card-category">${escapeHtml(org.Location_Category)}</div>` : ""}
           ${this.showDescription && org.Description ? `<div class="od-card-desc">${escapeHtml(org.Description)}</div>` : ""}
+          ${streetAddress ? `<div class="od-card-address">${escapeHtml(streetAddress)}</div>` : ""}
           <div class="od-card-meta">
             ${cityState ? `<span>${escapeHtml(cityState)}</span>` : ""}
             ${this.showPhone && org.Phone ? `<span>${escapeHtml(org.Phone)}</span>` : ""}
@@ -542,10 +566,31 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
           `
         )
         .join("");
+    } else if (this.browseMode === "city") {
+      const byCity = new Map<string, OrganizationSummary[]>();
+      for (const o of visible) {
+        const key = o.City || "Other";
+        const list = byCity.get(key);
+        if (list) list.push(o);
+        else byCity.set(key, [o]);
+      }
+      const sortedCities = [...byCity.keys()].sort((a, b) => (a === "Other" ? 1 : b === "Other" ? -1 : a.localeCompare(b)));
+      groupsHtml = sortedCities
+        .map(
+          (city) => `
+            <div class="od-group">
+              <div class="od-group-heading">${escapeHtml(city)}</div>
+              <div class="od-group-items ${compact ? "od-rows" : "od-cards"}">
+                ${byCity.get(city)!.map((o) => this.orgCardHtml(o, compact)).join("")}
+              </div>
+            </div>
+          `
+        )
+        .join("");
     } else {
       const byLetter = new Map<string, OrganizationSummary[]>();
       for (const o of visible) {
-        const key = sortKeyFor(o.Name).charAt(0).toUpperCase() || "#";
+        const key = this.letterKeyFor(o);
         const list = byLetter.get(key);
         if (list) list.push(o);
         else byLetter.set(key, [o]);
@@ -555,7 +600,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         .map(
           (letter) => `
             <div class="od-group">
-              <div class="od-group-heading">${letter}</div>
+              <div class="od-group-heading" data-letter="${letter}">${letter}</div>
               <div class="od-group-items ${compact ? "od-rows" : "od-cards"}">
                 ${byLetter.get(letter)!.map((o) => this.orgCardHtml(o, compact)).join("")}
               </div>
@@ -570,6 +615,51 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       ${groupsHtml}
       ${hasMore ? `<button type="button" class="od-load-more" id="od-load-more">Show more ${this.nounPlural.toLowerCase()} (${orgs.length - this.visibleCount} remaining)</button>` : ""}
     `;
+  }
+
+  private letterKeyFor(org: OrganizationSummary): string {
+    return sortKeyFor(org.Name).charAt(0).toUpperCase() || "#";
+  }
+
+  // Built from the filtered, pre-pagination list (same basis as the classic
+  // widget's letter bar) so a letter with no matches under the current
+  // search/city filter shows disabled rather than just missing.
+  private renderAlphaBar(orgs: OrganizationSummary[]): string {
+    if (this.browseMode !== "alphabetical" || this.originPoint) return "";
+
+    const counts = new Map<string, number>();
+    for (const o of orgs) {
+      const key = this.letterKeyFor(o);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    if (counts.has("#")) letters.push("#");
+
+    const buttons = letters
+      .map((letter) => {
+        const count = counts.get(letter) || 0;
+        const noun = count === 1 ? this.nounSingular.toLowerCase() : this.nounPlural.toLowerCase();
+        return `<button type="button" class="od-alpha-btn" data-jump="${letter}" ${count ? "" : "disabled"} title="${count} ${noun}">${letter}</button>`;
+      })
+      .join("");
+
+    return `<div class="od-alpha-bar">${buttons}</div>`;
+  }
+
+  // The target letter's group may not be rendered yet on a long, paginated
+  // list — grow visibleCount to cover it (mirrors the classic widget's own
+  // behavior) before scrolling to it.
+  private jumpToLetter(letter: string): void {
+    const orgs = this.filteredOrganizations();
+    let lastIndex = -1;
+    for (let i = 0; i < orgs.length; i++) {
+      if (this.letterKeyFor(orgs[i]) === letter) lastIndex = i;
+    }
+    if (lastIndex === -1) return;
+
+    if (lastIndex + 1 > this.visibleCount) this.visibleCount = lastIndex + 1;
+    this.render();
+    this.root.querySelector(`[data-letter="${letter}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   render(): void {
@@ -606,22 +696,41 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         <div class="od-controls">
           <input type="search" id="od-search" class="od-search" placeholder="Search by name or city…" value="${escapeHtml(this.searchTerm)}">
 
-          <div class="od-distance-search">
-            <input type="text" id="od-zip" class="od-zip-input" placeholder="ZIP / postal code" inputmode="numeric">
-            <select id="od-radius">
-              ${this.radiusOptions.map((r) => `<option value="${r}" ${r === this.defaultRadius ? "selected" : ""}>${r} ${this.units}</option>`).join("")}
-            </select>
-            <button type="button" class="od-btn" id="od-search-distance">${this.geocoding ? "Searching…" : "Near Me"}</button>
-            <button type="button" class="od-btn od-btn-secondary" id="od-use-my-location">${this.geolocating ? "Locating…" : "Use my location"}</button>
-            ${this.originPoint ? `<button type="button" class="od-btn od-btn-clear" id="od-clear-distance">Clear</button>` : ""}
+          <div class="od-toggle-group">
+            <button type="button" class="od-toggle ${this.browseMode === "alphabetical" ? "active" : ""}" data-browse="alphabetical">A–Z</button>
+            <button type="button" class="od-toggle ${this.browseMode === "city" ? "active" : ""}" data-browse="city">By City</button>
+            ${
+              this.browseGroupTypeId
+                ? `<button type="button" class="od-toggle ${this.browseMode === "group" ? "active" : ""}" data-browse="group">By ${escapeHtml(this.groupNounPlural)}</button>`
+                : ""
+            }
+            <button type="button" class="od-toggle ${this.browseMode === "nearest" ? "active" : ""}" data-browse="nearest">Nearest</button>
           </div>
 
           ${
-            this.browseGroupTypeId
+            this.cities().length > 1
               ? `
-            <div class="od-toggle-group">
-              <button type="button" class="od-toggle ${this.browseMode === "alphabetical" ? "active" : ""}" data-browse="alphabetical">A–Z</button>
-              <button type="button" class="od-toggle ${this.browseMode === "group" ? "active" : ""}" data-browse="group">By ${escapeHtml(this.groupNounPlural)}</button>
+            <select id="od-city-select" class="od-select">
+              <option value="">All cities</option>
+              ${this.cities()
+                .map((c) => `<option value="${escapeHtml(c)}" ${this.selectedCity === c ? "selected" : ""}>${escapeHtml(c)}</option>`)
+                .join("")}
+            </select>
+          `
+              : ""
+          }
+
+          ${
+            this.browseMode === "nearest" || this.originPoint
+              ? `
+            <div class="od-distance-search">
+              <input type="text" id="od-zip" class="od-zip-input" placeholder="ZIP / postal code" inputmode="numeric">
+              <select id="od-radius" class="od-select">
+                ${this.radiusOptions.map((r) => `<option value="${r}" ${r === this.defaultRadius ? "selected" : ""}>${r} ${this.units}</option>`).join("")}
+              </select>
+              <button type="button" class="od-btn" id="od-search-distance">${this.geocoding ? "Searching…" : "Search"}</button>
+              <button type="button" class="od-btn od-btn-secondary" id="od-use-my-location">${this.geolocating ? "Locating…" : "Use my location"}</button>
+              ${this.originPoint ? `<button type="button" class="od-btn od-btn-clear" id="od-clear-distance">Clear</button>` : ""}
             </div>
           `
               : ""
@@ -631,6 +740,8 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
         ${this.geocodeError ? `<div class="od-error-msg">${escapeHtml(this.geocodeError)}</div>` : ""}
 
         <div class="od-count">${orgs.length} ${orgs.length === 1 ? this.nounSingular.toLowerCase() : this.nounPlural.toLowerCase()}</div>
+
+        ${this.renderAlphaBar(orgs)}
 
         <div class="od-layout">
           <div class="od-list">${this.renderListBody(orgs)}</div>
@@ -666,9 +777,21 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
 
     this.root.querySelectorAll<HTMLButtonElement>("[data-browse]").forEach((btn) => {
       btn.addEventListener("click", () => {
-        this.browseMode = btn.dataset.browse as "alphabetical" | "group";
+        this.browseMode = btn.dataset.browse as "alphabetical" | "city" | "group" | "nearest";
         this.render();
+        if (this.browseMode === "nearest") this.root.querySelector<HTMLInputElement>("#od-zip")?.focus();
       });
+    });
+
+    this.root.querySelectorAll<HTMLButtonElement>("[data-jump]").forEach((btn) => {
+      btn.addEventListener("click", () => this.jumpToLetter(btn.dataset.jump!));
+    });
+
+    const citySelect = this.root.querySelector<HTMLSelectElement>("#od-city-select");
+    citySelect?.addEventListener("change", () => {
+      this.selectedCity = citySelect.value || null;
+      this.visibleCount = this.pageSize;
+      this.render();
     });
 
     this.root.querySelectorAll<HTMLButtonElement>("[data-action='map']").forEach((btn) => {
@@ -768,11 +891,13 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   }
 
   private pinPopupHtml(org: OrganizationSummary): string {
+    const streetAddress = this.showAddress ? this.streetAddressFor(org) : "";
     const cityStateZip = [[org.City, org.State].filter(Boolean).join(", "), org.Postal_Code].filter(Boolean).join(" ");
     const directionsHref = this.directionsHrefFor(org);
     return `
       <div class="od-pin-popup">
         <strong>${escapeHtml(org.Name)}</strong>
+        ${streetAddress ? `<div>${escapeHtml(streetAddress)}</div>` : ""}
         ${cityStateZip ? `<div>${escapeHtml(cityStateZip)}</div>` : ""}
         ${org.Phone ? `<div><a href="tel:${escapeHtml(org.Phone.replace(/[^\d+]/g, ""))}">${escapeHtml(org.Phone)}</a></div>` : ""}
         ${directionsHref ? `<a href="${escapeHtml(directionsHref)}" target="_blank" rel="noopener">Get directions →</a>` : ""}
@@ -953,7 +1078,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       }
       .od-distance-search { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
       .od-zip-input { width: 120px; padding: 9px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.95em; }
-      .od-distance-search select { padding: 9px 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9em; }
+      .od-select { padding: 9px 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 0.9em; }
       .od-btn {
         padding: 9px 14px; border-radius: 8px; border: none; background: var(--primary); color: #fff;
         font-weight: 600; font-size: 0.9em; cursor: pointer; white-space: nowrap;
@@ -970,6 +1095,14 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-error-msg { background: #ffebee; color: #c62828; padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 0.9em; }
       .od-count { color: #6b7a88; font-size: 0.88em; margin-bottom: 14px; }
       .od-empty { color: #6b7a88; padding: 24px; text-align: center; }
+
+      .od-alpha-bar { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; }
+      .od-alpha-btn {
+        min-width: 26px; padding: 4px 6px; border: 1px solid #e3ebf3; border-radius: 6px; background: #fff;
+        color: var(--primary); font-size: 0.8em; font-weight: 700; cursor: pointer;
+      }
+      .od-alpha-btn:hover:not(:disabled) { background: var(--primary); color: #fff; border-color: var(--primary); }
+      .od-alpha-btn:disabled { color: #c7d0d8; border-color: #eef2f6; cursor: default; }
 
       .od-group { margin-bottom: 22px; }
       .od-group-heading {
@@ -995,6 +1128,7 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
       .od-card-name:hover { text-decoration: underline; }
       .od-card-category { font-size: 0.78em; color: var(--primary); font-weight: 600; text-transform: uppercase; }
       .od-card-desc { font-size: 0.88em; color: #667080; line-height: 1.4; }
+      .od-card-address { font-size: 0.85em; color: #6b7a88; margin-top: 2px; }
       .od-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 0.85em; color: #6b7a88; margin-top: 2px; }
       .od-distance-chip { background: #eef4fb; color: var(--primary); padding: 3px 9px; border-radius: 999px; font-weight: 600; }
       .od-card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }

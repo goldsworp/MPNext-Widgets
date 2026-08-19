@@ -51,6 +51,8 @@ describe('OrganizationDirectoryService', () => {
       Location_Group_ID: 1,
       Location_Group: 'North Deanery',
       Phone: '555-555-3220',
+      Address_Line_1: '3140 N 51st Ave',
+      Address_Line_2: null,
       City: 'Phoenix',
       State: 'AZ',
       Postal_Code: '85031',
