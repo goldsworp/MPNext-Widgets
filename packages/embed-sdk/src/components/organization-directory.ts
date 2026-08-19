@@ -144,6 +144,17 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private singleMarkersByOrgId: Map<number, any> = new Map();
   private mapResizeObserver: ResizeObserver | null = null;
+  // Some host page layouts (e.g. Duda's `.dmLayoutWrapper`) put an
+  // `overflow: hidden` ancestor between the widget and the viewport, which
+  // silently breaks CSS `position: sticky` (its containing block becomes
+  // that ancestor instead of the viewport, and the ancestor doesn't
+  // actually scroll). These fields drive a `position: fixed` fallback via
+  // scroll/resize instead, computed in viewport coordinates — unaffected
+  // by an ancestor's overflow, only by transform/filter/will-change, which
+  // is far rarer on a structural wrapper. See stickyMapTick().
+  private mapPanelEl: HTMLElement | null = null;
+  private mapPanelNaturalWidth = 0;
+  private stickyMapRafId: number | null = null;
 
   static get observedAttributes() {
     return [
@@ -311,6 +322,9 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     void this.applyCustomCss(this.getAttribute("customcss"));
     this.render();
     await this.loadOrganizations();
+
+    window.addEventListener("scroll", this.scheduleStickyMapTick, { passive: true });
+    window.addEventListener("resize", this.scheduleStickyMapTick);
   }
 
   // ── Data ──
@@ -760,7 +774,85 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
     void this.ensureMapLoaded().then(() => {
       if (!this.mapLoadError) this.renderMap(orgs);
     });
+
+    // render() just replaced the map panel with a fresh DOM node — resync
+    // its position immediately rather than waiting for the next scroll,
+    // since the list's height (and so where the panel should settle) may
+    // have just changed (search, filter, "Show more", etc.) with no scroll
+    // event of its own.
+    this.mapPanelEl = null;
+    this.stickyMapTick();
   }
+
+  private getStickyTopPx(): number {
+    const raw = getComputedStyle(this).getPropertyValue("--map-sticky-top").trim();
+    const n = parseFloat(raw);
+    return Number.isFinite(n) ? n : 20;
+  }
+
+  // CSS `position: sticky` (set in getStyles()) is the default, but it
+  // silently does nothing if any ancestor between this widget and the
+  // viewport has `overflow` other than `visible` — common in page-builder
+  // wrapper divs (e.g. Duda's `.dmLayoutWrapper`), since that ancestor
+  // becomes sticky's containing block instead of the viewport, and it
+  // doesn't itself scroll. This drives an equivalent `position: fixed`
+  // fallback in viewport coordinates, which isn't affected by an
+  // ancestor's overflow (only by transform/filter/will-change on one,
+  // which is much rarer on a structural wrapper).
+  private scheduleStickyMapTick = (): void => {
+    if (this.stickyMapRafId !== null) return;
+    this.stickyMapRafId = requestAnimationFrame(() => {
+      this.stickyMapRafId = null;
+      this.stickyMapTick();
+    });
+  };
+
+  private stickyMapTick = (): void => {
+    const layout = this.root.querySelector<HTMLElement>(".od-layout");
+    const panel = this.root.querySelector<HTMLElement>(".od-map-panel");
+    if (!layout || !panel) return;
+
+    if (panel !== this.mapPanelEl) {
+      // A brand-new node from the latest render() — no inline override yet,
+      // so its rect still reflects the normal grid-flow width.
+      this.mapPanelEl = panel;
+      this.mapPanelNaturalWidth = panel.getBoundingClientRect().width;
+    }
+
+    // Matches the single-column breakpoint in getStyles() — the map isn't
+    // sticky at all on narrow screens, so clear any earlier override.
+    if (window.innerWidth <= 900) {
+      panel.style.position = "";
+      panel.style.top = "";
+      panel.style.left = "";
+      panel.style.width = "";
+      return;
+    }
+
+    const stickyTop = this.getStickyTopPx();
+    const layoutRect = layout.getBoundingClientRect();
+    const mapHeight = panel.offsetHeight;
+    const width = this.mapPanelNaturalWidth;
+    const left = layoutRect.right - width;
+
+    if (layoutRect.top > stickyTop) {
+      // Above the sticky range — natural position, same as CSS sticky's
+      // own "hasn't engaged yet" state.
+      panel.style.position = "";
+      panel.style.top = "";
+      panel.style.left = "";
+      panel.style.width = "";
+    } else {
+      // Pinned — but stop before it would overflow past the bottom of the
+      // results list (same as CSS sticky's own end-of-container behavior),
+      // in case the map is taller than what's left to scroll through.
+      const top = Math.min(stickyTop, layoutRect.bottom - mapHeight);
+      panel.style.position = "fixed";
+      panel.style.top = `${top}px`;
+      panel.style.left = `${left}px`;
+      panel.style.width = `${width}px`;
+    }
+  };
 
   private attachControlListeners(): void {
     const searchInput = this.root.querySelector<HTMLInputElement>("#od-search");
@@ -1013,6 +1105,12 @@ export class OrganizationDirectoryWidget extends MPNextWidget {
   }
 
   disconnectedCallback(): void {
+    window.removeEventListener("scroll", this.scheduleStickyMapTick);
+    window.removeEventListener("resize", this.scheduleStickyMapTick);
+    if (this.stickyMapRafId !== null) {
+      cancelAnimationFrame(this.stickyMapRafId);
+      this.stickyMapRafId = null;
+    }
     this.mapResizeObserver?.disconnect();
     this.mapResizeObserver = null;
     if (this.mapInstance) {
